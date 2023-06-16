@@ -149,6 +149,8 @@ typedef enum
     VBI_DATA,
     // Timed Text data
     TIMED_TEXT,
+    // IAB Immersive Audio
+    IAB
 } EssenceType;
 
 

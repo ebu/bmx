@@ -162,6 +162,7 @@ public:
     void RegisterPictureTrackElement(uint32_t track_index, bool is_cbe, bool apply_temporal_reordering);
     void RegisterAVCITrackElement(uint32_t track_index);
     void RegisterSoundTrackElement(uint32_t track_index);
+    void RegisterIABTrackElement(uint32_t track_index, bool is_cbe);
     void RegisterDataTrackElement(uint32_t track_index, bool is_cbe);
 
     void PrepareWrite();

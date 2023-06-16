@@ -68,7 +68,9 @@ protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
 
 public:
-    uint8_t GetSequenceOffset() const { return mSequenceOffset; }
+    uint8_t GetSequenceOffset() const { 
+        return mSequenceOffset;
+    }
 
     virtual uint32_t GetSampleSize();
 

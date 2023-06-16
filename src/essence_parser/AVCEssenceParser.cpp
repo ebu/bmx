@@ -436,8 +436,11 @@ uint32_t AVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
     // The frame ends at the byte before zero_byte + start_code_prefix_one_3byte of the next
     //   access unit's NAL unit
 
-    if (mOffset == 0)
+    if (mOffset == 0) {
+        log_info("got frame data ptr: %p\n", data);
         ResetFrameSize();
+    }
+    log_info("in parser %d\n", data_size);
 
     bool have_frame_end = false;
     bool have_issue = false;
@@ -547,6 +550,7 @@ uint32_t AVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
             frame_size = ESSENCE_PARSER_NULL_FRAME_SIZE;
         } else {
             frame_size = offset - 1;
+            printf("got frame size: %d\n", frame_size);
         }
         mOffset = 0;
     } else if (have_issue) {
