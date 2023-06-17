@@ -406,6 +406,28 @@ static const mxfUL MXF_EC_L(AES3ClipWrapped)   = MXF_AES3BWF_EC_L(0x01, 0x04);
 static const mxfUL MXF_EC_L(BWFCustomWrapped)  = MXF_AES3BWF_EC_L(0x05, 0x08);
 static const mxfUL MXF_EC_L(AES3CustomWrapped) = MXF_AES3BWF_EC_L(0x05, 0x09);
 
+/* IAB mappings */
+
+/* Generic Container & Essence Descriptor */
+
+// ST-2067-201, Annex D
+#define MXF_IAB_EC_L(regver) \
+    MXF_GENERIC_CONTAINER_LABEL(regver, 0x1D, 0x00, 0x00)
+
+// Frame wrap only 
+static const mxfUL MXF_EC_L(IABFrameWrapped) = MXF_IAB_EC_L(0x0D);
+
+#define MXF_IAB_ITEM_TYPE  0x15
+
+// {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, regver, 0x0d, 0x01, 0x03, 0x01, itemtype, elecount, eletype, elenum}
+// 06.0E.2B.34.01.01.01.07.0E.09.<TBD>
+#define MXF_IAB_EE_K(elecount, eletype, elenum) \
+    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x07 /*regver */, MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_IAB_TRACK_NUM(elecount, eletype, elenum) \
+    MXF_TRACK_NUM(MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_IAB_FRAME_WRAPPED_EE_TYPE   0x0F
 
 /* IEC-DV and DV-based mappings */
 
