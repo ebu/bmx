@@ -184,6 +184,9 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     BMX_OPT_PROP_DEFAULT(dial_norm, 0);
     d10_aes3_valid_flags = 0;
     channel_assignment = g_Null_UL;
+    BMX_OPT_PROP_DEFAULT(sound_essence_compression, g_Null_UL);
+    isIabDescriptor = false;
+    descriptor_ul = g_Null_UL;
 }
 
 bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
@@ -218,6 +221,9 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     BMX_OPT_PROP_COPY(clone->audio_ref_level, audio_ref_level);
     BMX_OPT_PROP_COPY(clone->dial_norm,       dial_norm);
     clone->channel_assignment   = channel_assignment;
+    BMX_OPT_PROP_COPY(clone->sound_essence_compression, sound_essence_compression);
+    clone->isIabDescriptor = isIabDescriptor;
+    clone->descriptor_ul = descriptor_ul;
 
     size_t i;
     for (i = 0; i < mca_labels.size(); i++)

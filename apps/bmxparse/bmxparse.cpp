@@ -47,6 +47,7 @@
 #include <bmx/essence_parser/VC3EssenceParser.h>
 #include <bmx/essence_parser/VC2EssenceParser.h>
 #include <bmx/essence_parser/J2CEssenceParser.h>
+#include <bmx/essence_parser/IABEssenceParser.h>
 #include <bmx/apps/AppTextInfoWriter.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/Utils.h>
@@ -72,6 +73,7 @@ typedef enum
     RDD36_INPUT,
     VC3_INPUT,
     VC2_INPUT,
+    IAB_INPUT
 } InputType;
 
 static const EnumInfo RDD36_CHROMA_FORMAT_ENUM[] =
@@ -323,6 +325,20 @@ public:
 typedef void (*print_frame_info_f)(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
                                    Buffer *buffer, uint32_t frame_size, int64_t frame_num);
 
+static void print_iab_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+{
+    IABEssenceParser *iab_parser = dynamic_cast<IABEssenceParser*>(parser);
+    iab_parser->ParseFrameInfo(buffer->data, frame_size);
+
+    info_writer->StartArrayElement("frame", (size_t)frame_num);
+    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteRationalItem("framerate", iab_parser->GetFrameRate());
+    info_writer->WriteRationalItem("samplerate", iab_parser->GetSampleRate());
+    info_writer->WriteIntegerItem("bitdepth", iab_parser->GetBitDepth());
+    info_writer->WriteIntegerItem("channel_count", iab_parser->GetChannelCount());
+    info_writer->EndArrayElement();
+}
 
 static void print_avc_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
                                  Buffer *buffer, uint32_t frame_size, int64_t frame_num)
@@ -672,6 +688,8 @@ static bool parse_type_str(const char *type_str, InputType *input_type)
         *input_type = RDD36_INPUT;
     else if (strcmp(type_str, "vc3") == 0)
         *input_type = VC3_INPUT;
+    else if (strcmp(type_str, "iab") == 0)
+        *input_type = IAB_INPUT;
     else
         return false;
 
@@ -684,7 +702,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "Text dump raw essence files using the bmx library's parser class\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s <<Options>> <type> <filename>\n", cmd);
-    fprintf(stderr, "    <type> is 'avc', 'dv', 'j2c', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'\n");
+    fprintf(stderr, "    <type> is 'iab', 'avc', 'dv', 'j2c', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
     fprintf(stderr, " -v | --version        Print version info to stderr\n");
@@ -855,6 +873,11 @@ int main(int argc, const char **argv)
                 if (text_info_writer)
                     text_info_writer->PushItemValueIndent(strlen("compression_id "));
                 break;
+            case IAB_INPUT:
+                parser = new IABEssenceParser();
+                print_frame_info = print_iab_frame_info;
+                //if (text_info_writer)
+                //    text_info_writer->PushItemValueIndent(strlen("size "));
         }
 
 

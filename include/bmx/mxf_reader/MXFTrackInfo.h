@@ -125,6 +125,7 @@ public:
     virtual MXFTrackInfo* Clone() const;
 
 public:
+    mxfUL descriptor_ul;
     mxfRational sampling_rate;
     uint32_t bits_per_sample;
     uint16_t block_align;
@@ -134,8 +135,11 @@ public:
     BMX_OPT_PROP_DECL(bool, locked);
     BMX_OPT_PROP_DECL(int8_t, audio_ref_level);
     BMX_OPT_PROP_DECL(int8_t, dial_norm);
+    BMX_OPT_PROP_DECL(mxfUL, sound_essence_compression);
     UL channel_assignment;
     std::vector<mxfpp::AudioChannelLabelSubDescriptor*> mca_labels;
+
+    bool isIabDescriptor;
 };
 
 

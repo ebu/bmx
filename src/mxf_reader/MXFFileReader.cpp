@@ -1892,6 +1892,8 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
         dynamic_cast<GenericSoundEssenceDescriptor*>(file_descriptor);
     BMX_CHECK(sound_descriptor);
 
+    sound_track_info->descriptor_ul = *sound_descriptor->getKey();
+
     if (sound_descriptor->haveAudioSamplingRate())
         sound_track_info->sampling_rate = normalize_rate(sound_descriptor->getAudioSamplingRate());
 
@@ -1908,13 +1910,21 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
     if (sound_descriptor->haveDialNorm())
         BMX_OPT_PROP_SET(sound_track_info->dial_norm, sound_descriptor->getDialNorm());
 
+    if (sound_descriptor->haveSoundEssenceCompression())
+        BMX_OPT_PROP_SET(sound_track_info->sound_essence_compression, sound_descriptor->getSoundEssenceCompression());
+    
+
     WaveAudioDescriptor *wave_descriptor = dynamic_cast<WaveAudioDescriptor*>(file_descriptor);
+    IABDescriptor *iab_descriptor = dynamic_cast<IABDescriptor*>(file_descriptor);
     if (wave_descriptor) {
         sound_track_info->block_align = wave_descriptor->getBlockAlign();
         if (wave_descriptor->haveSequenceOffset())
             sound_track_info->sequence_offset = wave_descriptor->getSequenceOffset();
         if (wave_descriptor->haveChannelAssignment())
             sound_track_info->channel_assignment = wave_descriptor->getChannelAssignment();
+    } else if (iab_descriptor) {
+        // nothing to do yet
+        sound_track_info->isIabDescriptor = true;
     } else {
         if (sound_track_info->channel_count > 0) {
             sound_track_info->block_align = sound_track_info->channel_count *
