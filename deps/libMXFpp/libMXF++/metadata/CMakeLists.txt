@@ -62,6 +62,7 @@ list(APPEND MXFpp_sources
     metadata/VBIDataDescriptor.cpp
     metadata/VC2SubDescriptor.cpp
     metadata/WaveAudioDescriptor.cpp
+    metadata/IABDescriptor.cpp
 )
 
 list(APPEND MXFpp_headers
@@ -129,6 +130,7 @@ list(APPEND MXFpp_headers
     metadata/VBIDataDescriptor.h
     metadata/VC2SubDescriptor.h
     metadata/WaveAudioDescriptor.h
+    metadata/IABDescriptor.h
 )
 
 add_subdirectory(base)
