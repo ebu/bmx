@@ -410,11 +410,31 @@ static const mxfUL MXF_EC_L(AES3CustomWrapped) = MXF_AES3BWF_EC_L(0x05, 0x09);
 
 /* Generic Container & Essence Descriptor */
 
+// ISXD MARKUS
+#define MXF_ISXD_EC_L(regver) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, regver, 0x0e, 0x09, 0x06, 0x07, 0x01, 0x01, 0x01, 0x03}
+    // DOLBY PRIVATE UL
+
+static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x05);  // 0x05 dolby namespace
+
+// Doc: ISXD MXF Mapping for Repository Files v.0.3 (2)(1)(1).docx
+
+#define MXF_ISXD_ITEM_TYPE  0x17
+
+#define MXF_ISXD_EE_K(elecount, eletype, elenum) \
+    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x07 /*regver */, MXF_ISXD_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_ISXD_TRACK_NUM(elecount, eletype, elenum) \
+    MXF_TRACK_NUM(MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_ISXD_FRAME_WRAPPED_EE_TYPE   0x01
+
+
 // ST-2067-201, Annex D
 #define MXF_IAB_EC_L(regver) \
     MXF_GENERIC_CONTAINER_LABEL(regver, 0x1D, 0x00, 0x00)
 
-// Frame wrap only 
+// Frame wrap only (Essence Container UL)
 static const mxfUL MXF_EC_L(IABFrameWrapped) = MXF_IAB_EC_L(0x0D);
 
 #define MXF_IAB_ITEM_TYPE  0x15
