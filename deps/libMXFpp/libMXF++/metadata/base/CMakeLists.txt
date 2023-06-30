@@ -63,6 +63,7 @@ list(APPEND MXFpp_sources
     metadata/base/VC2SubDescriptorBase.cpp
     metadata/base/WaveAudioDescriptorBase.cpp
     metadata/base/IABDescriptorBase.cpp
+    metadata/base/ISXDDescriptorBase.cpp
 )
 
 list(APPEND MXFpp_headers
@@ -130,6 +131,7 @@ list(APPEND MXFpp_headers
     metadata/base/VC2SubDescriptorBase.h
     metadata/base/WaveAudioDescriptorBase.h
     metadata/base/IABDescriptorBase.h
+    metadata/base/ISXDDescriptorBase.h
 )
 
 set(MXFpp_sources ${MXFpp_sources} PARENT_SCOPE)

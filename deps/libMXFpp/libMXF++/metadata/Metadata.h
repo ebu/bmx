@@ -98,5 +98,6 @@
 #include <libMXF++/metadata/MGASoundfieldGroupLabelSubDescriptor.h>
 #include <libMXF++/metadata/ContainerConstraintsSubDescriptor.h>
 #include <libMXF++/metadata/IABDescriptor.h>
+#include <libMXF++/metadata/ISXDDescriptor.h>
 
 #endif
