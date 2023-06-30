@@ -133,7 +133,7 @@ void IABDescriptorHelper::UpdateFileDescriptor()
     IABDescriptor *descriptor = dynamic_cast<IABDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
-    // essence doing (4.10, SMPTE ST 2098-2)
+    // Essence Coding (4.10, SMPTE ST 2098-2)
     mxfUL label = {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x05, 0x0E, 0x09, 0x06, 0x04, 0x00, 0x00, 0x00, 0x00};
 
     descriptor->setSoundEssenceCompression(label);
@@ -160,10 +160,7 @@ void IABDescriptorHelper::UpdateFileDescriptor(IABEssenceParser *essence_parser)
 
 uint32_t IABDescriptorHelper::GetSampleSize()
 {
-    // MXF: Here we need to calculate the sample size of an IAFrame (meta + sound ?)
     return 0; 
-    return SoundMXFDescriptorHelper::GetSampleSize();
-    //return mChannelCount * ((mQuantizationBits + 7) / 8);
 }
 
 mxfUL IABDescriptorHelper::ChooseEssenceContainerUL() const

@@ -150,7 +150,9 @@ typedef enum
     // Timed Text data
     TIMED_TEXT,
     // IAB Immersive Audio
-    IAB
+    IAB,
+    // ISXD
+    ISXD
 } EssenceType;
 
 

@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2023, Dolby Laboratories, Inc
+ * Copyright (C) 2011, British Broadcasting Corporation
  * All Rights Reserved.
  *
- * Author: Markus Pfundstein
+ * Author: Philip de Nier, Markus Pfundstein
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,31 +29,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_IAB_IABREADER_H_
-#define BMX_IAB_IABREADER_H_
+#ifndef BMX_OP1A_ISXD_TRACK_H_
+#define BMX_OP1A_ISXD_TRACK_H_
 
-#include <string>
+#include <bmx/mxf_op1a/OP1ATrack.h>
+#include <bmx/mxf_helper/ISXDDescriptorHelper.h>
 
 namespace bmx
 {
 
-struct IABIOContext;
 
-class IABReader
+class OP1AISXDTrack : public OP1ATrack
 {
 public:
-    static IABReader* Open(std::string filename);
+    OP1AISXDTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                 mxfRational frame_rate, EssenceType essence_type);
+    virtual ~OP1AISXDTrack();
 
 public:
-    ~IABReader();
+
+protected:
+    virtual void PrepareWrite(uint8_t track_count);
+    virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
+
 
 private:
-    IABReader();
 
 private:
-    IABIOContext *mIO;
+    ISXDDescriptorHelper *mISXDDescriptorHelper;
+    int64_t mPosition;
+    bool mCbe;
 };
 
+
 };
+
+
 
 #endif
+

@@ -81,7 +81,7 @@ OP1AIABTrack::OP1AIABTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
     }
 #endif
 
-    mCbe =  true;
+    mCbe =  false;
 }
 
 OP1AIABTrack::~OP1AIABTrack()
@@ -90,7 +90,6 @@ OP1AIABTrack::~OP1AIABTrack()
 
 void OP1AIABTrack::PrepareWrite(uint8_t track_count)
 {
-    log_info("OP1ATrack::PreparteWrite");
     CompleteEssenceKeyAndTrackNum(track_count);
 
     mCPManager->RegisterIABTrackElement(mTrackIndex, mEssenceElementKey);

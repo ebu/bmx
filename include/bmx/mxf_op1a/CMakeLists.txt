@@ -20,6 +20,7 @@ list(APPEND bmx_headers
     bmx/mxf_op1a/OP1AVC2Track.h
     bmx/mxf_op1a/OP1AVC3Track.h
     bmx/mxf_op1a/OP1AXMLTrack.h
+    bmx/mxf_op1a/OP1AISXDTrack.h
 )
 
 set(bmx_headers ${bmx_headers} PARENT_SCOPE)

@@ -627,6 +627,23 @@ void OP1AContentPackageManager::RegisterIABTrackElement(uint32_t track_index, mx
     mSysMetaItemFlags |= SYS_META_SOUND_ITEM_FLAG;
 }
 
+void OP1AContentPackageManager::RegisterISXDTrackElement(uint32_t track_index, mxfKey element_key)
+{
+    BMX_ASSERT(mFrameWrapped);
+
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
+                                                                       OP1AContentPackageElement::SOUND_ELEMENT,
+                                                                       element_key, mKAGSize, mMinLLen);
+    //element->SetMaxEssenceLen(100000);
+    element->is_cbe = false;
+
+    mElements.push_back(element);
+    mElementTrackIndexMap[track_index] = element;
+
+    mSysMetaItemFlags |= SYS_META_DATA_ITEM_FLAG;
+}
+
+
 void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                                           uint8_t element_llen)
 {
@@ -815,7 +832,6 @@ size_t OP1AContentPackageManager::CreateContentPackage()
 
     if (mFreeContentPackages.empty()) {
         BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
-        log_info("create content package %d\n", mPosition + cp_index);
         mContentPackages.push_back(new OP1AContentPackage(mMXFFile, mIndexTable, mKAGSize, mMinLLen, mHaveSystemItem,
                                                           mHaveInputUserTimecode, mFrameRate, mSysMetaItemFlags,
                                                           mElements, mPosition + cp_index, mStartTimecode));

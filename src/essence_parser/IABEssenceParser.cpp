@@ -247,15 +247,15 @@ uint32_t IABEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
         if (mFrameHeaderParsed == false) {
             ParseFrameInfo(data, data_size);
             mFrameHeaderParsed = true;
-            log_info("got new frame with length: %d\n", mFrameLength);
-            log_info("sample rate: %d\n", GetSampleRate());
-            log_info("bit_depth: %d\n", GetBitDepth());
-            log_info("channel count: %d\n", GetChannelCount());
+            //log_info("got new frame with length: %d\n", mFrameLength);
+            //log_info("sample rate: %d\n", GetSampleRate());
+            //log_info("bit_depth: %d\n", GetBitDepth());
+            //log_info("channel count: %d\n", GetChannelCount());
         }
 
         // done with frame.
         if (data_size >= mFrameLength) {
-            log_info("frame done\n");
+            //log_info("frame done\n");
             // reset for next frame
             mFrameHeaderParsed = false;
             return mFrameLength;

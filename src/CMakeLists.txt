@@ -17,7 +17,6 @@ add_subdirectory(rdd9_mxf)
 add_subdirectory(st436)
 add_subdirectory(wave)
 add_subdirectory(writer_helper)
-add_subdirectory(iab)
 
 add_library(bmx
     ${bmx_sources}

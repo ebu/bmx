@@ -67,6 +67,7 @@
 #include <bmx/essence_parser/D10RawEssenceReader.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/essence_parser/IABEssenceParser.h>
+#include <bmx/essence_parser/ISXDEssenceParser.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
@@ -3910,16 +3911,27 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (have_iab)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Multiple '%s' inputs are not permitted\n", argv[cmdln_index]);
-                return 1;
-            }
             input.essence_type = IAB;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             have_iab = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--isxd") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = ISXD;
+            if (strchr(argv[cmdln_index + 1], '%') != 0) {
+                input.file_pattern = argv[cmdln_index + 1];
+            } else {
+                input.filename = argv[cmdln_index + 1];
+            }
+            inputs.push_back(input);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--tt") == 0)
@@ -4562,6 +4574,19 @@ int main(int argc, const char** argv)
                     // TODO: other parameters?
                 }
             }
+            else if (input->essence_type == ISXD)
+            {
+                log_info("got isxd\n");
+                /*ISXDEssenceParser *isxd_parser = new ISXDEssenceParser();
+                input->raw_reader->SetEssenceParser(isxd_parser);
+                input->raw_reader->ReadSamples(1);
+
+                if (input->raw_reader->GetNumSamples() == 0) {
+                    log_error("Failed to read and parse first ISXD frame\n");
+                    throw false;
+                }
+                */
+            }
             else if (input->essence_type == IAB)
             {
                 // read first frame of IABitstream to get some info about the stream
@@ -4671,7 +4696,6 @@ int main(int argc, const char** argv)
             if (input->disabled)
                 continue;
 
-            // MARKUS: ADD HERE IAB
             if (input->essence_type == WAVE_PCM) {
                 have_sound = true;
             } else if (input->essence_type == IAB) {
@@ -5478,6 +5502,10 @@ int main(int argc, const char** argv)
                     if (BMX_OPT_PROP_IS_SET(output_sound_info->audio_ref_level))
                         clip_track->SetAudioRefLevel(output_sound_info->audio_ref_level);
                     break;
+                case ISXD:
+                    // MARKUS]
+                    log_info("To-DO: init clip_track for isxd\n");
+                    break;
                 default:
                     BMX_ASSERT(false);
             }
@@ -5744,6 +5772,13 @@ int main(int argc, const char** argv)
                     input->raw_reader->SetEssenceParser(new IABEssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(100000000);
                     break;
+                case ISXD:
+                    // MARKUS
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new ISXDEssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(100000000);
+                    break;
                 default:
                     BMX_ASSERT(false);
             }
@@ -5845,6 +5880,7 @@ int main(int argc, const char** argv)
             for (i = 0; i < inputs.size(); i++) {
                 RawInput *input = &inputs[i];
                 if (!input->disabled && input->essence_type != TIMED_TEXT) {
+                    log_info("track: %d read samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
                     num_samples = read_samples(input, max_samples_per_read);
                     if (num_samples < min_num_samples) {
                         min_num_samples = num_samples;
@@ -5887,7 +5923,7 @@ int main(int argc, const char** argv)
                                                        pcm_buffer.GetBytes(), pcm_buffer.GetSize(),
                                                        num_samples);
                         } else {
-                            log_info("write samples. Bytes: %p - %d\n", input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+                            log_info("track %d, write samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
                             output_track->WriteSamples(output_channel_index,
                                                        input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
                                                        num_samples);

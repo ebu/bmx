@@ -375,6 +375,14 @@ void OP1AIndexTable::RegisterIABTrackElement(uint32_t track_index, bool is_cbe)
     mIsCBE &= is_cbe;
 }
 
+void OP1AIndexTable::RegisterISXDTrackElement(uint32_t track_index, bool is_cbe)
+{
+    mIndexElements.push_back(new OP1AIndexTableElement(track_index, OP1AIndexTableElement::DATA_ELEMENT, is_cbe, false));
+    mIndexElementsMap[track_index] = mIndexElements.back();
+
+    mIsCBE &= is_cbe;
+}
+
 void OP1AIndexTable::RegisterSoundTrackElement(uint32_t track_index)
 {
     mIndexElements.push_back(new OP1AIndexTableElement(track_index, OP1AIndexTableElement::SOUND_ELEMENT, true, false));
