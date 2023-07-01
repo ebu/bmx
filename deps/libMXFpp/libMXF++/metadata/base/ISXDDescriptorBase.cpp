@@ -55,3 +55,37 @@ ISXDDescriptorBase::ISXDDescriptorBase(HeaderMetadata *headerMetadata, ::MXFMeta
 
 ISXDDescriptorBase::~ISXDDescriptorBase()
 {}
+
+
+// getters
+bool ISXDDescriptorBase::haveNamespaceURI() const
+{
+    return haveItem(&MXF_ITEM_K(ISXDDescriptor, NamespaceURI));
+
+}
+
+std::string ISXDDescriptorBase::getNamespaceURI() const
+{
+    return getStringItem(&MXF_ITEM_K(ISXDDescriptor, NamespaceURI));
+}
+
+bool ISXDDescriptorBase::haveRootRelementKey() const
+{
+    return haveItem(&MXF_ITEM_K(ISXDDescriptor, RootElementKey));
+}
+
+std::string ISXDDescriptorBase::getRootElementKey() const
+{
+    return getStringItem(&MXF_ITEM_K(ISXDDescriptor, RootElementKey));
+}
+
+// setters
+void ISXDDescriptorBase::setNamespaceURI(std::string value)
+{
+    setStringItem(&MXF_ITEM_K(ISXDDescriptor, NamespaceURI), value);
+}
+
+void ISXDDescriptorBase::setRootElementKey(std::string value)
+{
+    setStringItem(&MXF_ITEM_K(ISXDDescriptor, RootElementKey), value);
+}

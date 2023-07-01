@@ -51,6 +51,16 @@ public:
     ISXDDescriptorBase(HeaderMetadata *headerMetadata);
     virtual ~ISXDDescriptorBase();
 
+    // getters
+   bool haveNamespaceURI() const;
+   std::string getNamespaceURI() const;
+   // setters
+   bool haveRootRelementKey() const;
+   std::string getRootElementKey() const;
+
+    // setters
+    void setNamespaceURI(std::string value);
+    void setRootElementKey(std::string value);
 
 protected:
     ISXDDescriptorBase(HeaderMetadata *headerMetadata, ::MXFMetadataSet *cMetadataSet);
