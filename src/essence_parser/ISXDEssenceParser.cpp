@@ -75,7 +75,7 @@ void ISXDEssenceParser::StartElement(void *user_data, const char *qname, const c
     // set RootElementKey for very first element that we encounter.
     if (parser->mRootElementKey == "")
     {
-        log_info("ISXDEssenceParser. Set RootElementKey to %s with ns: %s\n", name.c_str(), ns.c_str());
+        //log_info("ISXDEssenceParser. Set RootElementKey to %s with ns: %s\n", name.c_str(), ns.c_str());
         parser->mRootElementKey = name;
         parser->mNamespace = ns;
     }
@@ -87,7 +87,7 @@ void ISXDEssenceParser::EndElement(void *user_data, const char *qname)
 
     string ns, name;
     split_qname(qname, &ns, &name);
-    //log_info("END %s [%s]\n", name.c_str(), ns.c_str());
+
     if (name == parser->mRootElementKey)
     {
         parser->mFullFrameParsed = true;
@@ -103,6 +103,10 @@ ISXDEssenceParser::ISXDEssenceParser()
 
 ISXDEssenceParser::~ISXDEssenceParser()
 {
+    if (mParser) {
+        XML_ParserFree(mParser);
+        mParser = nullptr;
+    }
 }
 
 std::string ISXDEssenceParser::GetNamespaceURI()
@@ -129,6 +133,7 @@ void ISXDEssenceParser::ResetParser()
 
     mBytesRead = 0;
     mFullFrameParsed = 0;
+    mPos = 0;
 }
 
 uint32_t ISXDEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
@@ -151,32 +156,41 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
     ParseFrameInfo(data, data_size);
 
-    int32_t byte_index = XML_GetCurrentByteIndex(mParser);
-
-    mBytesRead += byte_index;
 
     if (mFullFrameParsed) {
+        uint32_t len = mBytesRead;
         ResetParser();
-
-        uint32_t len = byte_index + 1;
-
-        //log_info("got frame length: %d\n", len);
-
-        return len;   // +1 because of \n at end?
+        return len;
     }
 
     return ESSENCE_PARSER_NULL_OFFSET;
 }
 
-
 void ISXDEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
-    XML_Status status = XML_Parse(mParser, (const char*)data + mBytesRead, data_size, 0);
+    const char *data_start = (const char*)data + mPos;
+
+    XML_Status status = XML_Parse(mParser, data_start, data_size - mPos, 0);
     if (status == XML_STATUS_ERROR)
     {
         XML_Error err = XML_GetErrorCode(mParser);
         if (err != XML_ERROR_ABORTED) {
-            throw BMXException("XML Error: %d (%s)\n", err, XML_ErrorString(err));
+            int32_t err_index = XML_GetErrorByteIndex(mParser);
+            throw BMXException("XML Error: %d (%s) (err_idx: %d, char: %c)\n",
+                err, XML_ErrorString(err), err_index, data[err_index]);
         }
+    }
+
+    int32_t byte_index = XML_GetCurrentByteIndex(mParser);
+    if (byte_index < 0) {
+        byte_index = 0;
+    }
+    
+    mBytesRead = byte_index;
+    if (mFullFrameParsed && data[mBytesRead] == '\n') {
+        mBytesRead+=1;
+    }
+    else if (!mFullFrameParsed) {
+        mPos = data_size;
     }
 }

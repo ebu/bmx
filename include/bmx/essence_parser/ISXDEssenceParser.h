@@ -72,6 +72,8 @@ private:
     XML_Parser mParser;
     std::string mRootElementKey;
     std::string mNamespace;
+
+    int32_t mPos;
 };
 
 };
