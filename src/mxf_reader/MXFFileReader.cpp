@@ -1946,6 +1946,16 @@ void MXFFileReader::ProcessDataDescriptor(FileDescriptor *file_descriptor, MXFDa
     if (tt_desc) {
         data_track_info->timed_text_manifest = TimedTextMXFDescriptorHelper::CreateManifest(tt_desc);
     }
+    ISXDDescriptor *isxd_descriptor = dynamic_cast<ISXDDescriptor*>(file_descriptor);
+    if (isxd_descriptor) {
+        data_track_info->is_isxd_descriptor = true;
+        if (isxd_descriptor->haveNamespaceURI()) {
+            data_track_info->namespace_uri = isxd_descriptor->getNamespaceURI();
+        }
+        if (isxd_descriptor->haveRootRelementKey()) {
+            data_track_info->root_element_key = isxd_descriptor->getRootElementKey();
+        }
+    }
 }
 
 void MXFFileReader::IndexMCALabels(GenericDescriptor *descriptor)

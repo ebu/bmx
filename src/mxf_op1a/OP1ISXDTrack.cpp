@@ -59,8 +59,6 @@ OP1AISXDTrack::OP1AISXDTrack(OP1AFile *file, uint32_t track_index, uint32_t trac
     mEssenceElementKey = MXF_ISXD_EE_K(elecount, MXF_ISXD_FRAME_WRAPPED_EE_TYPE, elenum);
     mTrackNumber = MXF_ISXD_TRACK_NUM(elecount, MXF_ISXD_FRAME_WRAPPED_EE_TYPE, elenum);
 
-    mxfUL tmp = mEssenceElementKey;
-
     mISXDDescriptorHelper = dynamic_cast<ISXDDescriptorHelper *>(mDescriptorHelper);
     BMX_ASSERT(mISXDDescriptorHelper);
 

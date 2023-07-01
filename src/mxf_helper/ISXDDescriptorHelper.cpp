@@ -131,9 +131,10 @@ void ISXDDescriptorHelper::UpdateFileDescriptor()
     
     ISXDDescriptor *descriptor = dynamic_cast<ISXDDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
+   
+    mxfUL essenceCoding = {0x06,0x0E,0x2B,0x34,0x04,0x01,0x01,0x05,0x0E,0x09,0x06,0x06,0x00,0x00,0x00,0x00};
 
-    // Essence Descriptor (4.10, SMPTE ST 2098-2) MARKUS
-    mxfUL label = {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x05, 0x0E, 0x09, 0x06, 0x04, 0x00, 0x00, 0x00, 0x00};
+    descriptor->setDataEssenceCoding(essenceCoding);
 }
 
 void ISXDDescriptorHelper::UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in)
@@ -147,8 +148,17 @@ void ISXDDescriptorHelper::UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc
 
 void ISXDDescriptorHelper::UpdateFileDescriptor(ISXDEssenceParser *essence_parser)
 {
+    (void)essence_parser;
     ISXDDescriptor *descriptor = dynamic_cast<ISXDDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
+
+    string namespace_uri = essence_parser->GetNamespaceURI();
+    string root_element_key = essence_parser->GetRootElementKey();
+
+    log_info("set namespace_uri: %s, root_element_key: %s\n", namespace_uri.c_str(), root_element_key.c_str());
+
+    descriptor->setNamespaceURI(namespace_uri);
+    descriptor->setRootElementKey(root_element_key);
 }
 
 mxfUL ISXDDescriptorHelper::ChooseEssenceContainerUL() const

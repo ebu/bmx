@@ -71,9 +71,13 @@ void ISXDEssenceParser::StartElement(void *user_data, const char *qname, const c
 
     string ns, name;
     split_qname(qname, &ns, &name);
-    //log_info("START %s [%s]\n", name.c_str(), ns.c_str());
-    if (name == "DolbyVisionFrameData")
+
+    // set RootElementKey for very first element that we encounter.
+    if (parser->mRootElementKey == "")
     {
+        log_info("ISXDEssenceParser. Set RootElementKey to %s with ns: %s\n", name.c_str(), ns.c_str());
+        parser->mRootElementKey = name;
+        parser->mNamespace = ns;
     }
 }
 
@@ -84,7 +88,7 @@ void ISXDEssenceParser::EndElement(void *user_data, const char *qname)
     string ns, name;
     split_qname(qname, &ns, &name);
     //log_info("END %s [%s]\n", name.c_str(), ns.c_str());
-    if (name == "DolbyVisionFrameData")
+    if (name == parser->mRootElementKey)
     {
         parser->mFullFrameParsed = true;
         XML_StopParser(parser->mParser, true);
@@ -101,12 +105,22 @@ ISXDEssenceParser::~ISXDEssenceParser()
 {
 }
 
+std::string ISXDEssenceParser::GetNamespaceURI()
+{
+    return mNamespace;
+}
+
+std::string ISXDEssenceParser::GetRootElementKey()
+{
+    return mRootElementKey;
+}
+
 void ISXDEssenceParser::ResetParser()
 {
     if (mParser) {
         XML_ParserReset(mParser, "utf-8");
     } else {
-        mParser = XML_ParserCreate("utf-8");
+        mParser = XML_ParserCreateNS("utf-8", NAMESPACE_SEPARATOR);
     }
 
     XML_SetStartElementHandler(mParser, ISXDEssenceParser::StartElement);
@@ -135,14 +149,7 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
-    XML_Status status = XML_Parse(mParser, (const char*)data + mBytesRead, data_size, 0);
-    if (status == XML_STATUS_ERROR)
-    {
-        XML_Error err = XML_GetErrorCode(mParser);
-        if (err != XML_ERROR_ABORTED) {
-            throw BMXException("XML Error: %d (%s)\n", err, XML_ErrorString(err));
-        }
-    }
+    ParseFrameInfo(data, data_size);
 
     int32_t byte_index = XML_GetCurrentByteIndex(mParser);
 
@@ -153,7 +160,7 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
         uint32_t len = byte_index + 1;
 
-        log_info("got frame length: %d\n", len);
+        //log_info("got frame length: %d\n", len);
 
         return len;   // +1 because of \n at end?
     }
@@ -164,6 +171,12 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
 void ISXDEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
-    (void)data;
-    (void)data_size;
+    XML_Status status = XML_Parse(mParser, (const char*)data + mBytesRead, data_size, 0);
+    if (status == XML_STATUS_ERROR)
+    {
+        XML_Error err = XML_GetErrorCode(mParser);
+        if (err != XML_ERROR_ABORTED) {
+            throw BMXException("XML Error: %d (%s)\n", err, XML_ErrorString(err));
+        }
+    }
 }

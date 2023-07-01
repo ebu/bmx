@@ -57,6 +57,9 @@ public:
 
 public:
 
+    std::string GetNamespaceURI();
+    std::string GetRootElementKey();
+
 private:
     void ResetParser();
 
@@ -67,6 +70,8 @@ private:
     uint64_t mBytesRead;
     bool mFullFrameParsed;
     XML_Parser mParser;
+    std::string mRootElementKey;
+    std::string mNamespace;
 };
 
 };

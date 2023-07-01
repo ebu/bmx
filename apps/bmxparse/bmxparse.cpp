@@ -328,6 +328,7 @@ typedef void (*print_frame_info_f)(AppInfoWriter *info_writer, EssenceParser *pa
 static void print_iab_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
                                  Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
+    (void)parser_data;
     IABEssenceParser *iab_parser = dynamic_cast<IABEssenceParser*>(parser);
     iab_parser->ParseFrameInfo(buffer->data, frame_size);
 

@@ -929,7 +929,16 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         if (text_writer)
             text_writer->PopItemValueIndent();
     } else if (data_info) {
-        info_writer->StartSection("data_descriptor");
+
+        if (data_info->is_isxd_descriptor)
+            info_writer->StartSection("ISXD_descriptor");
+            if (data_info->namespace_uri != "")
+                info_writer->WriteStringItem("namespace_uri   ", data_info->namespace_uri);
+            if (data_info->root_element_key != "")
+                info_writer->WriteStringItem("root_element_key", data_info->root_element_key);
+        else
+            info_writer->StartSection("data_descriptor");
+
         if (!data_info->vbi_manifest.empty()) {
             info_writer->StartSection("vbi_descriptor");
             info_writer->StartArrayItem("manifest", data_info->vbi_manifest.size());
