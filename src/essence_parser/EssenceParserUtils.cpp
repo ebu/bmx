@@ -42,6 +42,32 @@
 using namespace bmx;
 
 
+uint32_t BitstreamParser::read(uint8_t num_bits)
+{
+    uint32_t d = get_bits(mDataPtr, mDataSize, mBitOffset, num_bits);
+    mBitOffset += num_bits;
+    return d;
+}
+
+void BitstreamParser::skip(uint32_t num_bits)
+{
+    mBitOffset += num_bits;
+}
+
+
+void BitstreamParser::start(const unsigned char *data, uint32_t data_size)
+{
+    mDataPtr = data;
+    mDataSize = data_size;
+    mBitOffset = 0;
+}
+
+void BitstreamParser::reset()
+{
+    mDataPtr = nullptr;
+    mDataSize = 0;
+    mBitOffset = 0;
+}
 
 uint32_t bmx::get_bits(const unsigned char *data, uint32_t data_size, uint32_t bit_offset, uint8_t num_bits)
 {

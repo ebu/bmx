@@ -46,10 +46,8 @@ using namespace bmx;
 // 10.2.3
 namespace bmx {
 
-typedef struct {
-    // offset how many bits we are in.
-    uint64_t bit_offset;
-} IABParserContext;
+#define IAB_PREAMBLE_TAG 0x01
+#define IAB_IAFRAME_TAG  0x02
 
 // 10.1.1
 enum IABElementId {
@@ -72,22 +70,22 @@ public:
     InvalidData(const char *message)
     : msg_(message) {}
 
+    InvalidData(const std::string &message)
+    : msg_(message) {}
+
     virtual const char* what() const noexcept {
        return msg_.c_str();
+    }
+
+    const char* msg() const noexcept {
+        return msg_.c_str();
     }
 
 protected:
     std::string msg_;
 };
 
-static uint32_t read_bits(const unsigned char *data, uint32_t data_size, uint32_t &bit_offset, int num_bits)
-{
-    uint32_t d = get_bits(data, data_size, bit_offset, num_bits);
-    bit_offset += num_bits;
-    return d;
-}
-
-static uint32_t read_plex(const unsigned char *data, uint32_t data_size, uint32_t &bit_offset, int num_bits)
+static uint32_t read_plex(BitstreamParser *parser, uint32_t num_bits)
 {
     uint32_t oVal = 0;
     uint32_t bitsToRead = num_bits;
@@ -95,7 +93,7 @@ static uint32_t read_plex(const unsigned char *data, uint32_t data_size, uint32_
     
     while (bitsToRead <= 32)
     {
-        value = read_bits(data, data_size, bit_offset, bitsToRead);
+        value = parser->read(bitsToRead);
         uint64_t maxValue = 1;
         maxValue = (maxValue << bitsToRead) - 1;
         
@@ -113,13 +111,14 @@ static uint32_t read_plex(const unsigned char *data, uint32_t data_size, uint32_
 }
 
 IABEssenceParser::IABEssenceParser()
-: EssenceParser()
+: EssenceParser(), mBitstreamParser(new BitstreamParser())
 {
     ResetFrameInfo();
 }
 
 IABEssenceParser::~IABEssenceParser()
 {
+    delete mBitstreamParser;
 }
 
 Rational IABEssenceParser::GetSampleRate() const
@@ -198,28 +197,7 @@ Rational IABEssenceParser::GetFrameRate() const
 uint32_t IABEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
-
-    ByteBuffer data_reader(data, data_size, true);
-    try
-    {
-        // skip preamble. and find position where actual IAFrame payload begins
-        uint8_t preambleTag = data_reader.GetUInt8();
-        if (preambleTag != 0x01) {
-            return ESSENCE_PARSER_NULL_FRAME_SIZE;
-        }
-        uint32_t mPreambleLength = data_reader.GetUInt32();
-        data_reader.Skip(mPreambleLength);
-
-        uint8_t frameTag = data_reader.GetUInt8();
-        if (frameTag != 0x02) {
-            return ESSENCE_PARSER_NULL_FRAME_SIZE;
-        }
-    }
-    catch (const InsufficientBytes&)
-    {
-        return ESSENCE_PARSER_NULL_OFFSET;
-    }
-
+    (void)data;
     return 0;
 }
 
@@ -237,15 +215,10 @@ uint32_t IABEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
         if (mFrameHeaderParsed == false) {
             ParseFrameInfo(data, data_size);
             mFrameHeaderParsed = true;
-            //log_info("got new frame with length: %d\n", mFrameLength);
-            //log_info("sample rate: %d\n", GetSampleRate());
-            //log_info("bit_depth: %d\n", GetBitDepth());
-            //log_info("channel count: %d\n", GetChannelCount());
         }
 
         // done with frame.
         if (data_size >= mFrameLength) {
-            //log_info("frame done\n");
             // reset for next frame
             mFrameHeaderParsed = false;
             return mFrameLength;
@@ -253,13 +226,9 @@ uint32_t IABEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
 
         return ESSENCE_PARSER_NULL_OFFSET;
     }
-    catch (const InsufficientBytes&)
-    {
-        return ESSENCE_PARSER_NULL_OFFSET;
-    }
     catch (const InvalidData& ex)
     {
-        log_error("Error parsing Iab: %s\n", ex.what());
+        log_error("Error parsing IAB: %s\n", ex.msg());
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 }
@@ -270,83 +239,82 @@ void IABEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     ResetFrameInfo();
     // for early break
     mNecessaryFrameInfoAcquired = false;
-    uint32_t offset = 0;
 
-    ReadPreamble(data, data_size, offset);
+    mBitstreamParser->start(data, data_size);
 
-    uint32_t tag = read_bits(data, data_size, offset, 8);
+    ReadPreamble();
 
-    if (tag != 0x02) {
-        throw InvalidData("Invalid Preamble");
+    uint32_t tag = mBitstreamParser->read(8);
+
+    if (tag != IAB_IAFRAME_TAG) {
+        throw InvalidData("Invalid Frame Tag");
     }
 
+    uint32_t frame_length = mBitstreamParser->read(32);
 
-    uint32_t frame_length = read_bits(data, data_size, offset, 32);
+    uint32_t offset = mBitstreamParser->getOffset();
 
     BMX_ASSERT(offset % 8 == 0);
     
     // Preamble + Frame Length
     mFrameLength = offset/8 + frame_length;
 
-    ReadIAElement(data, data_size, offset);
+    ReadIAElement();
 }
 
-void IABEssenceParser::ReadPreamble(const unsigned char *data, uint32_t data_size, uint32_t &offset)
+void IABEssenceParser::ReadPreamble()
 {
-    uint8_t preambleTag = read_bits(data, data_size, offset, 8);
-    if (preambleTag != 0x01) {
+    uint8_t preambleTag = mBitstreamParser->read(8);
+    if (preambleTag != IAB_PREAMBLE_TAG) {
         throw InvalidData("Invalid Preamble Tag");
     }
 
-    uint32_t preambleLength = read_bits(data, data_size, offset, 32);
+    uint32_t preambleLength = mBitstreamParser->read(32);
 
     // skip preamble
-    offset += preambleLength * 8;
+    mBitstreamParser->skip(preambleLength * 8);
 }
 
-void IABEssenceParser::ReadIAElement(const unsigned char *data, uint32_t data_size, uint32_t &offset)
+void IABEssenceParser::ReadIAElement()
 {
+    // skip rest of stream if we have all info we need
     if (mNecessaryFrameInfoAcquired) {
         return;
     }
-    IABElementId elementId = (IABElementId)read_plex(data, data_size, offset, 8);
 
-    //log_info("element id: %04x\n", elementId);
+    IABElementId elementId = (IABElementId)read_plex(mBitstreamParser, 8);
 
-    /**/
-    uint32_t elementLength = read_plex(data, data_size, offset, 8);
+    uint32_t elementLength = read_plex(mBitstreamParser, 8);
     (void)elementLength;
-    //log_info("element length[0]: %04x, offset: %d\n", elementLength, offset);
 
     if (elementId == IAB_ELEMENT_IA_FRAME) 
     {
         // to get framerate, samplerate, bit depth
-        ReadIAFrame(data, data_size, offset);
+        ReadIAFrame();
     }
     else if (elementId == IAB_ELEMENT_BED_DEFINITION)
     {
         // to get channels
-        ReadBedDefinition(data, data_size, offset);
+        ReadBedDefinition();
     }
 }
 
-void IABEssenceParser::ReadIAFrame(const unsigned char *data, uint32_t data_size, uint32_t &offset)
+void IABEssenceParser::ReadIAFrame()
 {
     // version (8)
     // sample rate (2)
     // bit depth (2)
     // frame rate (4)
-    // max rendered (plex 8)
-
-    uint8_t version = read_bits(data, data_size, offset, 8);
-    uint8_t samplerate = read_bits(data, data_size, offset, 2);
-    uint8_t bitDepth = read_bits(data, data_size, offset, 2);
-    uint8_t framerate = read_bits(data, data_size, offset, 4);
+    uint8_t version = mBitstreamParser->read(8);
+    uint8_t samplerate = mBitstreamParser->read(2);
+    uint8_t bitDepth = mBitstreamParser->read(2);
+    uint8_t framerate = mBitstreamParser->read(4);
     
-    // maxRendered
-    read_plex(data, data_size, offset, 8);
+    // maxRendered (plex 8)
+    read_plex(mBitstreamParser, 8);
 
-    uint32_t nSubElements = read_plex(data, data_size, offset, 8);
+    // sub elements (8)
+    uint32_t nSubElements = read_plex(mBitstreamParser, 8);
 
     mVersion = version;
     mSampleRate = static_cast<IABSampleRate>(samplerate);
@@ -354,30 +322,34 @@ void IABEssenceParser::ReadIAFrame(const unsigned char *data, uint32_t data_size
     mFrameRate = static_cast<IABFrameRate>(framerate);
 
     for (uint32_t i =0 ; i < nSubElements; ++i) {
-        ReadIAElement(data, data_size, offset);
+        ReadIAElement();
     }
 }
 
-void IABEssenceParser::ReadBedDefinition(const unsigned char *data, uint32_t data_size, uint32_t &offset)
+void IABEssenceParser::ReadBedDefinition()
 {
-    // metaId
-    read_plex(data, data_size, offset, 8);
-    // conditionalBed
-    uint8_t cond_bed = read_bits(data, data_size, offset, 1);
+    // metaId (8)
+    read_plex(mBitstreamParser, 8);
+    
+    // conditionalBed (1)
+    uint8_t cond_bed = mBitstreamParser->read(1);
     if (cond_bed) {
-        // bed use case.
-        read_bits(data, data_size, offset, 8);
+        // bed use case (8)
+        mBitstreamParser->read(8);
     }
 
-    // 5 bits in
-    uint32_t channelCount = read_plex(data, data_size, offset, 4);
+    // channel count (4)
+    uint32_t channelCount = read_plex(mBitstreamParser, 4);
     BMX_ASSERT(channelCount != 0);
     mChannelCount = channelCount;
+
+    // done. no more data needed
     mNecessaryFrameInfoAcquired = true;
 }
 
 void IABEssenceParser::ResetFrameInfo()
 {
+    mBitstreamParser->reset();
     mFrameLength = 0;
     mFrameHeaderParsed = false;
     mFrameRate = IAB_FRAMERATE_UNDEFINED;

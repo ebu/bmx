@@ -36,7 +36,6 @@
 #include <vector>
 
 #include <bmx/essence_parser/EssenceParser.h>
-#include <bmx/ByteBuffer.h>
 
 
 namespace bmx
@@ -74,6 +73,8 @@ enum IABFrameRate {
     IAB_FRAMERATE_UNDEFINED  = 0xFF
 };
 
+class BitstreamParser;
+
 class IABEssenceParser : public EssenceParser
 {
 public:
@@ -95,12 +96,14 @@ public:
 
 private:
     void ResetFrameInfo();
-    void ReadPreamble(const unsigned char *data, uint32_t data_size, uint32_t &offset);
-    void ReadIAElement(const unsigned char *data, uint32_t data_size, uint32_t &offset);
-    void ReadIAFrame(const unsigned char *data, uint32_t data_size, uint32_t &offset);
-    void ReadBedDefinition(const unsigned char *data, uint32_t data_size, uint32_t &offset);
+    void ReadPreamble();
+    void ReadIAElement();
+    void ReadIAFrame();
+    void ReadBedDefinition();
 
 private:
+    BitstreamParser *mBitstreamParser;
+
     uint32_t mFrameLength;
     bool mFrameHeaderParsed;
 
