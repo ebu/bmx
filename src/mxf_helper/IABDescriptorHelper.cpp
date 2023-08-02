@@ -114,6 +114,12 @@ void IABDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t m
     BMX_ASSERT(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 
+void IABDescriptorHelper::SetSampleRate(mxfRational sample_rate)
+{
+    // note: this is framerate. Set in Op1ATrack constructor
+    mSampleRate = sample_rate;
+}
+
 void IABDescriptorHelper::SetChannelAssignment(mxfUL label)
 {
     mChannelAssignment = label;
