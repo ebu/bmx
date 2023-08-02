@@ -365,11 +365,13 @@ void IABEssenceParser::ReadBedDefinition(const unsigned char *data, uint32_t dat
     // conditionalBed
     uint8_t cond_bed = read_bits(data, data_size, offset, 1);
     if (cond_bed) {
-
+        // bed use case.
+        read_bits(data, data_size, offset, 8);
     }
 
     // 5 bits in
     uint32_t channelCount = read_plex(data, data_size, offset, 4);
+    BMX_ASSERT(channelCount != 0);
     mChannelCount = channelCount;
     mNecessaryFrameInfoAcquired = true;
 }
