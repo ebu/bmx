@@ -182,6 +182,7 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     BMX_OPT_PROP_DEFAULT(locked, false);
     BMX_OPT_PROP_DEFAULT(audio_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(dial_norm, 0);
+    BMX_OPT_PROP_DEFAULT(reference_image_edit_rate, ZERO_RATIONAL);
     d10_aes3_valid_flags = 0;
     channel_assignment = g_Null_UL;
     BMX_OPT_PROP_DEFAULT(sound_essence_compression, g_Null_UL);
@@ -220,6 +221,7 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     BMX_OPT_PROP_COPY(clone->locked,          locked);
     BMX_OPT_PROP_COPY(clone->audio_ref_level, audio_ref_level);
     BMX_OPT_PROP_COPY(clone->dial_norm,       dial_norm);
+    BMX_OPT_PROP_COPY(clone->reference_image_edit_rate, reference_image_edit_rate);
     clone->channel_assignment   = channel_assignment;
     BMX_OPT_PROP_COPY(clone->sound_essence_compression, sound_essence_compression);
     clone->isIabDescriptor = isIabDescriptor;

@@ -62,6 +62,24 @@ enum IABElementId {
     AUDIO_DATA_PCM                  = 0x400
 };
 
+inline void IsValidIABElement(IABElementId id)
+{
+    bool valid = (id == IAB_ELEMENT_IA_FRAME 
+            || id == IAB_ELEMENT_BED_DEFINITION
+            || id == IAB_ELEMENT_BED_REMAP
+            || id == IAB_OBJECT_DEFINITION
+            || id == IAB_OBJECT_ZONE_DEFINITION19
+            || id == AUTHORING_TOOL_INFO
+            || id == USER_DATA
+            || id == AUDIO_DATA_DLC
+            || id == AUDIO_DATA_PCM);
+
+    if (!valid) {
+        log_error("Invalid IAB Element ID: %04x\n", id);
+    }
+    BMX_ASSERT(valid);
+}
+
 };
 
 class InvalidData : public exception
@@ -237,6 +255,8 @@ uint32_t IABEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
 void IABEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
     ResetFrameInfo();
+
+    log_debug("New IAB Frame\n");
     // for early break
     mNecessaryFrameInfoAcquired = false;
 
@@ -251,6 +271,7 @@ void IABEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     }
 
     uint32_t frame_length = mBitstreamParser->read(32);
+    log_debug("frame length: %d\n", frame_length);
 
     uint32_t offset = mBitstreamParser->getOffset();
 
@@ -271,6 +292,8 @@ void IABEssenceParser::ReadPreamble()
 
     uint32_t preambleLength = mBitstreamParser->read(32);
 
+    //printf("preamble length: %d\n", preambleLength);
+
     // skip preamble
     mBitstreamParser->skip(preambleLength * 8);
 }
@@ -284,8 +307,12 @@ void IABEssenceParser::ReadIAElement()
 
     IABElementId elementId = (IABElementId)read_plex(mBitstreamParser, 8);
 
+    IsValidIABElement(elementId);
+
     uint32_t elementLength = read_plex(mBitstreamParser, 8);
     (void)elementLength;
+
+    log_debug("elementId: %04x, elementLength: %d\n", elementId, elementLength);
 
     if (elementId == IAB_ELEMENT_IA_FRAME) 
     {
@@ -295,7 +322,14 @@ void IABEssenceParser::ReadIAElement()
     else if (elementId == IAB_ELEMENT_BED_DEFINITION)
     {
         // to get channels
+        //mNecessaryFrameInfoAcquired = true;
         ReadBedDefinition();
+    }
+    else 
+    {
+        // break. even if we dont have enough info yet. hopefully
+        // this doesnt happen on first frame :-)
+        mNecessaryFrameInfoAcquired = true;
     }
 }
 
@@ -306,15 +340,21 @@ void IABEssenceParser::ReadIAFrame()
     // bit depth (2)
     // frame rate (4)
     uint8_t version = mBitstreamParser->read(8);
+    
+    BMX_ASSERT(version == 0x01);
+
     uint8_t samplerate = mBitstreamParser->read(2);
     uint8_t bitDepth = mBitstreamParser->read(2);
     uint8_t framerate = mBitstreamParser->read(4);
+
     
     // maxRendered (plex 8)
-    read_plex(mBitstreamParser, 8);
+    uint8_t maxRendered = read_plex(mBitstreamParser, 8);
 
     // sub elements (8)
     uint32_t nSubElements = read_plex(mBitstreamParser, 8);
+
+    log_debug("IAFrame: Version: %d, SampleRate: %d, BitDepth: %d, Framerate: %d, MaxRendered: %d, nSubElements: %d\n", version, samplerate, bitDepth, framerate, maxRendered, nSubElements);
 
     mVersion = version;
     mSampleRate = static_cast<IABSampleRate>(samplerate);
@@ -340,6 +380,9 @@ void IABEssenceParser::ReadBedDefinition()
 
     // channel count (4)
     uint32_t channelCount = read_plex(mBitstreamParser, 4);
+
+    log_debug("Channel Count: %d\n", channelCount);
+
     BMX_ASSERT(channelCount != 0);
     mChannelCount = channelCount;
 

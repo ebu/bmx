@@ -155,8 +155,6 @@ void ISXDDescriptorHelper::UpdateFileDescriptor(ISXDEssenceParser *essence_parse
     string namespace_uri = essence_parser->GetNamespaceURI();
     string root_element_key = essence_parser->GetRootElementKey();
 
-    log_info("set namespace_uri: %s, root_element_key: %s\n", namespace_uri.c_str(), root_element_key.c_str());
-
     descriptor->setNamespaceURI(namespace_uri);
     descriptor->setRootElementKey(root_element_key);
 }

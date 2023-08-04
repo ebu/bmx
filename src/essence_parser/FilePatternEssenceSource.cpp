@@ -90,7 +90,6 @@ bool FilePatternEssenceSource::Open(const string &pattern, int64_t start_offset)
         char last_char;
         if (sscanf(name_with_newline.c_str(), format.c_str(), &index, &last_char) == 2 && last_char == '\n') {
             mFilenames[index] = entry->d_name;
-            log_info("add file: %s\n", entry->d_name);
         }
     }
 

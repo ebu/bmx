@@ -49,6 +49,13 @@ public:
 public:
     const std::vector<uint32_t>& GetSampleSequence() const { return mSampleSequence; }
 
+    void SetSamplingRate(Rational sample_rate);
+    void SetReferenceImageEditRate(Rational edit_rate);
+    void SetQuantizationBits(uint32_t bitDepth);
+    void SetChannelCount(uint32_t channelCount);
+    void SetLocked(bool locked);
+    void SetAudioRefLevel(int8_t level);
+
 protected:
     virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);

@@ -714,7 +714,8 @@ void OP1AContentPackageManager::PrepareWrite()
             }
         }
     }
-    BMX_CHECK_M(valid_sequences, ("Sound tracks have different number of samples per frame"));
+    // MARKUS: This throws if IAB seq is in the mix. Which is a sound essence
+    //BMX_CHECK_M(valid_sequences, ("Sound tracks have different number of samples per frame"));
 }
 
 void OP1AContentPackageManager::WriteUserTimecode(Timecode user_timecode)

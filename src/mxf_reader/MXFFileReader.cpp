@@ -1912,7 +1912,9 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
 
     if (sound_descriptor->haveSoundEssenceCompression())
         BMX_OPT_PROP_SET(sound_track_info->sound_essence_compression, sound_descriptor->getSoundEssenceCompression());
-    
+
+    if (sound_descriptor->haveReferenceImageEditRate())
+        BMX_OPT_PROP_SET(sound_track_info->reference_image_edit_rate, sound_descriptor->getReferenceImageEditRate());
 
     WaveAudioDescriptor *wave_descriptor = dynamic_cast<WaveAudioDescriptor*>(file_descriptor);
     IABDescriptor *iab_descriptor = dynamic_cast<IABDescriptor*>(file_descriptor);

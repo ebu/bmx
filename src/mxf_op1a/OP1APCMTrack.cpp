@@ -268,10 +268,6 @@ void OP1APCMTrack::PrepareWrite(uint8_t track_count)
     CompleteEssenceKeyAndTrackNum(track_count);
 
     if (mOP1AFile->IsFrameWrapped()) {
-        auto bla = GetShiftedSampleSequence();
-        for (auto it = bla.begin(); it != bla.end(); ++it) {
-            log_info("shifted sample seq -> %d\n", *it);
-        }
         mCPManager->RegisterSoundTrackElement(mTrackIndex, mEssenceElementKey,
                                               GetShiftedSampleSequence(), mWaveDescriptorHelper->GetSampleSize());
     } else {
@@ -285,11 +281,4 @@ void OP1APCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
     BMX_CHECK(get_sample_sequence(mFrameRate, mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
-
-    log_info("OP1APCMTrack::SetSampleSe\n");
-    auto bla = GetSampleSequence();
-    for (auto it = bla.begin(); it != bla.end(); ++it) {
-        log_info("sample seq -> %d\n", *it);
-    }
-    log_info("done\n");
 }

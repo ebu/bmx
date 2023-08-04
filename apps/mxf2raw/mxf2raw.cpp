@@ -902,6 +902,8 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             info_writer->WriteAUIDItem("essence_coding_label", sound_info->sound_essence_compression);
             
         info_writer->WriteRationalItem("sampling_rate", sound_info->sampling_rate);
+        if (BMX_OPT_PROP_IS_SET(sound_info->reference_image_edit_rate))
+            info_writer->WriteRationalItem("ref_image_edit_rate", sound_info->reference_image_edit_rate);
         info_writer->WriteIntegerItem("bits_per_sample", sound_info->bits_per_sample);
         info_writer->WriteIntegerItem("block_align", sound_info->block_align);
         info_writer->WriteIntegerItem("channel_count", sound_info->channel_count);
@@ -930,12 +932,13 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             text_writer->PopItemValueIndent();
     } else if (data_info) {
 
-        if (data_info->is_isxd_descriptor)
+        if (data_info->is_isxd_descriptor) {
             info_writer->StartSection("ISXD_descriptor");
             if (data_info->namespace_uri != "")
                 info_writer->WriteStringItem("namespace_uri   ", data_info->namespace_uri);
             if (data_info->root_element_key != "")
                 info_writer->WriteStringItem("root_element_key", data_info->root_element_key);
+        }
         else
             info_writer->StartSection("data_descriptor");
 

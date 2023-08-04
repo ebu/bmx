@@ -101,17 +101,40 @@ void OP1AIABTrack::PrepareWrite(uint8_t track_count)
 
 void OP1AIABTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    //return OP1ATrack::WriteSamplesInt(data, size, num_samples);
-    if (mPosition == 0) {
-        IABEssenceParser essence_parser;
-        essence_parser.ParseFrameInfo(data, size);
-        mIABDescriptorHelper->UpdateFileDescriptor(&essence_parser);
-    }
-
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
     if (!mCbe) {
         mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true, false);
     }
 
     mPosition++;
+}
+
+void OP1AIABTrack::SetSamplingRate(Rational sample_rate)
+{
+    mIABDescriptorHelper->SetSamplingRate(sample_rate);
+}
+
+void OP1AIABTrack::SetReferenceImageEditRate(Rational edit_rate)
+{
+    mIABDescriptorHelper->SetReferenceImageEditRate(edit_rate);
+}
+
+void OP1AIABTrack::SetQuantizationBits(uint32_t bitDepth)
+{
+    mIABDescriptorHelper->SetQuantizationBits(bitDepth);
+}
+
+void OP1AIABTrack::SetChannelCount(uint32_t channelCount)
+{
+    mIABDescriptorHelper->SetChannelCount(channelCount);
+}
+
+void OP1AIABTrack::SetLocked(bool locked)
+{
+    mIABDescriptorHelper->SetLocked(locked);
+}
+
+void OP1AIABTrack::SetAudioRefLevel(int8_t level)
+{
+    mIABDescriptorHelper->SetAudioRefLevel(level);
 }

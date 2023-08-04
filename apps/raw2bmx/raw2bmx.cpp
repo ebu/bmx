@@ -145,6 +145,7 @@ struct RawInput
     RawEssenceReader *raw_reader;
     WaveReader *wave_reader;
     uint32_t channel_count;
+    uint32_t iab_channel_count;
     TimedTextManifestParser *timed_text_manifest;
 
     uint32_t sample_sequence[32];
@@ -369,6 +370,7 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->component_depth, 8);
     input->bits_per_sample = 16;
     input->channel_count = 1;
+    input->iab_channel_count = 0;
     BMX_OPT_PROP_DEFAULT(input->ref_image_edit_rate, g_Null_Rational);
     BMX_OPT_PROP_DEFAULT(input->ref_audio_align_level, 0);
 }
@@ -662,6 +664,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
     fprintf(stderr, "  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
+    fprintf(stderr, "  --iab-chan <count>      Overwrite auto detect channels for IAB stream. Useful if program can't deduce channel count.\n");
     fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
     fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
     fprintf(stderr, "  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
@@ -788,6 +791,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --vc3_1080i_1260 <name> Raw VC3/DNxHD 1920x1080i 85 Mbps input file\n");
     fprintf(stderr, "  --pcm <name>            Raw PCM audio input file\n");
     fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
+    fprintf(stderr, "  --iab <name>            Immersive Audio Bitstream\n");
+    fprintf(stderr, "  --isxd <isxdpattern>    Path containing '%%d' for a sequence of XML files, each containing a single ISXD frame\n");
     fprintf(stderr, "  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
     fprintf(stderr, "  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Currently requires the --vbi-const option\n");
     fprintf(stderr, "  --tt <manifest>         Manifest file containing Timed Text metadata\n");
@@ -2435,6 +2440,25 @@ int main(int argc, const char** argv)
                 return 1;
             }
             input.channel_count = value;
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--iab-chan") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
+                value == 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.iab_channel_count = value;
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -4595,7 +4619,8 @@ int main(int argc, const char** argv)
                 input->raw_reader->SetEssenceParser(iab_parser);
                 input->raw_reader->ReadSamples(1);
 
-                if (input->raw_reader->GetNumSamples() == 0) {
+                if (input->raw_reader->GetNumSamples() == 0)
+                {
                     log_error("Failed to read and parse first IAB frame\n");
                     throw false;
                 }
@@ -4604,10 +4629,14 @@ int main(int argc, const char** argv)
 
                 input->sampling_rate       = iab_parser->GetSampleRate();
                 input->bits_per_sample     = iab_parser->GetBitDepth();
-                input->channel_count       = iab_parser->GetChannelCount();
-                input->ref_image_edit_rate = iab_parser->GetFrameRate();
+                input->ref_image_edit_rate = iab_parser->GetFrameRate();       
 
-                //BMX_ASSERT(input->channel_count == 10);
+                input->iab_channel_count = input->iab_channel_count != 0 ? input->iab_channel_count : iab_parser->GetChannelCount();
+
+                if (input->iab_channel_count == 0) {
+                    log_error("Error reading channel count from first IAFrame and no channel count provided (use --iab-chan\n");
+                    throw false;
+                }
 
                 if (!frame_rate_set) {
                     if (iab_parser->HasFrameRate()) {
@@ -5496,7 +5525,9 @@ int main(int argc, const char** argv)
                     // MARKUS! 
                     clip_track->SetSamplingRate(output_sound_info->sampling_rate);
                     clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
-                    clip_track->SetChannelCount(output_track->GetChannelCount());
+                    clip_track->SetChannelCount(input->iab_channel_count);
+                    clip_track->SetReferenceImageEditRate(output_sound_info->ref_image_edit_rate);
+
                     if (BMX_OPT_PROP_IS_SET(output_sound_info->locked))
                         clip_track->SetLocked(output_sound_info->locked);
                     if (BMX_OPT_PROP_IS_SET(output_sound_info->audio_ref_level))
@@ -5880,7 +5911,7 @@ int main(int argc, const char** argv)
             for (i = 0; i < inputs.size(); i++) {
                 RawInput *input = &inputs[i];
                 if (!input->disabled && input->essence_type != TIMED_TEXT) {
-                    log_info("track: %d read samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+                    //log_info("track: %d read samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
                     num_samples = read_samples(input, max_samples_per_read);
                     if (num_samples < min_num_samples) {
                         min_num_samples = num_samples;
@@ -5923,7 +5954,7 @@ int main(int argc, const char** argv)
                                                        pcm_buffer.GetBytes(), pcm_buffer.GetSize(),
                                                        num_samples);
                         } else {
-                            log_info("track %d, write samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+                            //log_info("track %d, write samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
                             output_track->WriteSamples(output_channel_index,
                                                        input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
                                                        num_samples);

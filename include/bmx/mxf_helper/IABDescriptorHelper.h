@@ -66,8 +66,6 @@ public:
     
     void UpdateFileDescriptor(IABEssenceParser *essence_parser);
 
-
-
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
 
