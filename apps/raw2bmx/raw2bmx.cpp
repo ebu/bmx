@@ -4757,7 +4757,6 @@ int main(int argc, const char** argv)
             if (input->disabled)
                 continue;
 
-            // MARKUS: ADD HERE IAB
             if (input->essence_type == WAVE_PCM) {
                 if (!ClipWriterTrack::IsSupported(clip_type, input->essence_type, input->sampling_rate)) {
                     log_error("PCM sampling rate %d/%d not supported\n",
@@ -5954,12 +5953,14 @@ int main(int argc, const char** argv)
                                                        pcm_buffer.GetBytes(), pcm_buffer.GetSize(),
                                                        num_samples);
                         } else {
+                            //log_info("Write Track %d\n", i);
                             //log_info("track %d, write samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
                             output_track->WriteSamples(output_channel_index,
                                                        input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
                                                        num_samples);
                         }
                     } else {
+                        //log_info("Write WAV %d\n", i);
                         Frame *frame = input->wave_reader->GetTrack(input_channel_index)->GetFrameBuffer()->GetLastFrame(false);
                         BMX_ASSERT(frame);
                         num_samples = frame->num_samples;

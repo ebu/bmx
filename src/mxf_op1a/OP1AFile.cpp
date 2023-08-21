@@ -460,7 +460,8 @@ void OP1AFile::WriteSamples(uint32_t track_index, const unsigned char *data, uin
         return;
     BMX_CHECK(data && size && num_samples);
 
-    GetTrack(track_index)->WriteSamplesInt(data, size, num_samples);
+    OP1ATrack *track = GetTrack(track_index);
+    track->WriteSamplesInt(data, size, num_samples);
 
     WriteContentPackages(false);
 }

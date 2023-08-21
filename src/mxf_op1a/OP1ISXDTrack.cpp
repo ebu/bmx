@@ -73,12 +73,10 @@ OP1AISXDTrack::~OP1AISXDTrack()
 
 void OP1AISXDTrack::PrepareWrite(uint8_t track_count)
 {
-    log_info("OP1AISXDTrack::PrepareWrite");
     CompleteEssenceKeyAndTrackNum(track_count);
 
     mCPManager->RegisterISXDTrackElement(mTrackIndex, mEssenceElementKey);
 
-    //mIndexTable->RegisterSoundTrackElement(mTrackIndex);
     mIndexTable->RegisterISXDTrackElement(mTrackIndex, mCbe);
 }
 

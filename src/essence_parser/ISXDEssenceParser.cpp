@@ -166,6 +166,7 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     {
         uint32_t len = mBytesRead;
         ResetParser();
+        //log_info("ISXD len: %d\n", len);
         return len;
     }
 
@@ -198,6 +199,7 @@ void ISXDEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
     if (mFullFrameParsed && data[mBytesRead] == '\n')
     {
         mBytesRead += 1;
+        
     }
     else if (!mFullFrameParsed)
     {

@@ -248,7 +248,8 @@ uint32_t OP1AContentPackageElementData::GetWriteSize() const
         }
         return mElement->fixed_element_size;
     } else {
-        return mElement->GetKAGAlignedSize(mxfKey_extlen + mElement->essence_llen + mData.GetSize());
+        uint32_t data_size = mData.GetSize();
+        return mElement->GetKAGAlignedSize(mxfKey_extlen + mElement->essence_llen + data_size);
     }
 }
 
@@ -604,6 +605,7 @@ void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, 
                                                                        OP1AContentPackageElement::SOUND_ELEMENT,
                                                                        element_key, mKAGSize, mMinLLen);
     element->SetSampleSequence(sample_sequence, sample_size);
+    //element->is_cbe = false;
 
     mElements.push_back(element);
     mElementTrackIndexMap[track_index] = element;
@@ -632,7 +634,7 @@ void OP1AContentPackageManager::RegisterISXDTrackElement(uint32_t track_index, m
     BMX_ASSERT(mFrameWrapped);
 
     OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
-                                                                       OP1AContentPackageElement::SOUND_ELEMENT,
+                                                                       OP1AContentPackageElement::DATA_ELEMENT,
                                                                        element_key, mKAGSize, mMinLLen);
     //element->SetMaxEssenceLen(100000);
     element->is_cbe = false;

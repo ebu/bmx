@@ -109,6 +109,7 @@ OP1ADeltaEntry::OP1ADeltaEntry()
 OP1AIndexTableElement::OP1AIndexTableElement(uint32_t track_index_, ElementType element_type_, bool is_cbe_,
                                              bool apply_temporal_reordering_)
 {
+    //log_info("Create Index Element. Track %d, Type: %d, Cbe: %d\n", track_index_, element_type_, is_cbe_);
     track_index = track_index_;
     element_type = element_type_;
     is_cbe = is_cbe_;
@@ -375,18 +376,23 @@ void OP1AIndexTable::RegisterIABTrackElement(uint32_t track_index, bool is_cbe)
     mIsCBE &= is_cbe;
 }
 
+
+void OP1AIndexTable::RegisterSoundTrackElement(uint32_t track_index)
+{
+    // Sound Element PCM always cbr
+    bool is_cbe = true;
+    mIndexElements.push_back(new OP1AIndexTableElement(track_index, OP1AIndexTableElement::SOUND_ELEMENT, is_cbe, false));
+    mIndexElementsMap[track_index] = mIndexElements.back();
+
+    //mIsCBE &= is_cbe;
+}
+
 void OP1AIndexTable::RegisterISXDTrackElement(uint32_t track_index, bool is_cbe)
 {
     mIndexElements.push_back(new OP1AIndexTableElement(track_index, OP1AIndexTableElement::DATA_ELEMENT, is_cbe, false));
     mIndexElementsMap[track_index] = mIndexElements.back();
 
     mIsCBE &= is_cbe;
-}
-
-void OP1AIndexTable::RegisterSoundTrackElement(uint32_t track_index)
-{
-    mIndexElements.push_back(new OP1AIndexTableElement(track_index, OP1AIndexTableElement::SOUND_ELEMENT, true, false));
-    mIndexElementsMap[track_index] = mIndexElements.back();
 }
 
 void OP1AIndexTable::RegisterDataTrackElement(uint32_t track_index, bool is_cbe)
@@ -693,8 +699,12 @@ void OP1AIndexTable::CheckDeltaEntries(vector<uint32_t> &element_sizes)
     size_t i;
     for (i = 0; i < mIndexElements.size(); i++) {
         if (mIndexElements[i]->is_cbe) {
-            BMX_CHECK_M(mIndexElements[i]->element_size == element_sizes[i],
+            if (mIndexElements[i]->element_size != element_sizes[i]) {
+                auto type = mIndexElements[i]->element_type;
+                log_info("i: %d, type: %d, cbr: %d, el_size: %d, should el_size: %d\n", i, type, mIndexElements[i]->is_cbe, mIndexElements[i]->element_size, element_sizes[i]);
+                BMX_CHECK_M(false,
                        ("Fixed size content package element data size changed"));
+            }
         }
     }
 }
