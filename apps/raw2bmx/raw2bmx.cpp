@@ -5910,12 +5910,12 @@ int main(int argc, const char** argv)
             for (i = 0; i < inputs.size(); i++) {
                 RawInput *input = &inputs[i];
                 if (!input->disabled && input->essence_type != TIMED_TEXT) {
-                    //log_info("track: %d read samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
                     num_samples = read_samples(input, max_samples_per_read);
                     if (num_samples < min_num_samples) {
                         min_num_samples = num_samples;
-                        if (min_num_samples == 0)
+                        if (min_num_samples == 0) {
                             break;
+                        }
                     }
                 }
             }

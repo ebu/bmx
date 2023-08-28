@@ -1480,7 +1480,8 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
     }
     mInternalTrackReaders.push_back(track_reader);
     track_info.release();
-    mInternalTrackReaderNumberMap[mInternalTrackReaders.back()->GetTrackInfo()->file_track_number] = track_reader;
+    uint32_t track_number = mInternalTrackReaders.back()->GetTrackInfo()->file_track_number;
+    mInternalTrackReaderNumberMap[track_number] = track_reader;
 
     return mInternalTrackReaders.back();
 }
@@ -2047,8 +2048,11 @@ MXFTrackReader* MXFFileReader::GetInternalTrackReader(size_t index) const
 MXFTrackReader* MXFFileReader::GetInternalTrackReaderByNumber(uint32_t track_number) const
 {
     map<uint32_t, MXFTrackReader*>::const_iterator result = mInternalTrackReaderNumberMap.find(track_number);
-    if (result == mInternalTrackReaderNumberMap.end())
+    if (result == mInternalTrackReaderNumberMap.end()) {
+        log_info("no track reader for track: %d\n", track_number);
+        BMX_ASSERT(false);
         return 0;
+    }
 
     return result->second;
 }
@@ -2345,8 +2349,10 @@ void MXFFileReader::StartRead()
 {
     size_t i;
     for (i = 0; i < mTrackReaders.size(); i++) {
-        if (mTrackReaders[i]->IsEnabled())
+        bool enabled = mTrackReaders[i]->IsEnabled();
+        if (enabled) {
             mTrackReaders[i]->GetMXFFrameBuffer()->StartRead();
+        }
     }
 }
 

@@ -2766,8 +2766,9 @@ int main(int argc, const char** argv)
                     MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
                     while (true) {
                         Frame *frame = reader->GetTrackReader(i)->GetFrameBuffer()->GetLastFrame(true);
-                        if (!frame)
+                        if (!frame) {
                             break;
+                        }
                         if (frame->IsEmpty()) {
                             delete frame;
                             continue;

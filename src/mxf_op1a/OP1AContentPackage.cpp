@@ -605,7 +605,6 @@ void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, 
                                                                        OP1AContentPackageElement::SOUND_ELEMENT,
                                                                        element_key, mKAGSize, mMinLLen);
     element->SetSampleSequence(sample_sequence, sample_size);
-    //element->is_cbe = false;
 
     mElements.push_back(element);
     mElementTrackIndexMap[track_index] = element;
