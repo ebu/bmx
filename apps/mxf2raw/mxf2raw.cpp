@@ -1760,6 +1760,7 @@ int main(int argc, const char** argv)
     const char *ess_output_prefix = 0;
     set<MXFDataDefEnum> wrap_klv_mask;
     map<size_t, set<size_t> > disable_track_indexes;
+    map<size_t, vector<string> > extract_track_names;
     map<size_t, bool> disable_audio;
     map<size_t, bool> disable_video;
     map<size_t, bool> disable_data;
@@ -2079,6 +2080,7 @@ int main(int argc, const char** argv)
             do_write_info = true;
         }
         else if (strcmp(argv[cmdln_index], "-p") == 0 ||
+                 strcmp(argv[cmdln_index], "--ess-out-prefix") == 0 ||
                  strcmp(argv[cmdln_index], "--ess-out") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2308,6 +2310,27 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
+            cmdln_index++;
+        }
+        if (strcmp(argv[cmdln_index], "--ess-out-suffices") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_extract_tracks(argv[cmdln_index + 1], &extract_track_names[input_filenames.size()]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+
+            for (int i = 0; i < extract_track_names[input_filenames.size()].size(); ++i) {
+                log_info("extrack tracks to suffixes: %s\n", extract_track_names[input_filenames.size()][i].c_str());
+            }
+
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--disable-audio") == 0)
@@ -2710,8 +2733,10 @@ int main(int argc, const char** argv)
                         continue;
 
                     const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
-                    output_file_manager.AddTrackFile(i, track_info,
-                                                     (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()));
+                    output_file_manager.AddTrackFile(i, 
+                                                     track_info,
+                                                     (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
+                                                     extract_track_names[0][i]);
 
                     if (track_info->data_def == MXF_PICTURE_DDEF)
                         have_video = true;
