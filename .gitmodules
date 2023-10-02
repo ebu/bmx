@@ -1,6 +1,6 @@
 [submodule "libMXF"]
 	path = deps/libMXF
-	url = ../libMXF.git
+	url = git@github.com:MarkusPfundstein/dolby-libMXF.git
 [submodule "libMXFpp"]
 	path = deps/libMXFpp
-	url = ../libMXFpp.git
+	url = git@github.com:MarkusPfundstein/dolby-libMXFpp.git
