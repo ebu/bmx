@@ -406,26 +406,26 @@ static const mxfUL MXF_EC_L(AES3ClipWrapped)   = MXF_AES3BWF_EC_L(0x01, 0x04);
 static const mxfUL MXF_EC_L(BWFCustomWrapped)  = MXF_AES3BWF_EC_L(0x05, 0x08);
 static const mxfUL MXF_EC_L(AES3CustomWrapped) = MXF_AES3BWF_EC_L(0x05, 0x09);
 
-/* IAB mappings */
+/* ISXD mappings */
 
-/* Generic Container & Essence Descriptor */
-
-// ISXD MARKUS
+// UL_DEFINITION ISXD ESSENCE CONTAINER
 #define MXF_ISXD_EC_L(regver) \
     {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, regver, 0x0e, 0x09, 0x06, 0x07, 0x01, 0x01, 0x01, 0x03}
     // DOLBY PRIVATE UL
 
-static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x05);  // 0x05 dolby namespace
+static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x07);  // 0x05 dolby namespace
 
-// Doc: ISXD MXF Mapping for Repository Files v.0.3 (2)(1)(1).docx
+#define MXF_ISXD_ITEM_TYPE  0x01  // From ST2067-202
 
-#define MXF_ISXD_ITEM_TYPE  0x17
+#define MXF_ISXD_GENERIC_CONTAINER_ELEMENT_KEY(regver, itemtype, elecount, eletype, elenum) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, regver, 0x0e, 0x09, 0x05, 0x02, itemtype, elecount, eletype, elenum}
 
+// UL_DEFINITION ISXD ELEMENT KEY
 #define MXF_ISXD_EE_K(elecount, eletype, elenum) \
-    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x07 /*regver */, MXF_ISXD_ITEM_TYPE, elecount, eletype, elenum)
+    MXF_ISXD_GENERIC_CONTAINER_ELEMENT_KEY(0x05 /*regver */, MXF_ISXD_ITEM_TYPE, elecount, eletype, elenum)
 
 #define MXF_ISXD_TRACK_NUM(elecount, eletype, elenum) \
-    MXF_TRACK_NUM(MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
+    MXF_TRACK_NUM(MXF_ISXD_ITEM_TYPE, elecount, eletype, elenum)
 
 #define MXF_ISXD_FRAME_WRAPPED_EE_TYPE   0x01
 
