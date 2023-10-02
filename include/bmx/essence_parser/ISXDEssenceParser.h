@@ -39,7 +39,7 @@
 #include <bmx/essence_parser/EssenceParser.h>
 #include <bmx/ByteBuffer.h>
 
-class XML_ParserStruct;
+struct XML_ParserStruct;
 
 namespace bmx
 {
