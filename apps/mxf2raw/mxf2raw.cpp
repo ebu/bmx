@@ -134,7 +134,7 @@ typedef struct
 static LogData LOG_DATA;
 
 static const char *APP_NAME                     = "mxf2raw";
-static const char *XML_INFO_WRITER_NAMESPACE    = "http://bbc.co.uk/rd/bmx/201312";
+static const char *XML_INFO_WRITER_NAMESPACE    = "http://www.dolby.com/rd/bmx/202310";
 static const char *XML_INFO_WRITER_VERSION      = "0.1"; // format <major>.<minor>
 
 static const char* STDIN_FILENAME = "stdin:";
@@ -819,6 +819,9 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
     }
 
     info_writer->WriteEnumStringItem("essence_kind", ESSENCE_KIND_EINFO, track_info->data_def);
+    
+    bmx::EssenceType essencetype = track_info->essence_type;
+    
     info_writer->WriteStringItem("essence_type", essence_type_to_enum_string(track_info->essence_type));
     info_writer->WriteAUIDItem("ec_label", track_info->essence_container_label);
     info_writer->WriteRationalItem("edit_rate", track_info->edit_rate);
@@ -899,7 +902,7 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             info_writer->StartSection("sound_descriptor");
         info_writer->WriteAUIDItem("label", sound_info->descriptor_ul);
         if (BMX_OPT_PROP_IS_SET(sound_info->sound_essence_compression))
-            info_writer->WriteAUIDItem("essence_coding_label", sound_info->sound_essence_compression);
+            info_writer->WriteAUIDItem("sound_essence_coding", sound_info->sound_essence_compression);
             
         info_writer->WriteRationalItem("sampling_rate", sound_info->sampling_rate);
         if (BMX_OPT_PROP_IS_SET(sound_info->reference_image_edit_rate))
@@ -934,10 +937,12 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
 
         if (data_info->is_isxd_descriptor) {
             info_writer->StartSection("ISXD_descriptor");
-            if (data_info->namespace_uri != "")
-                info_writer->WriteStringItem("namespace_uri   ", data_info->namespace_uri);
+            info_writer->WriteAUIDItem("label              ", data_info->descriptor_ul);
+            if (BMX_OPT_PROP_IS_SET(data_info->data_essence_coding))
+                info_writer->WriteAUIDItem("data_essence_coding", data_info->data_essence_coding);
+            info_writer->WriteStringItem("namespace_uri      ", data_info->namespace_uri);
             if (data_info->root_element_key != "")
-                info_writer->WriteStringItem("root_element_key", data_info->root_element_key);
+                info_writer->WriteStringItem("root_element_key   ", data_info->root_element_key);
         }
         else
             info_writer->StartSection("data_descriptor");
@@ -2327,8 +2332,8 @@ int main(int argc, const char** argv)
                 return 1;
             }
 
-            for (int i = 0; i < extract_track_names[input_filenames.size()].size(); ++i) {
-                log_info("extrack tracks to suffixes: %s\n", extract_track_names[input_filenames.size()][i].c_str());
+            for (size_t i = 0; i < extract_track_names[input_filenames.size()].size(); ++i) {
+                log_info("Extract track %d to suffix: %s\n", i, extract_track_names[input_filenames.size()][i].c_str());
             }
 
             cmdln_index++;
@@ -2787,7 +2792,10 @@ int main(int argc, const char** argv)
                 bool have_app_tc = false;
                 bool written_timecodes = false;
                 size_t i;
-                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+
+                size_t num_readers = reader->GetNumTrackReaders();
+
+                for (i = 0; i < num_readers; i++) {
                     MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
                     while (true) {
                         Frame *frame = reader->GetTrackReader(i)->GetFrameBuffer()->GetLastFrame(true);
@@ -2907,8 +2915,14 @@ int main(int argc, const char** argv)
                                 }
                             } else if (track_info->essence_type != TIMED_TEXT) {  // timed text is written at the end
                                 output_file_manager.GetTrackFile(i, &file, &filename);
-                                write_data(file, filename,
-                                           frame->GetBytes(), frame->GetSize(),
+
+                                uint32_t frame_size = frame->GetSize();
+                                //printf("%d -> %d [%s]\n", i, frame_size, filename.c_str());
+
+                                write_data(file,
+                                           filename,
+                                           frame->GetBytes(),
+                                           frame_size,
                                            (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
                                            &frame->element_key);
                             }

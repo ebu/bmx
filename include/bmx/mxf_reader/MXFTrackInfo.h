@@ -192,6 +192,8 @@ public:
     void AppendUniqueANCElement(const ANCManifestElement &element);
 
 public:
+    mxfUL descriptor_ul;
+    BMX_OPT_PROP_DECL(mxfUL, data_essence_coding);
     std::vector<VBIManifestElement> vbi_manifest;
     std::vector<ANCManifestElement> anc_manifest;
     TimedTextManifest *timed_text_manifest;

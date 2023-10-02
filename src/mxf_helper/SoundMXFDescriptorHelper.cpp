@@ -85,6 +85,10 @@ EssenceType SoundMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
     if (essence_type)
         return essence_type;
 
+    essence_type = IABDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    if (essence_type)
+        return essence_type;
+
     return SOUND_ESSENCE;
 }
 
