@@ -34,6 +34,7 @@
 
 #include <map>
 #include <vector>
+#include <string>
 
 #include <bmx/essence_parser/EssenceParser.h>
 #include <bmx/ByteBuffer.h>
