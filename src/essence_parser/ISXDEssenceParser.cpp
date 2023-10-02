@@ -39,6 +39,7 @@
 #include <bmx/BMXException.h>
 #include "EssenceParserUtils.h"
 #include <bmx/Logging.h>
+#include <expat.h>
 
 using namespace std;
 using namespace bmx;

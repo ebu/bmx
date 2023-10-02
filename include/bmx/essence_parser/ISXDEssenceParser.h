@@ -39,8 +39,7 @@
 #include <bmx/essence_parser/EssenceParser.h>
 #include <bmx/ByteBuffer.h>
 
-#include <expat.h>
-
+class XML_ParserStruct;
 
 namespace bmx
 {
@@ -70,7 +69,7 @@ private:
 private:
     uint64_t mBytesRead;
     bool mFullFrameParsed;
-    XML_Parser mParser;
+    XML_ParserStruct *mParser;
     std::string mRootElementKey;
     std::string mNamespace;
 
