@@ -108,7 +108,7 @@ essence_out/
 └── SOL_Levante_t8_d0.isxd
 ```
 
-As you have probably noticed, it is currently necessary to tell the demuxer which suffices it should use for the different essence streams. There is no automatic detection yet of those. Therefore, it is recommended to first inspect a stream using XML output, determine the tracks and the essence type, and then invoke the extraction command with the appropriate prefix and suffices. We hope to improve this quickly in future iterations.
+As you have probably noticed, it is currently necessary to tell the demuxer which suffices it should use for the different essence streams. There is no automatic detection yet of those. Therefore, it is recommended to first inspect a stream using XML output, determine the tracks and the essence type, and then invoke the extraction command with the appropriate prefix and suffices.
 
 ## Essence Creation
 
@@ -167,6 +167,50 @@ python -m dv2isxd \
   -o essence_in/SolLevante_25fps.isxd
 ```
 
+## Development
+
+### Directory
+
+If you got a tarball/zip from Dolby, just unzip.
+
+### Git
+
+If working from git, clone the repository file to your disc and checkout the branch `feature/iab`. 
+
+Initialize submodules with the command `git submodule update --init --remote`.
+
+### Compilation
+
+#### Linux
+
+Dependencies. Please install first:
+
+- libexpat1-dev
+- libcurl4-openssl-dev
+- uuid-dev
+- liburiparser-dev
+
+```
+mkdir -p out/build
+cd out/build
+cmake ../../ -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+#sudo make install
+#sudo ldconfig
+```
+
+#### Windows (Visual Studio)
+
+On Windows, dependencies are downloaded automatically.
+
+```
+mkdir out\build
+cd out\build
+cmake ..\..\
+cmake --build . --config Release
+#cmake --build . --config Release --target install
+```
+
 ## Notes on the Repository File
 
 The Repository File is essentially a AS11 compatible OP1A MXF. This means that we have 1 Material Package and 1 File Package and there are no cuts in any of the tracks.
@@ -219,8 +263,17 @@ The Essence Descriptor in the Repository file is the same as defined in the IMF 
 
 ##### Essence Container
 
+The Essence Descriptor in the Repository file is the same as defined in the IMF Standard document *ST 2067-201*. 
+
+| Essence Type | UL | Description 
+|-|---------|-------------|
+| IAB Frame Wrapped | 06.0E.2B.34.04.01.01.0D.0D.01.03.01.02.1D.00.00 | Generic Container AVC byte stream Frame Wrap | Identifies Container for Frame Wrapped IAB Sound Elements |
+
 ##### Essence Coding
 
+| Essence Type | UL | Description 
+|---------|-------------|---------|
+| IAB Frame Wrapped | 06.0E.2B.34.04.01.01.05.0E.09.06.04.00.00.00.00 | Immersive Audio Coding per SMPTE ST 2098-2 |
 
 
 
