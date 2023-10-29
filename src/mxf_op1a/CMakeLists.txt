@@ -20,6 +20,8 @@ list(APPEND bmx_sources
     mxf_op1a/OP1AVC2Track.cpp
     mxf_op1a/OP1AVC3Track.cpp
     mxf_op1a/OP1AXMLTrack.cpp
+    mxf_op1a/OP1AIABTrack.cpp
+    mxf_op1a/OP1ISXDTrack.cpp
 )
 
 set(bmx_sources ${bmx_sources} PARENT_SCOPE)

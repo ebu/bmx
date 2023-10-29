@@ -98,10 +98,13 @@ static bool get_utf8_code(const char *u8, uint32_t *code, size_t *len)
     return false;
 }
 
-static const string& get_xml_name(const string &name)
+static const string get_xml_name(const string &name_in)
 {
     // assert that XML element and attribute names use a limited set of characters
     // Note that it is more restrictive than what XML requires
+    string name(name_in);
+
+    name.erase(name.find_last_not_of(" \n\r\t")+1);
 
     uint32_t code;
     size_t code_len = 0;

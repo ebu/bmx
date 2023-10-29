@@ -105,6 +105,8 @@ void OP1AContentPackageElement::SetSampleSequence(const vector<uint32_t> &sample
             max_sample_sequence = sample_sequence[i];
     }
 
+    // MARKUS
+    //variable_sequence = true;
     if (variable_sequence)
         SetMaxEssenceLen(max_sample_sequence * sample_size);
     else
@@ -246,7 +248,8 @@ uint32_t OP1AContentPackageElementData::GetWriteSize() const
         }
         return mElement->fixed_element_size;
     } else {
-        return mElement->GetKAGAlignedSize(mxfKey_extlen + mElement->essence_llen + mData.GetSize());
+        uint32_t data_size = mData.GetSize();
+        return mElement->GetKAGAlignedSize(mxfKey_extlen + mElement->essence_llen + data_size);
     }
 }
 
@@ -609,6 +612,39 @@ void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, 
     mSysMetaItemFlags |= SYS_META_SOUND_ITEM_FLAG;
 }
 
+void OP1AContentPackageManager::RegisterIABTrackElement(uint32_t track_index, mxfKey element_key)
+{
+    BMX_ASSERT(mFrameWrapped);
+
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
+                                                                       OP1AContentPackageElement::SOUND_ELEMENT,
+                                                                       element_key, mKAGSize, mMinLLen);
+    //element->SetMaxEssenceLen(100000);
+    element->is_cbe = false;
+
+    mElements.push_back(element);
+    mElementTrackIndexMap[track_index] = element;
+
+    mSysMetaItemFlags |= SYS_META_SOUND_ITEM_FLAG;
+}
+
+void OP1AContentPackageManager::RegisterISXDTrackElement(uint32_t track_index, mxfKey element_key)
+{
+    BMX_ASSERT(mFrameWrapped);
+
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
+                                                                       OP1AContentPackageElement::DATA_ELEMENT,
+                                                                       element_key, mKAGSize, mMinLLen);
+    //element->SetMaxEssenceLen(100000);
+    element->is_cbe = false;
+
+    mElements.push_back(element);
+    mElementTrackIndexMap[track_index] = element;
+
+    mSysMetaItemFlags |= SYS_META_DATA_ITEM_FLAG;
+}
+
+
 void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                                           uint8_t element_llen)
 {
@@ -679,7 +715,8 @@ void OP1AContentPackageManager::PrepareWrite()
             }
         }
     }
-    BMX_CHECK_M(valid_sequences, ("Sound tracks have different number of samples per frame"));
+    // MARKUS: This throws if IAB seq is in the mix. Which is a sound essence
+    //BMX_CHECK_M(valid_sequences, ("Sound tracks have different number of samples per frame"));
 }
 
 void OP1AContentPackageManager::WriteUserTimecode(Timecode user_timecode)

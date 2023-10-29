@@ -182,8 +182,12 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     BMX_OPT_PROP_DEFAULT(locked, false);
     BMX_OPT_PROP_DEFAULT(audio_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(dial_norm, 0);
+    BMX_OPT_PROP_DEFAULT(reference_image_edit_rate, ZERO_RATIONAL);
     d10_aes3_valid_flags = 0;
     channel_assignment = g_Null_UL;
+    BMX_OPT_PROP_DEFAULT(sound_essence_compression, g_Null_UL);
+    isIabDescriptor = false;
+    descriptor_ul = g_Null_UL;
 }
 
 bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
@@ -217,7 +221,11 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     BMX_OPT_PROP_COPY(clone->locked,          locked);
     BMX_OPT_PROP_COPY(clone->audio_ref_level, audio_ref_level);
     BMX_OPT_PROP_COPY(clone->dial_norm,       dial_norm);
+    BMX_OPT_PROP_COPY(clone->reference_image_edit_rate, reference_image_edit_rate);
     clone->channel_assignment   = channel_assignment;
+    BMX_OPT_PROP_COPY(clone->sound_essence_compression, sound_essence_compression);
+    clone->isIabDescriptor = isIabDescriptor;
+    clone->descriptor_ul = descriptor_ul;
 
     size_t i;
     for (i = 0; i < mca_labels.size(); i++)
@@ -323,6 +331,9 @@ MXFDataTrackInfo::MXFDataTrackInfo()
 {
     data_def = MXF_DATA_DDEF;
     timed_text_manifest = 0;
+    is_isxd_descriptor = false;
+    descriptor_ul = g_Null_UL;
+    BMX_OPT_PROP_DEFAULT(data_essence_coding, g_Null_UL);
 }
 
 MXFDataTrackInfo::~MXFDataTrackInfo()
@@ -350,6 +361,12 @@ MXFTrackInfo* MXFDataTrackInfo::Clone() const
     if (timed_text_manifest) {
         clone->timed_text_manifest = new TimedTextManifest(*timed_text_manifest);
     }
+
+    clone->is_isxd_descriptor = is_isxd_descriptor;
+    clone->namespace_uri = namespace_uri;
+    clone->root_element_key = root_element_key;
+    clone->descriptor_ul = descriptor_ul;
+    BMX_OPT_PROP_COPY(clone->data_essence_coding, data_essence_coding);
 
     return clone;
 }

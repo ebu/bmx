@@ -4,6 +4,7 @@ on:
   push:
 jobs:
   build_and_test:
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:

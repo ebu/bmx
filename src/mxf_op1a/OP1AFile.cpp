@@ -460,7 +460,8 @@ void OP1AFile::WriteSamples(uint32_t track_index, const unsigned char *data, uin
         return;
     BMX_CHECK(data && size && num_samples);
 
-    GetTrack(track_index)->WriteSamplesInt(data, size, num_samples);
+    OP1ATrack *track = GetTrack(track_index);
+    track->WriteSamplesInt(data, size, num_samples);
 
     WriteContentPackages(false);
 }
@@ -695,7 +696,9 @@ int64_t OP1AFile::GetContainerDuration() const
 OP1ATrack* OP1AFile::GetTrack(uint32_t track_index)
 {
     BMX_ASSERT(track_index < mTracks.size());
-    return mTrackMap[track_index];
+    OP1ATrack*track = mTrackMap[track_index];
+    BMX_ASSERT(track);
+    return track;
 }
 
 uint32_t OP1AFile::CreateStreamId()

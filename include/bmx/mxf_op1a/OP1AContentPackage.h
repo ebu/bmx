@@ -56,9 +56,9 @@ class OP1AContentPackageElement
 public:
   typedef enum
   {
-    DATA_ELEMENT,
     PICTURE_ELEMENT,
     SOUND_ELEMENT,
+    DATA_ELEMENT,
   } ElementType;
 
 public:
@@ -190,6 +190,8 @@ public:
                                   uint32_t first_sample_size, uint32_t nonfirst_sample_size);
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                    std::vector<uint32_t> sample_sequence, uint32_t sample_size);
+    void RegisterIABTrackElement(uint32_t track_index, mxfKey element_key);
+    void RegisterISXDTrackElement(uint32_t track_index, mxfKey element_key);
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key, uint8_t element_llen);
     void RegisterDataTrackElement(uint32_t track_index, mxfKey element_key, uint32_t constant_essence_len,
                                   uint32_t max_essence_len);

@@ -66,6 +66,8 @@
 #include <bmx/essence_parser/FilePatternEssenceSource.h>
 #include <bmx/essence_parser/D10RawEssenceReader.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
+#include <bmx/essence_parser/IABEssenceParser.h>
+#include <bmx/essence_parser/ISXDEssenceParser.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
@@ -143,6 +145,7 @@ struct RawInput
     RawEssenceReader *raw_reader;
     WaveReader *wave_reader;
     uint32_t channel_count;
+    uint32_t iab_channel_count;
     TimedTextManifestParser *timed_text_manifest;
 
     uint32_t sample_sequence[32];
@@ -367,6 +370,7 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->component_depth, 8);
     input->bits_per_sample = 16;
     input->channel_count = 1;
+    input->iab_channel_count = 0;
     BMX_OPT_PROP_DEFAULT(input->ref_image_edit_rate, g_Null_Rational);
     BMX_OPT_PROP_DEFAULT(input->ref_audio_align_level, 0);
 }
@@ -660,6 +664,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
     fprintf(stderr, "  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
+    fprintf(stderr, "  --iab-chan <count>      Overwrite auto detect channels for IAB stream. Useful if program can't deduce channel count.\n");
     fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
     fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
     fprintf(stderr, "  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
@@ -786,6 +791,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --vc3_1080i_1260 <name> Raw VC3/DNxHD 1920x1080i 85 Mbps input file\n");
     fprintf(stderr, "  --pcm <name>            Raw PCM audio input file\n");
     fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
+    fprintf(stderr, "  --iab <name>            Immersive Audio Bitstream\n");
+    fprintf(stderr, "  --isxd <isxdpattern>    Path containing '%%d' for a sequence of XML files, each containing a single ISXD frame\n");
     fprintf(stderr, "  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
     fprintf(stderr, "  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Currently requires the --vbi-const option\n");
     fprintf(stderr, "  --tt <manifest>         Manifest file containing Timed Text metadata\n");
@@ -952,6 +959,7 @@ int main(int argc, const char** argv)
     mxfRational rate;
     bool msvc_block_limit;
     int cmdln_index;
+    bool have_iab = false;
 
     memset(&next_embed_xml, 0, sizeof(next_embed_xml));
     parse_essence_type_names("video,audio,data,mixed", &filename_essence_type_names);
@@ -2435,6 +2443,25 @@ int main(int argc, const char** argv)
             cmdln_index++;
             continue; // skip input reset at the end
         }
+        else if (strcmp(argv[cmdln_index], "--iab-chan") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
+                value == 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.iab_channel_count = value;
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
         else if (strcmp(argv[cmdln_index], "--locked") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -3900,6 +3927,37 @@ int main(int argc, const char** argv)
             have_vbi = true;
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--iab") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = IAB;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            have_iab = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--isxd") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = ISXD;
+            if (strchr(argv[cmdln_index + 1], '%') != 0) {
+                input.file_pattern = argv[cmdln_index + 1];
+            } else {
+                input.filename = argv[cmdln_index + 1];
+            }
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--tt") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -4540,6 +4598,56 @@ int main(int argc, const char** argv)
                     // TODO: other parameters?
                 }
             }
+            else if (input->essence_type == ISXD)
+            {
+                log_info("got isxd\n");
+                /*ISXDEssenceParser *isxd_parser = new ISXDEssenceParser();
+                input->raw_reader->SetEssenceParser(isxd_parser);
+                input->raw_reader->ReadSamples(1);
+
+                if (input->raw_reader->GetNumSamples() == 0) {
+                    log_error("Failed to read and parse first ISXD frame\n");
+                    throw false;
+                }
+                */
+            }
+            else if (input->essence_type == IAB)
+            {
+                // read first frame of IABitstream to get some info about the stream
+                log_info("got iab\n");
+                IABEssenceParser *iab_parser = new IABEssenceParser();
+                input->raw_reader->SetEssenceParser(iab_parser);
+                input->raw_reader->ReadSamples(1);
+
+                if (input->raw_reader->GetNumSamples() == 0)
+                {
+                    log_error("Failed to read and parse first IAB frame\n");
+                    throw false;
+                }
+
+                //iab_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+
+                input->sampling_rate       = iab_parser->GetSampleRate();
+                input->bits_per_sample     = iab_parser->GetBitDepth();
+                input->ref_image_edit_rate = iab_parser->GetFrameRate();       
+
+                input->iab_channel_count = input->iab_channel_count != 0 ? input->iab_channel_count : iab_parser->GetChannelCount();
+
+                if (input->iab_channel_count == 0) {
+                    log_error("Error reading channel count from first IAFrame and no channel count provided (use --iab-chan\n");
+                    throw false;
+                }
+
+                if (!frame_rate_set) {
+                    if (iab_parser->HasFrameRate()) {
+                        frame_rate = iab_parser->GetFrameRate();
+                    } else {
+                        log_warn("No frame rate set for '%s'; using default frame rate %d/%d\n",
+                            essence_type_to_string(input->essence_type),
+                            frame_rate.numerator, frame_rate.denominator);
+                    }
+                }
+            }
         }
 
 
@@ -4618,6 +4726,8 @@ int main(int argc, const char** argv)
                 continue;
 
             if (input->essence_type == WAVE_PCM) {
+                have_sound = true;
+            } else if (input->essence_type == IAB) {
                 have_sound = true;
             } else if (input->essence_type != TIMED_TEXT) {  // timed text is in a separate container
                 sound_only_container = false;
@@ -4820,6 +4930,9 @@ int main(int argc, const char** argv)
         int flavour = 0;
         if (clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
+            
+            //flavour |= OP1A_SYSTEM_ITEM_FLAVOUR;
+            
             if (ard_zdf_hdf_profile) {
                 flavour |= OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
             } else if (clip_sub_type == AS11_CLIP_SUB_TYPE) {
@@ -5407,6 +5520,22 @@ int main(int argc, const char** argv)
                 case TIMED_TEXT:
                     clip_track->SetTimedTextSource(input->timed_text_manifest);
                     break;
+                case IAB:
+                    // MARKUS! 
+                    clip_track->SetSamplingRate(output_sound_info->sampling_rate);
+                    clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
+                    clip_track->SetChannelCount(input->iab_channel_count);
+                    clip_track->SetReferenceImageEditRate(output_sound_info->ref_image_edit_rate);
+
+                    if (BMX_OPT_PROP_IS_SET(output_sound_info->locked))
+                        clip_track->SetLocked(output_sound_info->locked);
+                    if (BMX_OPT_PROP_IS_SET(output_sound_info->audio_ref_level))
+                        clip_track->SetAudioRefLevel(output_sound_info->audio_ref_level);
+                    break;
+                case ISXD:
+                    // MARKUS]
+                    log_info("To-DO: init clip_track for isxd\n");
+                    break;
                 default:
                     BMX_ASSERT(false);
             }
@@ -5666,6 +5795,20 @@ int main(int argc, const char** argv)
                     break;
                 case TIMED_TEXT:
                     break;
+                case IAB:
+                    // MARKUS: Open raw readers and init inputs
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new IABEssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(100000000);
+                    break;
+                case ISXD:
+                    // MARKUS
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new ISXDEssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(100000000);
+                    break;
                 default:
                     BMX_ASSERT(false);
             }
@@ -5770,8 +5913,9 @@ int main(int argc, const char** argv)
                     num_samples = read_samples(input, max_samples_per_read);
                     if (num_samples < min_num_samples) {
                         min_num_samples = num_samples;
-                        if (min_num_samples == 0)
+                        if (min_num_samples == 0) {
                             break;
+                        }
                     }
                 }
             }
@@ -5809,11 +5953,14 @@ int main(int argc, const char** argv)
                                                        pcm_buffer.GetBytes(), pcm_buffer.GetSize(),
                                                        num_samples);
                         } else {
+                            //log_info("Write Track %d\n", i);
+                            //log_info("track %d, write samples. Bytes: %p - %d\n", i, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
                             output_track->WriteSamples(output_channel_index,
                                                        input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
                                                        num_samples);
                         }
                     } else {
+                        //log_info("Write WAV %d\n", i);
                         Frame *frame = input->wave_reader->GetTrack(input_channel_index)->GetFrameBuffer()->GetLastFrame(false);
                         BMX_ASSERT(frame);
                         num_samples = frame->num_samples;

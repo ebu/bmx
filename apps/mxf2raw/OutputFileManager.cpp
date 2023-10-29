@@ -72,7 +72,7 @@ void OutputFileManager::SetSoundDeinterleave(bool enable)
     mSoundDeinterleave = enable;
 }
 
-void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *track_info, bool wrap_klv)
+void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *track_info, bool wrap_klv, std::string track_file_name_suffix)
 {
     const char *ddef_letter = "x";
     switch (track_info->data_def)
@@ -90,12 +90,15 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
     const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
     if (sound_info && mSoundDeinterleave && sound_info->channel_count > 1) {
         const char *suffix = ".raw";
-        if (wrap_klv)
+        if (wrap_klv) {
             suffix = ".klv";
+        } else if (track_file_name_suffix != "") {
+            suffix = (string(".") + track_file_name_suffix).c_str();
+        }
 
         uint32_t c;
         for (c = 0; c < sound_info->channel_count; c++) {
-            bmx_snprintf(buffer, sizeof(buffer), "_%s%u_%d%s", ddef_letter, ddef_count, c, suffix);
+            bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u_%d%s", track_index, ddef_letter, ddef_count, c, suffix);
 
             FileInfo file_info;
             file_info.filename = mPrefix + buffer;
@@ -110,7 +113,7 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
     } else if (track_info->essence_type == TIMED_TEXT) {
         TimedTextManifest *manifest = dynamic_cast<const MXFDataTrackInfo*>(track_info)->timed_text_manifest;
 
-        bmx_snprintf(buffer, sizeof(buffer), "_%s%u.xml", ddef_letter, ddef_count);
+        bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u.xml", track_index, ddef_letter, ddef_count);
 
         FileInfo file_info;
         file_info.filename = mPrefix + buffer;
@@ -139,21 +142,25 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
             mTrackFiles[track_index].children[anc_resources[i].stream_id] = file_info;
         }
     } else {
-          const char *suffix = ".raw";
-          if (wrap_klv)
-              suffix = ".klv";
+        const char *suffix = ".raw";
+        if (wrap_klv) {
+            suffix = ".klv";
+        }
+        else if (track_file_name_suffix != "") {
+            suffix = (string(".") + track_file_name_suffix).c_str();
+        }
 
-          bmx_snprintf(buffer, sizeof(buffer), "_%s%u%s", ddef_letter, ddef_count, suffix);
+        bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u%s", track_index, ddef_letter, ddef_count, suffix);
 
-          FileInfo file_info;
-          file_info.filename = mPrefix + buffer;
-          file_info.file = fopen(file_info.filename.c_str(), "wb");
-          if (!file_info.file) {
-              log_error("Failed to open raw file '%s': %s\n",
-                        file_info.filename.c_str(), bmx_strerror(errno).c_str());
-              throw false;
-          }
-          mTrackFiles[track_index].children[(uint32_t)(-1)] = file_info;
+        FileInfo file_info;
+        file_info.filename = mPrefix + buffer;
+        file_info.file = fopen(file_info.filename.c_str(), "wb");
+        if (!file_info.file) {
+            log_error("Failed to open raw file '%s': %s\n",
+                    file_info.filename.c_str(), bmx_strerror(errno).c_str());
+            throw false;
+        }
+        mTrackFiles[track_index].children[(uint32_t)(-1)] = file_info;
     }
 
     mDDefCount[track_info->data_def]++;

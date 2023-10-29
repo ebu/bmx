@@ -56,8 +56,6 @@ using namespace bmx;
 #define READ_BLOCK_SIZE         8192
 #define PARSE_FRAME_START_SIZE  8192
 
-
-
 RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
 {
     mEssenceSource = essence_source;

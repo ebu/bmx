@@ -41,6 +41,7 @@
 #include <cerrno>
 #include <ctime>
 #include <ctype.h>
+#include <sstream>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -752,6 +753,20 @@ bool bmx::parse_rdd6_lines(const char *lines_str, uint16_t *lines)
     lines[0] = line_1;
     lines[1] = line_2;
 
+    return true;
+}
+
+
+
+bool bmx::parse_extract_tracks(const char *tracks_str, vector<string> *track_names)
+{
+    string tmp; 
+    stringstream ss(tracks_str);
+    vector<string> words;
+
+    while(getline(ss, tmp, ',')){
+        track_names->push_back(tmp);
+    }
     return true;
 }
 

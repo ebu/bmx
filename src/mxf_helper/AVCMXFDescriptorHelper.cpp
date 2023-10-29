@@ -278,7 +278,8 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor()
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
 
-    cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
+    mxfUL coding = SUPPORTED_ESSENCE[mEssenceIndex].pc_label;
+    cdci_descriptor->setPictureEssenceCoding(coding);
 }
 
 void AVCMXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc_in)
