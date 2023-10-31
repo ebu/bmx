@@ -8,5 +8,5 @@
   (list :type "gdb"
         :request "launch"
         :name "raw2bmx [gdb]"
-        :target "./out/build/apps/raw2bmx/raw2bmx"
+        :target "./build/apps/raw2bmx/raw2bmx"
         :cwd dolby-muxer-workspace-dir))

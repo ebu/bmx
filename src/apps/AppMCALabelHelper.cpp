@@ -54,10 +54,41 @@ using namespace mxfpp;
 using namespace bmx;
 
 
+// Multi-channel audio labels from Dolby
+
+#define DOLBY_MCA_LABEL(type, octet11) \
+  {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x05, 0x0e, 0x09, 0x01, 0x01, type, octet11, 0x00,0x00 }
+
+#define DOLBY_CHANNEL_LABEL(octet11) DOLBY_MCA_LABEL(0x04, octet11)
+#define DOLBY_SOUNDFIELD_GROUP_LABEL(octet11) DOLBY_MCA_LABEL(0x05, octet11)
+
+static const MCALabelEntry DOLBY_MCA_LABELS[] =
+{
+    // Channels
+    {AUDIO_CHANNEL_LABEL, "chLw", "Left Wide", DOLBY_CHANNEL_LABEL(0x01)},
+    {AUDIO_CHANNEL_LABEL, "chRw", "Right Wide", DOLBY_CHANNEL_LABEL(0x02)},
+    {AUDIO_CHANNEL_LABEL, "chLtf", "Left Top Front", DOLBY_CHANNEL_LABEL(0x03)},
+    {AUDIO_CHANNEL_LABEL, "chRtf", "Right Top Front", DOLBY_CHANNEL_LABEL(0x04)},
+    {AUDIO_CHANNEL_LABEL, "chTpSiL", "Top Side Left", DOLBY_CHANNEL_LABEL(0x05)},
+    {AUDIO_CHANNEL_LABEL, "chTpSiR", "Top Side Right", DOLBY_CHANNEL_LABEL(0x06)},
+    {AUDIO_CHANNEL_LABEL, "chLtb", "Left Top Back", DOLBY_CHANNEL_LABEL(0x07)},
+    {AUDIO_CHANNEL_LABEL, "chRtb", "Right Top Back", DOLBY_CHANNEL_LABEL(0x08)},
+  
+    // Soundfield Groups
+    {SOUNDFIELD_GROUP_LABEL, "sg512", "5.1.2", DOLBY_SOUNDFIELD_GROUP_LABEL(0x01)},
+    {SOUNDFIELD_GROUP_LABEL, "sg514", "5.1.4", DOLBY_SOUNDFIELD_GROUP_LABEL(0x02)},
+    {SOUNDFIELD_GROUP_LABEL, "sg712", "7.1.2", DOLBY_SOUNDFIELD_GROUP_LABEL(0x03)},
+    {SOUNDFIELD_GROUP_LABEL, "sg714", "7.1.4", DOLBY_SOUNDFIELD_GROUP_LABEL(0x04)},
+    {SOUNDFIELD_GROUP_LABEL, "sg912", "9.1.2", DOLBY_SOUNDFIELD_GROUP_LABEL(0x05)},
+    {SOUNDFIELD_GROUP_LABEL, "sg914", "9.1.4", DOLBY_SOUNDFIELD_GROUP_LABEL(0x06)},
+    {SOUNDFIELD_GROUP_LABEL, "sg916", "9.1.6", DOLBY_SOUNDFIELD_GROUP_LABEL(0x07)},
+};
+
+
 // Multi-channel audio labels from D-Cinema, SMPTE ST 428-12:2013
 
 #define DC_MCA_LABEL(type, octet11) \
-    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x03, 0x02, type, octet11, 0x00, 0x00, 0x00, 0x00}
+  {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x03, 0x02, type, octet11, 0x00, 0x00, 0x00, 0x00}
 
 #define DC_CHANNEL_LABEL(octet11)  DC_MCA_LABEL(0x01, octet11)
 #define DC_SOUNDFIELD_GROUP_LABEL(octet11)  DC_MCA_LABEL(0x02, octet11)
@@ -81,7 +112,7 @@ static const MCALabelEntry DC_MCA_LABELS[] =
     {AUDIO_CHANNEL_LABEL, "chCs", "Center Surround", DC_CHANNEL_LABEL(0x0d)},
     {AUDIO_CHANNEL_LABEL, "chHI", "Hearing Impaired", DC_CHANNEL_LABEL(0x0e)},
     {AUDIO_CHANNEL_LABEL, "chVIN", "Visually Impaired Narrative", DC_CHANNEL_LABEL(0x0f)},
-
+    
     // Soundfield Groups
     {SOUNDFIELD_GROUP_LABEL, "sg51", "5.1", DC_SOUNDFIELD_GROUP_LABEL(0x01)},
     {SOUNDFIELD_GROUP_LABEL, "sg71", "7.1DS", DC_SOUNDFIELD_GROUP_LABEL(0x02)},
@@ -266,6 +297,7 @@ AppMCALabelHelper::AppMCALabelHelper(bool is_as11)
 {
     // Register D-Cinema, IMF and AS-11 labels
     IndexLabels(DC_MCA_LABELS, BMX_ARRAY_SIZE(DC_MCA_LABELS), true);
+    IndexLabels(DOLBY_MCA_LABELS, BMX_ARRAY_SIZE(DOLBY_MCA_LABELS), true);
     IndexLabels(IMF_MCA_LABELS, BMX_ARRAY_SIZE(IMF_MCA_LABELS), true);
     IndexLabels(AS11_MCA_LABELS, BMX_ARRAY_SIZE(AS11_MCA_LABELS), true);
     if (is_as11)
