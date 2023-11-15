@@ -74,10 +74,11 @@ void ISXDEssenceParser::StartElement(void *user_data, const char *qname, const c
     // set RootElementKey for very first element that we encounter.
     if (parser->mRootElementKey == "")
     {
+        // log_info("ISXDEssenceParser. Set RootElementKey to %s with ns: %s\n", name.c_str(), ns.c_str());
+
         string ns, name;
         split_qname(qname, &ns, &name);
 
-        // log_info("ISXDEssenceParser. Set RootElementKey to %s with ns: %s\n", name.c_str(), ns.c_str());
         parser->mRootElementKey = name;
         parser->mNamespace = ns;
     }
@@ -123,32 +124,6 @@ std::string ISXDEssenceParser::GetRootElementKey()
     return mRootElementKey;
 }
 
-/*
-  XML_Parser XMLCALL
-XML_ParserCreate_MM(const XML_Char *encodingName,
-                    const XML_Memory_Handling_Suite *memsuite,
-                    const XML_Char *nameSep) {
-  return parserCreate(encodingName, memsuite, nameSep, NULL);
-}
-*/
-
-/*
-XML_Parser XMLCALL
-XML_ParserCreateNS(const XML_Char *encodingName, XML_Char nsSep) {
-  XML_Char tmp[2] = {nsSep, 0};
-  return XML_ParserCreate_MM(encodingName, NULL, tmp);
-}
-
-XML_Memory_Handling_Suite
-
-
-typedef struct {
-  void *(*malloc_fcn)(size_t size);
-  void *(*realloc_fcn)(void *ptr, size_t size);
-  void (*free_fcn)(void *ptr);
-} XML_Memory_Handling_Suite;
-*/
-
 void ISXDEssenceParser::ResetParser()
 {
     if (mParser)
@@ -190,25 +165,39 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
-    //    if (mRootElementKey != "") {
-    //  // return fixed size
-    //  return 9500;
-    //}
-
     if (!mFullFrameParsed) {
       ParseFrameInfo(data, data_size);
     }
 
     if (mFullFrameParsed)
     {
-        if (data[mBytesRead] == '\n') {
-          if (mBytesRead + 1 > data_size) {
+          //if (data[mBytesRead] == '\n') {
+
+        if (mBytesRead + 1 >= data_size) {
             // one more round
+            // log_info("\t\tONE MORE\n");
             return ESSENCE_PARSER_NULL_OFFSET;
-          }
-          mBytesRead += 1;
         }
 
+        // log_info("\t\tADD ONE\n");
+        mBytesRead += 1;
+
+          //}
+#if 0
+        log_info("END mPos: %ld, data_size: %ld\n", mPos, data_size);
+        log_info("DONE: '%c' '%c' '%c'\n",
+                   data[mBytesRead-2],
+                   data[mBytesRead-1],
+                   data[mBytesRead]);
+
+
+
+        printf("$$$$$");
+        for (int i = 0; i < mBytesRead; ++i) {
+          printf("%c", data[i]);
+        }
+        printf("$$$$$$\n\n");
+#endif
         uint32_t len = mBytesRead;
         ResetParser();
         return len;
@@ -220,7 +209,16 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 void ISXDEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
     const char *data_start = (const char*)data + mPos;
+#if 0
+    log_info("START: '%c' '%c' '%c' '%c'\n",
+             data[mPos],
+             data[mPos+1],
+             data[mPos+2],
+             data[mPos+3]);
 
+    log_info("START mPos: %ld, data_size: %ld\n", mPos, data_size);
+#endif
+    
     XML_Status status = XML_Parse(mParser, data_start, data_size - mPos, 0);
     if (status == XML_STATUS_ERROR)
     {
@@ -231,7 +229,7 @@ void ISXDEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
             throw BMXException("XML Error: %d (%s) (err_idx: %d, char: %c)\n",
                 err, XML_ErrorString(err), err_index, data[err_index]);
         }
-        throw BMXException("Another error");
+        throw BMXException("XML ABORTED error");
     }
 
     int32_t byte_index = XML_GetCurrentByteIndex(mParser);

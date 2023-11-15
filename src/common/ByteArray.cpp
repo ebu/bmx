@@ -85,7 +85,6 @@ ByteArray::~ByteArray()
 void ByteArray::SetAllocBlockSize(uint32_t block_size)
 {
     BMX_CHECK(block_size > 0);
-    log_info("alloc block size: %d\n", block_size);
     mAllocBlockSize = block_size;
 }
 
@@ -193,8 +192,6 @@ void ByteArray::Allocate(uint32_t min_size)
     mBytes = new unsigned char[size];
     memset(mBytes, 0, size);
     mAllocatedSize = size;
-
-    log_info("Aallocate: %d\n", mSize);
 }
 
 void ByteArray::Reallocate(uint32_t min_size)

@@ -5899,9 +5899,9 @@ int main(int argc, const char** argv)
         int64_t total_read = 0;
         while (have_samples_to_write && (duration < 0 || total_read < duration)) {
 
-          //log_info("\33[2K\r");
-          //  log_info("frame: %ld | %ld", total_read, duration);
-          //  fflush(stdout);
+            log_info("\33[2K\r");
+            log_info("frame: %ld | %ld", total_read, duration);
+            fflush(stdout);
                       // break if reached end of partial file regression test
             if (regtest_end >= 0 && total_read >= regtest_end)
                 break;
