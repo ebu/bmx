@@ -221,6 +221,7 @@ uint32_t IABEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
 
 uint32_t IABEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
+    //log_info("IAB Parse: %d\n", data_size);
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     // done with file
@@ -276,7 +277,7 @@ void IABEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     uint32_t offset = mBitstreamParser->getOffset();
 
     BMX_ASSERT(offset % 8 == 0);
-    
+
     // Preamble + Frame Length
     mFrameLength = offset/8 + frame_length;
 

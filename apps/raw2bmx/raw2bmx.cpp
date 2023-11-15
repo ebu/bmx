@@ -959,7 +959,6 @@ int main(int argc, const char** argv)
     mxfRational rate;
     bool msvc_block_limit;
     int cmdln_index;
-    bool have_iab = false;
 
     memset(&next_embed_xml, 0, sizeof(next_embed_xml));
     parse_essence_type_names("video,audio,data,mixed", &filename_essence_type_names);
@@ -3938,7 +3937,6 @@ int main(int argc, const char** argv)
             input.essence_type = IAB;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
-            have_iab = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--isxd") == 0)
@@ -5900,7 +5898,11 @@ int main(int argc, const char** argv)
         bmx::ByteArray pcm_buffer;
         int64_t total_read = 0;
         while (have_samples_to_write && (duration < 0 || total_read < duration)) {
-            // break if reached end of partial file regression test
+
+          //log_info("\33[2K\r");
+          //  log_info("frame: %ld | %ld", total_read, duration);
+          //  fflush(stdout);
+                      // break if reached end of partial file regression test
             if (regtest_end >= 0 && total_read >= regtest_end)
                 break;
 
