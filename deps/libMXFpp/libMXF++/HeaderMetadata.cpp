@@ -300,6 +300,8 @@ void HeaderMetadata::initialiseObjectFactory()
     // Markus
     REGISTER_CLASS(IABDescriptor);
     REGISTER_CLASS(ISXDDescriptor);
+    REGISTER_CLASS(SADMDescriptor);
+    // Markus END
     REGISTER_CLASS(AES3AudioDescriptor);
     REGISTER_CLASS(ANCDataDescriptor);
     REGISTER_CLASS(VBIDataDescriptor);
