@@ -429,6 +429,22 @@ static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x07);  // 0x05 do
 
 #define MXF_ISXD_FRAME_WRAPPED_EE_TYPE   0x01
 
+    // ST 2027-1, Table 4 - MXF-GC Frame-Wrapped MGA
+#define MXF_SADM_EC_L(regver) \
+    MXF_GENERIC_CONTAINER_LABEL(regver, 0x25, 0x01, 0x00) 
+
+static const mxfUL MXF_EC_L(SADMFrameWrapped) = MXF_SADM_EC_L(0x0D);
+
+    // ST 2027-1, Table 3 Essence Element Type, 
+#define MXF_SADM_ITEM_TYPE 0x0E  // Frame-wrapped MGA Sound Element
+
+#define MXF_SADM_EE_K(elecount, eletype, elenum) \
+    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x07 /*regver*/, MXF_SADM_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_SADM_TRACK_NUM(elecount, eletype, elenum) \
+    MXF_TRACK_NUM(MXF_SADM_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_SADM_FRAME_WRAPPED_EE_TYPE 0x00
 
 // ST-2067-201, Annex D
 #define MXF_IAB_EC_L(regver) \

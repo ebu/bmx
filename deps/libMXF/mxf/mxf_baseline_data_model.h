@@ -1289,9 +1289,40 @@ MXF_SET_DEFINITION(FileDescriptor, MultipleDescriptor,
     );
 
 // UL_DEFINITION IABDescriptor
-MXF_SET_DEFINITION(GenericSoundEssenceDescriptor, IABDescriptor,
-    MXF_LABEL(0x06,0x0e,0x2b,0x34,0x02,0x7F,0x01,0x01,0x0D,0x01,0x01,0x01,0x01,0x01,0x7B,0x00)
-);
+    MXF_SET_DEFINITION(GenericSoundEssenceDescriptor, IABDescriptor,
+                       MXF_LABEL(0x06, 0x0e, 0x2b, 0x34, 0x02, 0x7F, 0x01, 0x01,
+                                 0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x7B,
+                                 0x00));
+
+    // UL_DEFINITION
+    MXF_SET_DEFINITION(GenericSoundEssenceDescriptor, SADMDescriptor,
+                       MXF_LABEL(0x06, 0x0e, 0x2b, 0x34, 0x02, 0x7F, 0x01, 0x01,
+                                 0x0d, 0x01, 0x01, 0x01, 0x01, 0x01, 0x81,
+                                 0x06));
+
+    MXF_ITEM_DEFINITION(SADMDescriptor, MGASoundEssenceBlockAlign,
+                        MXF_LABEL(0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01,
+                                  0x0e, 0x04, 0x02, 0x03, 0x04, 0x01, 0x00,
+                                  0x00, 0x00),
+                        0x0000,          /* localTag */
+                        MXF_UINT16_TYPE, /* typeId */
+                        1);
+
+    MXF_ITEM_DEFINITION(SADMDescriptor, MGASoundEssenceAverageBytesPerSecond,
+                        MXF_LABEL(0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01,
+                                  0x0e, 0x04, 0x02, 0x03, 0x04, 0x02, 0x00,
+                                  0x00, 0x00),
+                        0x0000,          /* localTag */
+                        MXF_UINT32_TYPE, /* typeId */
+                        1);
+
+MXF_ITEM_DEFINITION(SADMDescriptor, MGASoundEssenceSequenceOffset,
+  MXF_LABEL(0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01,
+            0x0e, 0x04, 0x02, 0x03, 0x04, 0x03, 0x00,
+            0x00, 0x00),
+  0x0000,          /* localTag */
+  MXF_UINT8_TYPE, /* typeId */
+  0);
 
 // UL_DEFINITION ISXDDESCRIPTOR
 MXF_SET_DEFINITION(GenericDataEssenceDescriptor, ISXDDescriptor,
