@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2023, Dolby Laboratories, Inc
+ * Copyright (C) 2010, British Broadcasting Corporation
  * All Rights Reserved.
  *
- * Author: Markus Pfundstein
+ * Author: Philip de Nier, Markus Pfundstein
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,49 +29,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef BMX_SADM_MXF_DESCRIPTOR_HELPER_H_
+#define BMX_SADM_MXF_DESCRIPTOR_HELPER_H_
 
-#define __STDC_FORMAT_MACROS
 
-#include <cstring>
+#include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
+#include <bmx/essence_parser/SADMEssenceParser.h>
 
-#include "bmx/iab/IABReader.h"
-//#include <bmx/essence_parser/SoundConversion.h>
-#include <bmx/BMXException.h>
-#include <bmx/Logging.h>
 
-using namespace std;
-using namespace bmx;
+namespace bmx
+{
 
-namespace bmx {
 
-struct IABIOContext {
-    FILE *file;
+class SADMDescriptorHelper : public SoundMXFDescriptorHelper
+{
+public:
+    static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    static bool IsSupported(EssenceType essence_type);
+
+public:
+    SADMDescriptorHelper();
+    virtual ~SADMDescriptorHelper();
+
+public:
+    // initialize from existing descriptor
+    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
+    virtual void SetSampleRate(mxfRational sample_rate);
+
+public:
+    // configure and create new descriptor
+    void SetChannelAssignment(mxfUL label);         // default not set
+
+    virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
+    virtual void UpdateFileDescriptor();
+    virtual void UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in);
+
+    void UpdateFileDescriptor(SADMEssenceParser *essence_parser);
+
+protected:
+    virtual mxfUL ChooseEssenceContainerUL() const;
+
+public:
+    virtual uint32_t GetSampleSize();
+
+private:
+    mxfUL mChannelAssignment;
 };
 
-}
 
-IABReader *IABReader::Open(string filename)
-{
-    IABReader *reader = new IABReader();
-    reader->mIO->file = fopen(filename.c_str(), "rb");
-    return reader;
-}
+};
 
-IABReader::IABReader()
-    : mIO(new IABIOContext())
-{
-    mIO->file = nullptr;
-}
 
-IABReader::~IABReader()
-{
-    if (mIO->file) {
-        fclose(mIO->file);
-        mIO->file = nullptr;
-    }
-    delete mIO;
-    mIO = nullptr;
-}
+
+#endif
+

@@ -1,0 +1,8 @@
+#+TITLE: s-ADM implementation
+
+** Log
+
+*** 15.1
+
+- Added first skeleton for s-ADM essence.
+- Made MGASoundEssenceBlockAlign and MGASoundEssenceAverageBytesPerSecond Optional in =mxf_baseline_data_model.h=. Should be reverted back!

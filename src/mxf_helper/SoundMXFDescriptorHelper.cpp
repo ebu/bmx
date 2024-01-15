@@ -36,6 +36,7 @@
 #include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/IABDescriptorHelper.h>
+#include <bmx/mxf_helper/SADMDescriptorHelper.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -89,6 +90,10 @@ EssenceType SoundMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
     if (essence_type)
         return essence_type;
 
+    essence_type = SADMDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    if (essence_type)
+        return essence_type;
+
     return SOUND_ESSENCE;
 }
 
@@ -96,12 +101,17 @@ SoundMXFDescriptorHelper* SoundMXFDescriptorHelper::Create(FileDescriptor *file_
                                                            mxfUL alternative_ec_label)
 {
     SoundMXFDescriptorHelper *helper;
-    if (WaveMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+    if (WaveMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label)) {
         helper = new WaveMXFDescriptorHelper();
-    else if (IABDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+    }
+    else if (IABDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label)) {
         helper = new IABDescriptorHelper();
-    else
+    } else if (SADMDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label)) {
+        helper = new SADMDescriptorHelper();
+    }
+    else {
         helper = new SoundMXFDescriptorHelper();
+    }
 
     helper->Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
@@ -119,7 +129,9 @@ bool SoundMXFDescriptorHelper::IsSupported(EssenceType essence_type)
     if (essence_type == IAB) {
         return IABDescriptorHelper::IsSupported(essence_type);
     }
-
+    if (essence_type == SADM) {
+        return SADMDescriptorHelper::IsSupported(essence_type);
+    }
     return WaveMXFDescriptorHelper::IsSupported(essence_type);
 }
 
@@ -132,6 +144,8 @@ MXFDescriptorHelper* SoundMXFDescriptorHelper::Create(EssenceType essence_type)
         helper = new WaveMXFDescriptorHelper();
     else if (IABDescriptorHelper::IsSupported(essence_type))
         helper = new IABDescriptorHelper();
+    else if (SADMDescriptorHelper::IsSupported(essence_type))
+        helper = new SADMDescriptorHelper();
     else
         helper = new SoundMXFDescriptorHelper();
     helper->SetEssenceType(essence_type);

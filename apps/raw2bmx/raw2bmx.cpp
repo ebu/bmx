@@ -68,6 +68,7 @@
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/essence_parser/IABEssenceParser.h>
 #include <bmx/essence_parser/ISXDEssenceParser.h>
+#include <bmx/essence_parser/SADMEssenceParser.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
@@ -792,6 +793,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --pcm <name>            Raw PCM audio input file\n");
     fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
     fprintf(stderr, "  --iab <name>            Immersive Audio Bitstream\n");
+    fprintf(stderr, "  --sadm <name>           Serial Audio Definition Bitstream\n");
     fprintf(stderr, "  --isxd <isxdpattern>    Path containing '%%d' for a sequence of XML files, each containing a single ISXD frame\n");
     fprintf(stderr, "  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
     fprintf(stderr, "  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Currently requires the --vbi-const option\n");
@@ -3939,6 +3941,19 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--sadm") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = SADM;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--isxd") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -4609,6 +4624,21 @@ int main(int argc, const char** argv)
                 }
                 */
             }
+            else if (input->essence_type == SADM)
+            {
+                log_info("got sADM\n");
+                /*
+                SADMEssenceParser *sadm_parser = new SADMEssenceParser();
+                input->raw_reader->SetEssenceParser(sadm_parser);
+                input->raw_reader->ReadSamples(1);
+
+                if (input->raw_reader->GetNumSamples() == 0)
+                {
+                    log_error("Failed to read and parse first s-ADM frame\n");
+                    throw false;
+                }
+                */
+            }
             else if (input->essence_type == IAB)
             {
                 // read first frame of IABitstream to get some info about the stream
@@ -4726,6 +4756,8 @@ int main(int argc, const char** argv)
             if (input->essence_type == WAVE_PCM) {
                 have_sound = true;
             } else if (input->essence_type == IAB) {
+                have_sound = true;
+            } else if (input->essence_type == SADM) {
                 have_sound = true;
             } else if (input->essence_type != TIMED_TEXT) {  // timed text is in a separate container
                 sound_only_container = false;
@@ -5518,8 +5550,11 @@ int main(int argc, const char** argv)
                 case TIMED_TEXT:
                     clip_track->SetTimedTextSource(input->timed_text_manifest);
                     break;
+                case SADM:
+                    // TODO: Markus: Fill that in
+                    log_info("TO-DO: init_clip track for SADM\n");
+                    break;
                 case IAB:
-                    // MARKUS! 
                     clip_track->SetSamplingRate(output_sound_info->sampling_rate);
                     clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
                     clip_track->SetChannelCount(input->iab_channel_count);
@@ -5531,8 +5566,6 @@ int main(int argc, const char** argv)
                         clip_track->SetAudioRefLevel(output_sound_info->audio_ref_level);
                     break;
                 case ISXD:
-                    // MARKUS]
-                    log_info("To-DO: init clip_track for isxd\n");
                     break;
                 default:
                     BMX_ASSERT(false);
@@ -5793,6 +5826,13 @@ int main(int argc, const char** argv)
                     break;
                 case TIMED_TEXT:
                     break;
+                case SADM:
+                    // MARKUS: Open raw readers and init inputs
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new SADMEssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(100000000);
+                    break;
                 case IAB:
                     // MARKUS: Open raw readers and init inputs
                     input->sample_sequence[0] = 1;
@@ -5897,6 +5937,7 @@ int main(int argc, const char** argv)
         // write samples
         bmx::ByteArray pcm_buffer;
         int64_t total_read = 0;
+        log_info("have_samples_to_write: %d\n", have_samples_to_write);
         while (have_samples_to_write && (duration < 0 || total_read < duration)) {
 
             log_info("\33[2K\r");
@@ -5989,8 +6030,9 @@ int main(int argc, const char** argv)
                     output_track->WriteSilenceSamples(first_sound_num_samples);
             }
 
-            if (min_num_samples < max_samples_per_read)
+            if (min_num_samples < max_samples_per_read) {
                 break;
+            }
 
             if (realtime)
                 rt_sleep(rt_factor, rt_start, frame_rate, total_read);

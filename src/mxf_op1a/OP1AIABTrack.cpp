@@ -46,7 +46,6 @@ using namespace std;
 using namespace bmx;
 using namespace mxfpp;
 
-
 OP1AIABTrack::OP1AIABTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
                            mxfRational frame_rate, EssenceType essence_type)
 : OP1ATrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
@@ -64,23 +63,6 @@ OP1AIABTrack::OP1AIABTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
 
     mPosition = 0;
 
-#if 0
-    mWaveDescriptorHelper = dynamic_cast<WaveMXFDescriptorHelper*>(mDescriptorHelper);
-    BMX_ASSERT(mWaveDescriptorHelper);
-
-    mWaveDescriptorHelper->SetSamplingRate(SAMPLING_RATE_48K);
-    mWaveDescriptorHelper->SetQuantizationBits(16);
-    mWaveDescriptorHelper->SetChannelCount(1);
-
-    if (mOP1AFile->IsFrameWrapped()) {
-        if ((file->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
-            mWaveDescriptorHelper->SetSampleRate(SAMPLING_RATE_48K);
-    } else {
-        mEditRate = mWaveDescriptorHelper->GetSamplingRate();
-        mWaveDescriptorHelper->SetSampleRate(mEditRate);
-    }
-#endif
-
     mCbe =  false;
 }
 
@@ -94,7 +76,6 @@ void OP1AIABTrack::PrepareWrite(uint8_t track_count)
 
     mCPManager->RegisterIABTrackElement(mTrackIndex, mEssenceElementKey);
 
-    //mIndexTable->RegisterSoundTrackElement(mTrackIndex);
     mIndexTable->RegisterIABTrackElement(mTrackIndex, mCbe);
 }
 

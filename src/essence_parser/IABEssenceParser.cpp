@@ -108,13 +108,13 @@ static uint32_t read_plex(BitstreamParser *parser, uint32_t num_bits)
     uint32_t oVal = 0;
     uint32_t bitsToRead = num_bits;
     uint32_t value = 0;
-    
+
     while (bitsToRead <= 32)
     {
         value = parser->read(bitsToRead);
         uint64_t maxValue = 1;
         maxValue = (maxValue << bitsToRead) - 1;
-        
+
         if (value < maxValue)
         {
             oVal = value;

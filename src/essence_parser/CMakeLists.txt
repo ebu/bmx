@@ -18,6 +18,7 @@ list(APPEND bmx_sources
     essence_parser/VC3EssenceParser.cpp
     essence_parser/IABEssenceParser.cpp
     essence_parser/ISXDEssenceParser.cpp
+    essence_parser/SADMEssenceParser.cpp
 )
 
 set(bmx_sources ${bmx_sources} PARENT_SCOPE)
