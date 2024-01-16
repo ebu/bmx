@@ -126,7 +126,10 @@ public:
 
 public:
     mxfUL descriptor_ul;
+    // audio sampling rate
     mxfRational sampling_rate;
+    // edit rate
+    mxfRational edit_rate;
     uint32_t bits_per_sample;
     uint16_t block_align;
     uint32_t channel_count;
@@ -141,6 +144,7 @@ public:
     std::vector<mxfpp::AudioChannelLabelSubDescriptor*> mca_labels;
 
     bool isIabDescriptor;
+    bool isSADMDescriptor;
 };
 
 

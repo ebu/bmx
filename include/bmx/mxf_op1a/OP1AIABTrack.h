@@ -52,9 +52,6 @@ public:
     void SetSamplingRate(Rational sample_rate);
     void SetReferenceImageEditRate(Rational edit_rate);
     void SetQuantizationBits(uint32_t bitDepth);
-    void SetChannelCount(uint32_t channelCount);
-    void SetLocked(bool locked);
-    void SetAudioRefLevel(int8_t level);
 
 protected:
     virtual void PrepareWrite(uint8_t track_count);

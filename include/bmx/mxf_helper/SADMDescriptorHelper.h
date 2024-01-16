@@ -57,8 +57,7 @@ public:
     virtual void SetSampleRate(mxfRational sample_rate);
 
 public:
-    // configure and create new descriptor
-    void SetChannelAssignment(mxfUL label);         // default not set
+    void SetSoundEssenceCompression(mxfUL label);
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
@@ -72,8 +71,7 @@ protected:
 public:
     virtual uint32_t GetSampleSize();
 
-private:
-    mxfUL mChannelAssignment;
+    mxfUL mEssenceCompressionLabel;
 };
 
 

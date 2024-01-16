@@ -815,14 +815,6 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
             if (pcm_track)
                 pcm_track->SetChannelCount(count);
-            else
-            {
-                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
-                if (iab_track)
-                {
-                    iab_track->SetChannelCount(count);
-                }
-            }
             break;
         }
         case CW_AVID_CLIP_TYPE:
@@ -890,14 +882,6 @@ void ClipWriterTrack::SetLocked(bool locked)
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
             if (pcm_track)
                 pcm_track->SetLocked(locked);
-            else
-            {
-                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
-                if (iab_track)
-                {
-                    iab_track->SetLocked(locked);
-                }
-            }
             break;
         }
         case CW_AVID_CLIP_TYPE:
@@ -945,14 +929,6 @@ void ClipWriterTrack::SetAudioRefLevel(int8_t level)
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
             if (pcm_track)
                 pcm_track->SetAudioRefLevel(level);
-            else
-            {
-                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
-                if (iab_track)
-                {
-                    iab_track->SetAudioRefLevel(level);
-                }
-            }
             break;
         }
         case CW_AVID_CLIP_TYPE:

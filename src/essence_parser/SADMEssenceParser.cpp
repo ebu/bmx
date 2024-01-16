@@ -64,13 +64,13 @@ uint32_t SADMEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t 
 
 uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-    log_info("----------\n");
-    log_info("s-ADM Parse: %d\n", data_size);
-    log_info("\nmSections\t%d\nmCurrentSectionIndex\t%d\nmSkipSection\t%d\ncurrentDataSize\t%d\n",
-             mSections,
-             mCurrentSectionIndex, mSkipSection,
-             data_size - mStreamPos);
-    log_info("data_size\t%d\n, mStreamPos\t%d\n", data_size, mStreamPos);
+    // log_info("----------\n");
+    // log_info("s-ADM Parse: %d\n", data_size);
+    // log_info("\nmSections\t%d\nmCurrentSectionIndex\t%d\nmSkipSection\t%d\ncurrentDataSize\t%d\n",
+    //mSections,
+    //         mCurrentSectionIndex, mSkipSection,
+    //         data_size - mStreamPos);
+    // log_info("data_size\t%d\n, mStreamPos\t%d\n", data_size, mStreamPos);
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
         // done with file
@@ -80,7 +80,7 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
     // no sections yet means we need to parse the initial header
     if (!mSections) {
-        log_info("parse number sections\n");
+        // log_info("parse number sections\n");
         mSections = data[mStreamPos];
         mStreamPos += 1;
         if (mSections < 2) {
@@ -96,10 +96,10 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
             mStreamPos += 1;
             uint32_t identifier = data[mStreamPos];
             mStreamPos += 1;
-            log_info("got section identifier: %X\n", identifier);
+            // log_info("got section identifier: %X\n", identifier);
             mSectionSize = data[mStreamPos] << 24 | data[mStreamPos + 1] << 16 | data[mStreamPos + 2] << 8 | data[mStreamPos + 3];
             mStreamPos += 4;
-            log_info("got section size: %d\n", mSectionSize);
+            // log_info("got section size: %d\n", mSectionSize);
             mSectionHeaderParsed = true;
             mSectionPos = 0;
 
@@ -108,10 +108,16 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
         }
 
         if (mSectionHeaderParsed) {
-            log_info("\nmStreamPos\t%d\nmSectionPos\t%d\nmSectionSize\t%d\ndata_size\t%d\n", mStreamPos, mSectionPos, mSectionSize, data_size);
+            // SKIP AUDIO AND FILL. Parse METADATA. But only for first frame.
+            // Store all metadata in an array of structs that we can then use
+            // to create the MGA Audio Metadat SubDescriptors. Because we need
+            // one per metadata section
+            // After first pass, we can skip
+
+            // log_info("\nmStreamPos\t%d\nmSectionPos\t%d\nmSectionSize\t%d\ndata_size\t%d\n", mStreamPos, mSectionPos, mSectionSize, data_size);
             uint32_t skipBytes = std::min(data_size - mStreamPos,
                                           mSectionSize - mSectionPos);
-            log_info("skipBytes: %d\n", skipBytes);
+            // log_info("skipBytes: %d\n", skipBytes);
             mStreamPos += skipBytes;
             mSectionPos += skipBytes;
         }
@@ -122,15 +128,15 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
         }
 
         if (mSectionPos == mSectionSize) {
-            log_info("!!! Section %d/%d done (%d)\n", mCurrentSectionIndex, mSections-1, mStreamPos);
-            log_info("mFrameLength: %d\n", mFrameLength);
+            // log_info("!!! Section %d/%d done (%d)\n", mCurrentSectionIndex, mSections-1, mStreamPos);
+            // log_info("mFrameLength: %d\n", mFrameLength);
             mSectionHeaderParsed = 0;
             mSectionPos = 0;
             mSectionSize = 0;
             if (mCurrentSectionIndex == mSections - 1) {
-                log_info("!!! LAST Section (%d) done\n", mCurrentSectionIndex);
+                // log_info("!!! LAST Section (%d) done\n", mCurrentSectionIndex);
 
-                log_info("%x\n", data[mStreamPos]);
+                // log_info("%x\n", data[mStreamPos]);
                 uint32_t tmp = mFrameLength;
                 ResetFrameInfo();
                 return tmp;
@@ -149,7 +155,7 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     /*
     // done with frame.
     if (data_size >= mFrameLength) {
-        log_info("out
+        // log_info("out
         // reset for next frame
         mFrameHeaderParsed = false;
         return mFrameLength;

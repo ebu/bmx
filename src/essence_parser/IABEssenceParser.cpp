@@ -382,7 +382,7 @@ void IABEssenceParser::ReadBedDefinition()
     // channel count (4)
     uint32_t channelCount = read_plex(mBitstreamParser, 4);
 
-    log_debug("Channel Count: %d\n", channelCount);
+    //log_info("Channel Count: %d\n", channelCount);
 
     BMX_ASSERT(channelCount != 0);
     mChannelCount = channelCount;

@@ -5557,13 +5557,7 @@ int main(int argc, const char** argv)
                 case IAB:
                     clip_track->SetSamplingRate(output_sound_info->sampling_rate);
                     clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
-                    clip_track->SetChannelCount(input->iab_channel_count);
                     clip_track->SetReferenceImageEditRate(output_sound_info->ref_image_edit_rate);
-
-                    if (BMX_OPT_PROP_IS_SET(output_sound_info->locked))
-                        clip_track->SetLocked(output_sound_info->locked);
-                    if (BMX_OPT_PROP_IS_SET(output_sound_info->audio_ref_level))
-                        clip_track->SetAudioRefLevel(output_sound_info->audio_ref_level);
                     break;
                 case ISXD:
                     break;

@@ -88,7 +88,7 @@ IABDescriptorHelper::IABDescriptorHelper()
 : SoundMXFDescriptorHelper()
 {
     mEssenceType = IAB;
-    mChannelAssignment = g_Null_UL;
+    mEssenceCompressionLabel = g_Null_UL;
 }
 
 IABDescriptorHelper::~IABDescriptorHelper()
@@ -120,9 +120,9 @@ void IABDescriptorHelper::SetSampleRate(mxfRational sample_rate)
     mSampleRate = sample_rate;
 }
 
-void IABDescriptorHelper::SetChannelAssignment(mxfUL label)
+void IABDescriptorHelper::SetSoundEssenceCompression(mxfUL label)
 {
-    mChannelAssignment = label;
+    mEssenceCompressionLabel = label;
 }
 
 FileDescriptor* IABDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
@@ -135,14 +135,11 @@ FileDescriptor* IABDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata 
 void IABDescriptorHelper::UpdateFileDescriptor()
 {
     SoundMXFDescriptorHelper::UpdateFileDescriptor();
-    
+
     IABDescriptor *descriptor = dynamic_cast<IABDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
-    // Essence Coding (4.10, SMPTE ST 2098-2)
-    mxfUL label = {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x05, 0x0E, 0x09, 0x06, 0x04, 0x00, 0x00, 0x00, 0x00};
-
-    descriptor->setSoundEssenceCompression(label);
+    descriptor->setSoundEssenceCompression(mEssenceCompressionLabel);
 }
 
 void IABDescriptorHelper::UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in)
@@ -154,19 +151,9 @@ void IABDescriptorHelper::UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_
     BMX_CHECK(iab_desc_in);
 }
 
-void IABDescriptorHelper::UpdateFileDescriptor(IABEssenceParser *essence_parser)
-{
-    IABDescriptor *descriptor = dynamic_cast<IABDescriptor*>(mFileDescriptor);
-    BMX_ASSERT(descriptor);
-    descriptor->setAudioSamplingRate(essence_parser->GetSampleRate());
-    descriptor->setReferenceImageEditRate(essence_parser->GetFrameRate());
-    descriptor->setQuantizationBits(essence_parser->GetBitDepth());
-    descriptor->setChannelCount(essence_parser->GetChannelCount());
-}
-
 uint32_t IABDescriptorHelper::GetSampleSize()
 {
-    return 0; 
+    return 0;
 }
 
 mxfUL IABDescriptorHelper::ChooseEssenceContainerUL() const

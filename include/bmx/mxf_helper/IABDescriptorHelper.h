@@ -55,16 +55,12 @@ public:
     // initialize from existing descriptor
     virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
     virtual void SetSampleRate(mxfRational sample_rate);
+    void SetSoundEssenceCompression(mxfUL label);
 
 public:
-    // configure and create new descriptor
-    void SetChannelAssignment(mxfUL label);         // default not set
-
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
     virtual void UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in);
-    
-    void UpdateFileDescriptor(IABEssenceParser *essence_parser);
 
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
@@ -73,7 +69,7 @@ public:
     virtual uint32_t GetSampleSize();
 
 private:
-    mxfUL mChannelAssignment;
+    mxfUL mEssenceCompressionLabel;
 };
 
 

@@ -29,6 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "bmx/BMXTypes.h"
+#include "mxf/mxf_types.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -89,7 +91,7 @@ SADMDescriptorHelper::SADMDescriptorHelper()
 : SoundMXFDescriptorHelper()
 {
     mEssenceType = SADM;
-    mChannelAssignment = g_Null_UL;
+    mEssenceCompressionLabel = g_Null_UL;
 }
 
 SADMDescriptorHelper::~SADMDescriptorHelper()
@@ -118,15 +120,15 @@ void SADMDescriptorHelper::Initialize(FileDescriptor *file_descriptor,
     BMX_ASSERT(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 
-void SADMDescriptorHelper::SetSampleRate(mxfRational sample_rate)
+void SADMDescriptorHelper::SetSoundEssenceCompression(mxfUL label)
 {
-    // note: this is framerate. Set in Op1ATrack constructor
-    mSampleRate = sample_rate;
+    mEssenceCompressionLabel = label;
 }
 
-void SADMDescriptorHelper::SetChannelAssignment(mxfUL label)
+void SADMDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
-    mChannelAssignment = label;
+    // note: this is edit rate. Set in Op1ATrack constructor
+    mSampleRate = sample_rate;
 }
 
 FileDescriptor* SADMDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
@@ -143,11 +145,11 @@ void SADMDescriptorHelper::UpdateFileDescriptor()
     SADMDescriptor *descriptor = dynamic_cast<SADMDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
-    // Essence Coding (4.10, SMPTE ST 2098-2)
-    // TODO: Markus: Update Label
-    mxfUL label = {0x06, 0x0E, 0x2B, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-    descriptor->setSoundEssenceCompression(label);
+    descriptor->setSoundEssenceCompression(mEssenceCompressionLabel);
+    descriptor->setSampleRate(mSampleRate);
+    descriptor->setQuantizationBits(0);
+    descriptor->setChannelCount(0);
+    descriptor->setAudioSamplingRate(ZERO_RATIONAL);
 }
 
 void SADMDescriptorHelper::UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in)
@@ -164,16 +166,12 @@ void SADMDescriptorHelper::UpdateFileDescriptor(SADMEssenceParser *essence_parse
     SADMDescriptor *descriptor = dynamic_cast<SADMDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
-    // TODO: Markus: Add update methods
-    //descriptor->setAudioSamplingRate(essence_parser->GetSampleRate());
-    //descriptor->setReferenceImageEditRate(essence_parser->GetFrameRate());
-    //descriptor->setQuantizationBits(essence_parser->GetBitDepth());
-    //descriptor->setChannelCount(essence_parser->GetChannelCount());
+    // add stuff from first parse
 }
 
 uint32_t SADMDescriptorHelper::GetSampleSize()
 {
-    return 0; 
+    return 0;
 }
 
 mxfUL SADMDescriptorHelper::ChooseEssenceContainerUL() const

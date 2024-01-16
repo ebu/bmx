@@ -61,9 +61,16 @@ OP1AIABTrack::OP1AIABTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
     mIABDescriptorHelper = dynamic_cast<IABDescriptorHelper *>(mDescriptorHelper);
     BMX_ASSERT(mIABDescriptorHelper);
 
+    // Essence Coding (4.10, SMPTE ST 2098-2)
+    mxfUL label = {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x05, 0x0E, 0x09, 0x06, 0x04, 0x00, 0x00, 0x00, 0x00};
+    mIABDescriptorHelper->SetSoundEssenceCompression(label);
+    mIABDescriptorHelper->SetChannelCount(0);
+    //mIABDescriptorHelper->SetReferenceAudioAlignmentLevel(/* ? */);
+
     mPosition = 0;
 
-    mCbe =  false;
+    // IAB always has variable bitrate
+    mCbe = false;
 }
 
 OP1AIABTrack::~OP1AIABTrack()
@@ -92,6 +99,7 @@ void OP1AIABTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uin
 
 void OP1AIABTrack::SetSamplingRate(Rational sample_rate)
 {
+    // audio sample rate (e.g. 48000/1). 
     mIABDescriptorHelper->SetSamplingRate(sample_rate);
 }
 
@@ -103,19 +111,4 @@ void OP1AIABTrack::SetReferenceImageEditRate(Rational edit_rate)
 void OP1AIABTrack::SetQuantizationBits(uint32_t bitDepth)
 {
     mIABDescriptorHelper->SetQuantizationBits(bitDepth);
-}
-
-void OP1AIABTrack::SetChannelCount(uint32_t channelCount)
-{
-    mIABDescriptorHelper->SetChannelCount(channelCount);
-}
-
-void OP1AIABTrack::SetLocked(bool locked)
-{
-    mIABDescriptorHelper->SetLocked(locked);
-}
-
-void OP1AIABTrack::SetAudioRefLevel(int8_t level)
-{
-    mIABDescriptorHelper->SetAudioRefLevel(level);
 }

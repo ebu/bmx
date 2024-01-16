@@ -66,9 +66,15 @@ OP1ASADMTrack::OP1ASADMTrack(OP1AFile *file,
     mSADMDescriptorHelper = dynamic_cast<SADMDescriptorHelper *>(mDescriptorHelper);
     BMX_ASSERT(mSADMDescriptorHelper);
 
+    // Essence Coding (Table 5 - ST 2127-1:2022)
+    mxfUL label = {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x02, 0x02, 0x01, 0x02, 0x01, 0x00, 0x00};
+
+    mSADMDescriptorHelper->SetSoundEssenceCompression(label);
+
     mPosition = 0;
 
-    mCbe =  false;
+    // constant bitrate , yes or no? Does s-ADM even allow for non constant bitrate?
+    mCbe = false;
 }
 
 OP1ASADMTrack::~OP1ASADMTrack()
@@ -77,7 +83,6 @@ OP1ASADMTrack::~OP1ASADMTrack()
 
 void OP1ASADMTrack::PrepareWrite(uint8_t track_count)
 {
-    log_info("PREPARE WRITE\n");
     CompleteEssenceKeyAndTrackNum(track_count);
 
     mCPManager->RegisterSADMTrackElement(mTrackIndex, mEssenceElementKey);
@@ -88,8 +93,6 @@ void OP1ASADMTrack::PrepareWrite(uint8_t track_count)
 
 void OP1ASADMTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    log_info("WRITE SAMPLES\n");
-    //return OP1ATrack::WriteSamplesInt(data, size, num_samples);
     if (mPosition == 0) {
         SADMEssenceParser essence_parser;
         essence_parser.ParseFrameInfo(data, size);

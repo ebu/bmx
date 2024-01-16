@@ -144,9 +144,9 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {ANC_DATA,                  DATA_ESSENCE,           "ANC data",                             "ANC_Data"},
     {VBI_DATA,                  DATA_ESSENCE,           "VBI data",                             "VBI_Data"},
     {TIMED_TEXT,                DATA_ESSENCE,           "Timed Text",                           "Timed_Text"},
-    {IAB,                       SOUND_ESSENCE,          "Immersive Audio Bitstream",            "IAB_Sound"},
-    {SADM,                      SOUND_ESSENCE,          "Serial Audio Definition Model", "SADM_Sound"},
-    {ISXD,                      DATA_ESSENCE,           "ISXD Data Essence",                    "ISXD_Data"}
+    {IAB,                       SOUND_ESSENCE,          "Immersive Audio Bitstream",            "IAB"},
+    {SADM,                      SOUND_ESSENCE,          "Serial Audio Definition Model", "MGA"},
+    {ISXD,                      DATA_ESSENCE,           "ISXD Data Essence",                    "ISXD"}
 };
 
 

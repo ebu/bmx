@@ -175,6 +175,7 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     data_def = MXF_SOUND_DDEF;
 
     sampling_rate = ZERO_RATIONAL;
+    edit_rate = ZERO_RATIONAL;
     bits_per_sample = 0;
     block_align = 0;
     channel_count = 0;
@@ -187,6 +188,7 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     channel_assignment = g_Null_UL;
     BMX_OPT_PROP_DEFAULT(sound_essence_compression, g_Null_UL);
     isIabDescriptor = false;
+    isSADMDescriptor = false;
     descriptor_ul = g_Null_UL;
 }
 
@@ -197,6 +199,7 @@ bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
         return false;
 
     return MXFTrackInfo::IsCompatible(right) &&
+           edit_rate            == sound_right->edit_rate &&
            sampling_rate        == sound_right->sampling_rate &&
            bits_per_sample      == sound_right->bits_per_sample &&
            block_align          == sound_right->block_align &&
@@ -212,6 +215,7 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
 
     MXFTrackInfo::Clone(clone);
 
+    clone->edit_rate            = edit_rate;
     clone->sampling_rate        = sampling_rate;
     clone->bits_per_sample      = bits_per_sample;
     clone->block_align          = block_align;
@@ -225,6 +229,7 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     clone->channel_assignment   = channel_assignment;
     BMX_OPT_PROP_COPY(clone->sound_essence_compression, sound_essence_compression);
     clone->isIabDescriptor = isIabDescriptor;
+    clone->isSADMDescriptor = isSADMDescriptor;
     clone->descriptor_ul = descriptor_ul;
 
     size_t i;

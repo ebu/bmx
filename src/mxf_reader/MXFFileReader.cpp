@@ -1898,6 +1898,8 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
     if (sound_descriptor->haveAudioSamplingRate())
         sound_track_info->sampling_rate = normalize_rate(sound_descriptor->getAudioSamplingRate());
 
+    sound_track_info->edit_rate = sound_descriptor->getSampleRate();
+
     if (sound_descriptor->haveChannelCount())
         sound_track_info->channel_count = sound_descriptor->getChannelCount();
 
@@ -1919,6 +1921,7 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
 
     WaveAudioDescriptor *wave_descriptor = dynamic_cast<WaveAudioDescriptor*>(file_descriptor);
     IABDescriptor *iab_descriptor = dynamic_cast<IABDescriptor*>(file_descriptor);
+    SADMDescriptor *sadm_descriptor = dynamic_cast<SADMDescriptor*>(file_descriptor);
     if (wave_descriptor) {
         sound_track_info->block_align = wave_descriptor->getBlockAlign();
         if (wave_descriptor->haveSequenceOffset())
@@ -1928,6 +1931,8 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
     } else if (iab_descriptor) {
         // nothing to do yet
         sound_track_info->isIabDescriptor = true;
+    } else if (sadm_descriptor) {
+        sound_track_info->isSADMDescriptor = true;
     } else {
         if (sound_track_info->channel_count > 0) {
             sound_track_info->block_align = sound_track_info->channel_count *

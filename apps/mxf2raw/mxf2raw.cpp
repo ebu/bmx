@@ -896,19 +896,27 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         if (text_writer)
             text_writer->PushItemValueIndent(strlen("d10_aes3_valid_flags "));
 
-        if (sound_info->isIabDescriptor)
+        if (sound_info->isIabDescriptor) {
             info_writer->StartSection("IAB_descriptor");
-        else
+        }
+        else if (sound_info->isSADMDescriptor) {
+            info_writer->StartSection("MGA_sound_descriptor");
+        }
+        else {
             info_writer->StartSection("sound_descriptor");
+        }
         info_writer->WriteAUIDItem("label", sound_info->descriptor_ul);
         if (BMX_OPT_PROP_IS_SET(sound_info->sound_essence_compression))
             info_writer->WriteAUIDItem("sound_essence_coding", sound_info->sound_essence_compression);
-            
-        info_writer->WriteRationalItem("sampling_rate", sound_info->sampling_rate);
+
+        info_writer->WriteRationalItem("sample_rate", sound_info->edit_rate);
+        info_writer->WriteRationalItem("audio_sample_rate", sound_info->sampling_rate);
         if (BMX_OPT_PROP_IS_SET(sound_info->reference_image_edit_rate))
             info_writer->WriteRationalItem("ref_image_edit_rate", sound_info->reference_image_edit_rate);
         info_writer->WriteIntegerItem("bits_per_sample", sound_info->bits_per_sample);
-        info_writer->WriteIntegerItem("block_align", sound_info->block_align);
+        if (!sound_info->isIabDescriptor && !sound_info->isSADMDescriptor) {
+            info_writer->WriteIntegerItem("block_align", sound_info->block_align);
+        }
         info_writer->WriteIntegerItem("channel_count", sound_info->channel_count);
         if (track_info->essence_type == D10_AES3_PCM) {
             info_writer->WriteStringItem("d10_aes3_valid_flags",

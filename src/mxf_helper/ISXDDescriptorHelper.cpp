@@ -128,10 +128,10 @@ uint32_t ISXDDescriptorHelper::GetSampleSize()
 void ISXDDescriptorHelper::UpdateFileDescriptor()
 {
     DataMXFDescriptorHelper::UpdateFileDescriptor();
-    
+
     ISXDDescriptor *descriptor = dynamic_cast<ISXDDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
-   
+
     // UL_DEFINITION ESSENCE CODING
     mxfUL essenceCoding = {0x06,0x0E,0x2B,0x34,0x04,0x01,0x01,0x05,0x0E,0x09,0x06,0x06,0x00,0x00,0x00,0x00};
 
