@@ -55,22 +55,58 @@ public:
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
 
 private:
-
-    enum ParserState {
-        AUDIO_SECTION,
-        METADATA_SECTION
-    };
-
     void ResetFrameInfo();
 
+    enum SECTION_IDENTIFIER {
+        AUDIO_ESSENCE = 0x00,
+        AUDIO_METADATA_METADATA_PACK = 0x01,
+        AUDIO_METADATA_PAYLOAD = 0x02,
+        FILL_SECTION = 0xFF
+    };
+
+    enum METADATA_FORMAT {
+        XML = 0x00,
+        GZIP = 0x01
+    };
+
+    bool SkipSection() const;
+    uint32_t BytesAvailable(uint32_t data_size) const;
+    void ParseMetadataPayload();
+
+    static void XML_StartElement(void *user_data, const char *qname, const char **atts);
+
+    static void XML_EndElement(void *user_data, const char *qname);
+    
+    uint32_t ReadBERLengthField(const unsigned char *data, uint32_t data_size, uint32_t *n);
+
+    uint8_t ReadByte(const unsigned char *data, uint32_t data_size);
+
+    // is the section header parsed already?
     bool mSectionHeaderParsed;
-    bool mSkipSection;
+    // size of the current section to be parsed
     uint32_t mSectionSize;
+    // number of sections in mga frame
     uint32_t mSections;
+    // index of current section
     uint32_t mCurrentSectionIndex;
+    // position in overall stream. reset after each frame
     uint32_t mStreamPos;
+    // position in current section. reset after end of section
     uint32_t mSectionPos;
+    // length of frame. updated after each section header is parsed
     uint32_t mFrameLength;
+    // identifier of current section
+    SECTION_IDENTIFIER mCurrentSectionIdentifier;
+    // flag to indicate whether metadata has already been parsed. This is NOT
+    // reset per frame
+    bool mMetadataParsed;
+    // is metadata header parsed already?
+    bool mMetadataHeaderParsed;
+
+    METADATA_FORMAT mMetadataFormat;
+
+    // position in metadata payload
+    std::vector<unsigned char> mMetadata;
 };
 
 };
