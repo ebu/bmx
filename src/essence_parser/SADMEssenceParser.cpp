@@ -116,16 +116,10 @@ uint32_t SADMEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t 
 
 uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-    // log_info("----------\n");
-    // log_info("s-ADM Parse: %d\n", data_size);
-    // log_info("\nmSections\t%d\nmCurrentSectionIndex\t%d\nmSkipSection\t%d\ncurrentDataSize\t%d\n",
-    //mSections,
-    //         mCurrentSectionIndex, mSkipSection,
-    //         data_size - mStreamPos);
-    // log_info("data_size\t%d\n, mStreamPos\t%d\n", data_size, mStreamPos);
+    log_info("Parse Frame Size\n");
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
-        // done with file
+    // done with file
     if (data_size == 0) {
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
@@ -133,19 +127,20 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     try {
         ParseFrameInfo(data, data_size);
 
-        // end of section reached?
+        // end of section reached
         if (mSectionPos == mSectionSize) {
-          log_info("\n!!! Section %d/%d (identifier: %x) done (%d)\n",
+            /*
+              log_info("\n!!! Section %d/%d (identifier: %x) done (%d)\n",
                    mCurrentSectionIndex, mSections - 1,
                    mCurrentSectionIdentifier, mStreamPos);
-          // log_info("mFrameLength: %d\n", mFrameLength);
+            */
           mSectionHeaderParsed = 0;
           mSectionPos = 0;
           mSectionSize = 0;
 
-          // last section?
+          // last section reached
           if (mCurrentSectionIndex == mSections - 1) {
-            log_info("!!! LAST Section (%d) done\n", mCurrentSectionIndex);
+              //log_info("!!! LAST Section (%d) done\n", mCurrentSectionIndex);
 
             uint32_t tmp = mFrameLength;
             ResetFrameInfo();
@@ -166,6 +161,7 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
 void SADMEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
+    log_info("Parse FrameInfo\n");
     if (!mSections) {
         // log_info("parse number sections\n");
         mSections = ReadByte(data, data_size);
@@ -250,7 +246,6 @@ void SADMEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
 
         if (mMetadataHeaderParsed) {
             uint32_t bytesToCopy = BytesAvailable(data_size);
-            log_info("can copy %d\n", bytesToCopy);
             for (uint32_t i = 0; i < bytesToCopy; ++i) {
                 mMetadata.push_back(data[mStreamPos]);
                 mStreamPos++;
@@ -272,7 +267,7 @@ void SADMEssenceParser::XML_StartElement(void *user_data, const char *qname, con
     (void)atts;
     (void)qname;
     (void)parser;
-    log_info(">>> %s\n", qname);
+    //log_info(">>> %s\n", qname);
 }
 
 void SADMEssenceParser::XML_EndElement(void *user_data, const char *qname)
@@ -280,11 +275,12 @@ void SADMEssenceParser::XML_EndElement(void *user_data, const char *qname)
     SADMEssenceParser *parser = static_cast<SADMEssenceParser*>(user_data);
     (void)qname;
     (void)parser;
-    log_info("<<< %s\n", qname);
+    //log_info("<<< %s\n", qname);
 }
 
 void SADMEssenceParser::ParseMetadataPayload()
 {
+    log_info("Parse Metadata\n");
     if (mMetadataFormat == METADATA_FORMAT::GZIP) {
         // unzip first. for now. throw error
         throw InvalidDataError("GZIP not supported yet");
@@ -311,8 +307,6 @@ void SADMEssenceParser::ParseMetadataPayload()
     }
 
     XML_ParserFree(parser);
-
-    BMX_ASSERT(false);
 }
 
 uint8_t SADMEssenceParser::ReadByte(const unsigned char *data, uint32_t data_size)

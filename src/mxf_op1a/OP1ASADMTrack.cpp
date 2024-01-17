@@ -95,8 +95,12 @@ void OP1ASADMTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
 {
     if (mPosition == 0) {
         SADMEssenceParser essence_parser;
+        log_info("----------------\nop1asadm. size: %d\n", size);
         essence_parser.ParseFrameInfo(data, size);
         mSADMDescriptorHelper->UpdateFileDescriptor(&essence_parser);
+        fflush(stdout);
+        fflush(stderr);
+        //BMX_ASSERT(false);
     }
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
