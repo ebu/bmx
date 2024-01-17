@@ -167,6 +167,8 @@ void SADMDescriptorHelper::UpdateFileDescriptor(SADMEssenceParser *essence_parse
     BMX_ASSERT(descriptor);
 
     // add stuff from first parse
+    descriptor->setQuantizationBits(essence_parser->GetBitDepth());
+    descriptor->setAudioSamplingRate(essence_parser->GetAudioSampleRate());
 }
 
 uint32_t SADMDescriptorHelper::GetSampleSize()

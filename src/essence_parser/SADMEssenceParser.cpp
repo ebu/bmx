@@ -86,7 +86,9 @@ SADMEssenceParser::SADMEssenceParser()
       mCurrentSectionIdentifier(SECTION_IDENTIFIER::AUDIO_ESSENCE),
       mMetadataParsed(false),
       mMetadataHeaderParsed(false),
-      mMetadataFormat(METADATA_FORMAT::XML)
+      mMetadataFormat(METADATA_FORMAT::XML),
+      mSampleRate(ZERO_RATIONAL),
+      mBitDepth(0)
 {
     ResetFrameInfo();
 }
@@ -103,6 +105,7 @@ bool SADMEssenceParser::SkipSection() const
         return true;
     }
     // skip metadata only if we have metadata parsed already
+    return false;
     return mMetadataParsed;
 }
 
@@ -116,7 +119,6 @@ uint32_t SADMEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t 
 
 uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-    log_info("Parse Frame Size\n");
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     // done with file
@@ -139,7 +141,7 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
             }
         }
     } catch (NotEnoughDataError &e) {
-        log_info("HELP!!!!! Need more data");
+        log_debug("HELP!!!!! Need more data");
         return ESSENCE_PARSER_NULL_OFFSET;
     } catch (InvalidDataError &e) {
         log_error("InvalidDataError: %s\n", e.msg());
@@ -168,7 +170,7 @@ void SADMEssenceParser::ParseFrameInfo(const unsigned char *data,
 void SADMEssenceParser::ParseSection(const unsigned char *data,
                                        uint32_t data_size)
 {
-    log_info("ParseMGAFrame (%d / %d)\n", mStreamPos, data_size);
+    log_debug("ParseMGAFrame (%d / %d)\n", mStreamPos, data_size);
     if (!mSections) {
         // log_info("parse number sections\n");
         mSections = ReadByte(data, data_size);
@@ -198,7 +200,6 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
             throw InvalidDataError("Invalid section identifier");
         }
 
-        log_info("got section identifier: %X\n", mCurrentSectionIdentifier);
         mSectionSize = data[mStreamPos] << 24 | data[mStreamPos + 1] << 16 |
                        data[mStreamPos + 2] << 8 | data[mStreamPos + 3];
         mStreamPos += 4;
@@ -271,10 +272,44 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
 void SADMEssenceParser::XML_StartElement(void *user_data, const char *qname, const char **atts)
 {
     SADMEssenceParser *parser = static_cast<SADMEssenceParser*>(user_data);
-    (void)atts;
-    (void)qname;
-    (void)parser;
-    //log_info(">>> %s\n", qname);
+
+    string name(qname);
+    if (name == "frameFormat") {
+        for (int i = 0; atts[i]; i += 2) {
+            string attrName = atts[i];
+            string attrVal = atts[i + 1];
+            if (attrName == "type" && attrVal != "full") {
+                throw InvalidDataError("Only full MGA Frames are supported");
+            }
+        }
+    }
+    if (name == "audioTrackUID") {
+        for (int i = 0; atts[i]; i += 2) {
+            string attrName = atts[i];
+            string attrVal = atts[i + 1];
+            if (attrName == "sampleRate") {
+                int intVal = std::stoi(attrVal);
+                if (parser->mSampleRate != ZERO_RATIONAL) {
+                    if (intVal != parser->mSampleRate.numerator) {
+                        throw InvalidDataError("Not all tracks in MGA Frame have same sample rate");
+                    }
+                } else {
+                    parser->mSampleRate.numerator = intVal;
+                    parser->mSampleRate.denominator = 1;
+                }
+            }
+            if (attrName == "bitDepth") {
+                uint32_t intVal = std::stoi(attrVal);
+                if (parser->mBitDepth != 0) {
+                    if (intVal != parser->mBitDepth) {
+                        throw InvalidDataError("Not all tracks in MGA Frame have same bitdepth");
+                    }
+                } else {
+                    parser->mBitDepth = intVal;
+                }
+            }
+        }
+    }
 }
 
 void SADMEssenceParser::XML_EndElement(void *user_data, const char *qname)
@@ -282,12 +317,10 @@ void SADMEssenceParser::XML_EndElement(void *user_data, const char *qname)
     SADMEssenceParser *parser = static_cast<SADMEssenceParser*>(user_data);
     (void)qname;
     (void)parser;
-    //log_info("<<< %s\n", qname);
 }
 
 void SADMEssenceParser::ParseMetadataPayload()
 {
-    log_info("Parse Metadata\n");
     if (mMetadataFormat == METADATA_FORMAT::GZIP) {
         // unzip first. for now. throw error
         throw InvalidDataError("GZIP not supported yet");
@@ -336,14 +369,10 @@ uint32_t SADMEssenceParser::ReadBERLengthField(const unsigned char *data, uint32
         throw NotEnoughDataError();
     }
 
-    log_info("streamPos: %d\n", mStreamPos);
-    log_info("data[0]: %x\n", data[mStreamPos]);
-
     uint8_t byte0 = ReadByte(data, data_size);
 
     // short-form.
     if ((byte0 & 0x80) == 0) {
-        log_info("aha");
         *n = 1;
         return byte0 & 0x7F;
     }
@@ -351,7 +380,6 @@ uint32_t SADMEssenceParser::ReadBERLengthField(const unsigned char *data, uint32
     // long-form
     // grab bits 1 - 7
     uint32_t berLength = byte0 & 0x7F;
-    log_info("berLength: %d\n", berLength);
     *n = berLength;
 
     uint32_t length = 0;

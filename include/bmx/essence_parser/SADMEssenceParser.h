@@ -32,6 +32,7 @@
 #ifndef BMX_SADM_ESSENCE_PARSER_H_
 #define BMX_SADM_ESSENCE_PARSER_H_
 
+#include "mxf/mxf_types.h"
 #include <map>
 #include <vector>
 
@@ -53,6 +54,9 @@ public:
     virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
 
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
+
+    uint32_t GetBitDepth() const { return mBitDepth; }
+    mxfRational GetAudioSampleRate() const { return mSampleRate; }
 
 private:
     enum SECTION_IDENTIFIER {
@@ -112,8 +116,13 @@ private:
 
     METADATA_FORMAT mMetadataFormat;
 
-    // position in metadata payload
+    // METADATA
+    mxfRational mSampleRate;
+    uint32_t mBitDepth;
+
+    // metadata payload
     std::vector<unsigned char> mMetadata;
+
 };
 
 };

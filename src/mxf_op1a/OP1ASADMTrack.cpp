@@ -94,10 +94,11 @@ void OP1ASADMTrack::PrepareWrite(uint8_t track_count)
 void OP1ASADMTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     if (mPosition == 0) {
-        SADMEssenceParser essence_parser;
-        log_info("----------------\nop1asadm. size: %d\n", size);
-        essence_parser.ParseFrameInfo(data, size);
-        mSADMDescriptorHelper->UpdateFileDescriptor(&essence_parser);
+        // get metadata to update Descriptor. We do this only in the first
+        // frame.
+        SADMEssenceParser parser;
+        parser.ParseFrameInfo(data, size);
+        mSADMDescriptorHelper->UpdateFileDescriptor(&parser);
     }
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
