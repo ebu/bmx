@@ -140,6 +140,7 @@ void IABDescriptorHelper::UpdateFileDescriptor()
     BMX_ASSERT(descriptor);
 
     descriptor->setSoundEssenceCompression(mEssenceCompressionLabel);
+    // todo: Set ReferenceAudioalignmentlevel if possible
 }
 
 void IABDescriptorHelper::UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in)

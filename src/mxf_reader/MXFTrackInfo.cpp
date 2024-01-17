@@ -190,6 +190,10 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     isIabDescriptor = false;
     isSADMDescriptor = false;
     descriptor_ul = g_Null_UL;
+
+    mgaSoundEssenceAverageBytesPerSecond = 0;
+    mgaSoundEssenceBlockAlign = 0;
+    BMX_OPT_PROP_DEFAULT(mgaSoundEssenceSequenceOffset, 0);
 }
 
 bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
@@ -199,14 +203,16 @@ bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
         return false;
 
     return MXFTrackInfo::IsCompatible(right) &&
-           edit_rate            == sound_right->edit_rate &&
-           sampling_rate        == sound_right->sampling_rate &&
-           bits_per_sample      == sound_right->bits_per_sample &&
-           block_align          == sound_right->block_align &&
-           channel_count        == sound_right->channel_count &&
-           d10_aes3_valid_flags == sound_right->d10_aes3_valid_flags &&
-           sequence_offset      == sound_right->sequence_offset &&
-           channel_assignment   == sound_right->channel_assignment;
+        edit_rate            == sound_right->edit_rate &&
+        sampling_rate        == sound_right->sampling_rate &&
+        bits_per_sample      == sound_right->bits_per_sample &&
+        block_align          == sound_right->block_align &&
+        channel_count        == sound_right->channel_count &&
+        d10_aes3_valid_flags == sound_right->d10_aes3_valid_flags &&
+        sequence_offset      == sound_right->sequence_offset &&
+        channel_assignment   == sound_right->channel_assignment &&
+        isIabDescriptor      == sound_right->isIabDescriptor &&
+        isSADMDescriptor     == sound_right->isSADMDescriptor;
 }
 
 MXFTrackInfo* MXFSoundTrackInfo::Clone() const
@@ -235,6 +241,10 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     size_t i;
     for (i = 0; i < mca_labels.size(); i++)
       clone->mca_labels.push_back(mca_labels[i]);
+
+    clone->mgaSoundEssenceBlockAlign = mgaSoundEssenceBlockAlign;
+    clone->mgaSoundEssenceAverageBytesPerSecond = mgaSoundEssenceAverageBytesPerSecond;
+    BMX_OPT_PROP_COPY(clone->mgaSoundEssenceSequenceOffset, mgaSoundEssenceSequenceOffset);
 
     return clone;
 }

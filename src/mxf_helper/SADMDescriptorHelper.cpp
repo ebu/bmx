@@ -31,6 +31,7 @@
 
 #include "bmx/BMXTypes.h"
 #include "mxf/mxf_types.h"
+#include <cmath>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -161,14 +162,30 @@ void SADMDescriptorHelper::UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc
     BMX_CHECK(desc_in);
 }
 
+void SADMDescriptorHelper::UpdateAverageBytesPerSecond(uint32_t avgBytes)
+{
+    SADMDescriptor *descriptor = dynamic_cast<SADMDescriptor*>(mFileDescriptor);
+    BMX_ASSERT(descriptor);
+
+    descriptor->setMGASoundEssenceAverageBytesPerSecond(avgBytes);
+}
+
 void SADMDescriptorHelper::UpdateFileDescriptor(SADMEssenceParser *essence_parser)
 {
     SADMDescriptor *descriptor = dynamic_cast<SADMDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
     // add stuff from first parse
+    uint32_t bitDepth = essence_parser->GetBitDepth();
     descriptor->setQuantizationBits(essence_parser->GetBitDepth());
     descriptor->setAudioSamplingRate(essence_parser->GetAudioSampleRate());
+    // I assume we have one channel PER audio and block align refers to this
+    // (and not to the whole array of files where each file is one channel)
+    descriptor->setMGASoundEssenceBlockAlign(1.0 * std::floor((float)(bitDepth + 7.0) / 8.0));
+    descriptor->setMGASoundEssenceSequenceOffset(0);
+
+    int nSubDescriptors = essence_parser->GetCountMetadataSections();
+    printf("\nadd n subs: %d\n", nSubDescriptors);
 }
 
 uint32_t SADMDescriptorHelper::GetSampleSize()

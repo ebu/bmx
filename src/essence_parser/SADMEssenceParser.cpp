@@ -86,7 +86,9 @@ SADMEssenceParser::SADMEssenceParser()
       mCurrentSectionIdentifier(SECTION_IDENTIFIER::AUDIO_ESSENCE),
       mMetadataParsed(false),
       mMetadataHeaderParsed(false),
+      mNumberFramesParsed(0),
       mMetadataFormat(METADATA_FORMAT::XML),
+      mNumberMetadataSections(0),
       mSampleRate(ZERO_RATIONAL),
       mBitDepth(0)
 {
@@ -137,6 +139,7 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
             if (mCurrentSectionIndex == mSections - 1) {
                 uint32_t tmp = mFrameLength;
                 ResetFrameInfo();
+                mNumberFramesParsed++;
                 return tmp;
             }
         }
@@ -199,6 +202,15 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
 
             throw InvalidDataError("Invalid section identifier");
         }
+
+        if (mCurrentSectionIdentifier != SECTION_IDENTIFIER::AUDIO_ESSENCE &&
+            mCurrentSectionIdentifier != SECTION_IDENTIFIER::FILL_SECTION) {
+            // only count on first frame. constant for rest of stream
+            if (mNumberFramesParsed == 0) {
+                mNumberMetadataSections++;
+            }
+        }
+
 
         mSectionSize = data[mStreamPos] << 24 | data[mStreamPos + 1] << 16 |
                        data[mStreamPos + 2] << 8 | data[mStreamPos + 3];

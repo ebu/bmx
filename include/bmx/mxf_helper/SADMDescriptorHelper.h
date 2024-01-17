@@ -56,6 +56,8 @@ public:
     virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
     virtual void SetSampleRate(mxfRational sample_rate);
 
+    void UpdateAverageBytesPerSecond(uint32_t avgBytes);
+
 public:
     void SetSoundEssenceCompression(mxfUL label);
 

@@ -59,6 +59,8 @@ private:
     SADMDescriptorHelper *mSADMDescriptorHelper;
     int64_t mPosition;
     bool mCbe;
+
+    uint64_t mBytesTotal;
 };
 
 

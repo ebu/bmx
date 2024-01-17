@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cmath>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -72,6 +73,7 @@ OP1ASADMTrack::OP1ASADMTrack(OP1AFile *file,
     mSADMDescriptorHelper->SetSoundEssenceCompression(label);
 
     mPosition = 0;
+    mBytesTotal = 0;
 
     // constant bitrate , yes or no? Does s-ADM even allow for non constant bitrate?
     mCbe = false;
@@ -93,12 +95,29 @@ void OP1ASADMTrack::PrepareWrite(uint8_t track_count)
 
 void OP1ASADMTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
+    // calculate bytes per second
+    BMX_ASSERT(num_samples == 1);
+
+
     if (mPosition == 0) {
         // get metadata to update Descriptor. We do this only in the first
         // frame.
         SADMEssenceParser parser;
         parser.ParseFrameInfo(data, size);
         mSADMDescriptorHelper->UpdateFileDescriptor(&parser);
+    }
+
+    mBytesTotal += size;
+
+    uint32_t rounded_rate = (uint32_t)((mFrameRate.numerator + mFrameRate.denominator/2) / mFrameRate.denominator);
+
+    int64_t edit_unit = (mPosition + 1) % rounded_rate;
+    int64_t sec = (mPosition + 1) / rounded_rate;
+    
+    if (edit_unit == 0) {
+        uint32_t avgBytes = std::round((double)mBytesTotal / (double)sec);
+        // TO-DO
+        mSADMDescriptorHelper->UpdateAverageBytesPerSecond(avgBytes);
     }
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);

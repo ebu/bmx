@@ -1933,6 +1933,12 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
         sound_track_info->isIabDescriptor = true;
     } else if (sadm_descriptor) {
         sound_track_info->isSADMDescriptor = true;
+
+        sound_track_info->mgaSoundEssenceAverageBytesPerSecond = sadm_descriptor->getMGASoundEssenceAverageBytesPerSecond();
+        sound_track_info->mgaSoundEssenceBlockAlign = sadm_descriptor->getMGASoundEssenceBlockAlign();
+        if (sadm_descriptor->haveMGASoundEssenceSequenceOffset()) {
+            BMX_OPT_PROP_SET(sound_track_info->mgaSoundEssenceSequenceOffset, sadm_descriptor->getMGASoundEssenceSequenceOffset());
+        }
     } else {
         if (sound_track_info->channel_count > 0) {
             sound_track_info->block_align = sound_track_info->channel_count *

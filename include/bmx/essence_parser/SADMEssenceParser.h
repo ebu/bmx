@@ -57,6 +57,7 @@ public:
 
     uint32_t GetBitDepth() const { return mBitDepth; }
     mxfRational GetAudioSampleRate() const { return mSampleRate; }
+    uint32_t GetCountMetadataSections() const { return mNumberMetadataSections; }
 
 private:
     enum SECTION_IDENTIFIER {
@@ -87,7 +88,7 @@ private:
     static void XML_StartElement(void *user_data, const char *qname, const char **atts);
 
     static void XML_EndElement(void *user_data, const char *qname);
-    
+
     uint32_t ReadBERLengthField(const unsigned char *data, uint32_t data_size, uint32_t *n);
 
     uint8_t ReadByte(const unsigned char *data, uint32_t data_size);
@@ -113,14 +114,17 @@ private:
     bool mMetadataParsed;
     // is metadata header parsed already?
     bool mMetadataHeaderParsed;
+    // number Frames Parsed
+    uint32_t mNumberFramesParsed;
 
     METADATA_FORMAT mMetadataFormat;
 
     // METADATA
+    uint32_t mNumberMetadataSections;
     mxfRational mSampleRate;
     uint32_t mBitDepth;
 
-    // metadata payload
+    // metadata payload. gets overwritten for each section
     std::vector<unsigned char> mMetadata;
 
 };
