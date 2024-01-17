@@ -55,8 +55,6 @@ public:
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
 
 private:
-    void ResetFrameInfo();
-
     enum SECTION_IDENTIFIER {
         AUDIO_ESSENCE = 0x00,
         AUDIO_METADATA_METADATA_PACK = 0x01,
@@ -69,8 +67,17 @@ private:
         GZIP = 0x01
     };
 
+    // resets whole frame. called in between MGAFrame
+    void ResetFrameInfo();
+    // resets sections info.
+    void ResetSectionInfo();
+    // parses a section. re-entrant.
+    void ParseSection(const unsigned char *data, uint32_t data_size);
+    // returns true if section can be skipped
     bool SkipSection() const;
+    // returns number of bytes we still can obtain
     uint32_t BytesAvailable(uint32_t data_size) const;
+    // parses metadata payload from mMetadata vector
     void ParseMetadataPayload();
 
     static void XML_StartElement(void *user_data, const char *qname, const char **atts);

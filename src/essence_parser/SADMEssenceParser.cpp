@@ -125,27 +125,18 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     }
 
     try {
-        ParseFrameInfo(data, data_size);
+        ParseSection(data, data_size);
 
         // end of section reached
         if (mSectionPos == mSectionSize) {
-            /*
-              log_info("\n!!! Section %d/%d (identifier: %x) done (%d)\n",
-                   mCurrentSectionIndex, mSections - 1,
-                   mCurrentSectionIdentifier, mStreamPos);
-            */
-          mSectionHeaderParsed = 0;
-          mSectionPos = 0;
-          mSectionSize = 0;
+            ResetSectionInfo();
 
-          // last section reached
-          if (mCurrentSectionIndex == mSections - 1) {
-              //log_info("!!! LAST Section (%d) done\n", mCurrentSectionIndex);
-
-            uint32_t tmp = mFrameLength;
-            ResetFrameInfo();
-            return tmp;
-          }
+            // last section reached
+            if (mCurrentSectionIndex == mSections - 1) {
+                uint32_t tmp = mFrameLength;
+                ResetFrameInfo();
+                return tmp;
+            }
         }
     } catch (NotEnoughDataError &e) {
         log_info("HELP!!!!! Need more data");
@@ -159,9 +150,25 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     return ESSENCE_PARSER_NULL_OFFSET;
 }
 
-void SADMEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
+void SADMEssenceParser::ParseFrameInfo(const unsigned char *data,
+                                       uint32_t data_size)
 {
-    log_info("Parse FrameInfo\n");
+    // Note: THIS FUNCTION EXPECTS THAT THE WHOLE DATA IS
+    // AVAILABLE IN ONE GO
+
+    // parse first section
+    ParseSection(data, data_size);
+    ResetSectionInfo();
+    for (uint32_t i = 1; i < mSections; ++i) {
+        ParseSection(data, data_size);
+        ResetSectionInfo();
+    }
+}
+
+void SADMEssenceParser::ParseSection(const unsigned char *data,
+                                       uint32_t data_size)
+{
+    log_info("ParseMGAFrame (%d / %d)\n", mStreamPos, data_size);
     if (!mSections) {
         // log_info("parse number sections\n");
         mSections = ReadByte(data, data_size);
@@ -191,11 +198,10 @@ void SADMEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
             throw InvalidDataError("Invalid section identifier");
         }
 
-        // log_info("got section identifier: %X\n", identifier);
+        log_info("got section identifier: %X\n", mCurrentSectionIdentifier);
         mSectionSize = data[mStreamPos] << 24 | data[mStreamPos + 1] << 16 |
                        data[mStreamPos + 2] << 8 | data[mStreamPos + 3];
         mStreamPos += 4;
-        // log_info("got section size: %d\n", mSectionSize);
         mSectionPos = 0;
 
         mFrameLength += SECTION_HEADER_LENGTH;
@@ -231,6 +237,7 @@ void SADMEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
             uint32_t nFields = 0;
             uint32_t payloadLength = ReadBERLengthField(data, data_size, &nFields);
             mMetadata.reserve(payloadLength);
+            mMetadata.clear();
 
             // 1 byte
             uint8_t version = ReadByte(data, data_size);
@@ -364,6 +371,13 @@ uint32_t SADMEssenceParser::BytesAvailable(uint32_t data_size) const
     }
     return data_size - mStreamPos;
 
+}
+
+void SADMEssenceParser::ResetSectionInfo()
+{
+    mSectionHeaderParsed = 0;
+    mSectionPos = 0;
+    mSectionSize = 0;
 }
 
 void SADMEssenceParser::ResetFrameInfo()
