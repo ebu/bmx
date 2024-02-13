@@ -44,6 +44,11 @@ namespace bmx
 
 class BitstreamParser;
 
+struct SADMMetadataSectionInfo {
+    uint8_t index;
+    uint8_t identifier;
+};
+
 class SADMEssenceParser : public EssenceParser
 {
 public:
@@ -58,6 +63,11 @@ public:
     uint32_t GetBitDepth() const { return mBitDepth; }
     mxfRational GetAudioSampleRate() const { return mSampleRate; }
     uint32_t GetCountMetadataSections() const { return mNumberMetadataSections; }
+
+    const std::map<uint8_t, SADMMetadataSectionInfo>& GetSADMMetadataSectionInfo()
+    {
+        return mMetadataSectionInfo;
+    }
 
 private:
     enum SECTION_IDENTIFIER {
@@ -127,6 +137,8 @@ private:
     // metadata payload. gets overwritten for each section
     std::vector<unsigned char> mMetadata;
 
+    // metadata info obtained during parsing of each metadata section
+    std::map<uint8_t, SADMMetadataSectionInfo> mMetadataSectionInfo;
 };
 
 };

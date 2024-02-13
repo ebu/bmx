@@ -189,8 +189,6 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
         if ((data_size - mStreamPos) < SECTION_HEADER_LENGTH) {
             throw NotEnoughDataError();
         }
-        // no need to call ReadByte here because of the conditional in the
-        // if statement
         mCurrentSectionIndex = ReadByte(data, data_size);
         mCurrentSectionIdentifier = (SECTION_IDENTIFIER)(ReadByte(data, data_size));
         if (mCurrentSectionIdentifier != SECTION_IDENTIFIER::AUDIO_ESSENCE &&
@@ -208,6 +206,11 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
             // only count on first frame. constant for rest of stream
             if (mNumberFramesParsed == 0) {
                 mNumberMetadataSections++;
+
+                SADMMetadataSectionInfo info;
+                info.identifier = (uint8_t)mCurrentSectionIdentifier;
+                info.index = mCurrentSectionIndex;
+                mMetadataSectionInfo[info.index] = info;
             }
         }
 

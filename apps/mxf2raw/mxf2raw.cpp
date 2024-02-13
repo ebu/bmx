@@ -896,6 +896,7 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         if (text_writer)
             text_writer->PushItemValueIndent(strlen("d10_aes3_valid_flags "));
 
+       
         if (sound_info->isIabDescriptor) {
             info_writer->StartSection("IAB_descriptor");
         }
@@ -932,6 +933,15 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             info_writer->WriteIntegerItem("dial_norm", sound_info->dial_norm);
         if (sound_info->channel_assignment != g_Null_UL)
             info_writer->WriteAUIDItem("channel_assignment", sound_info->channel_assignment);
+
+        if (sound_info->isSADMDescriptor) {
+            info_writer->WriteIntegerItem("mga_block_align", sound_info->mgaSoundEssenceBlockAlign);
+            info_writer->WriteIntegerItem("mga_average_bps", sound_info->mgaSoundEssenceAverageBytesPerSecond);
+            if (BMX_OPT_PROP_IS_SET(sound_info->mgaSoundEssenceSequenceOffset)) {
+                info_writer->WriteIntegerItem("mga_sequence_offset", sound_info->mgaSoundEssenceSequenceOffset);
+            }
+        }
+
         if (!sound_info->mca_labels.empty()) {
             info_writer->StartSection("mca_labels");
             write_track_mca_label_info(info_writer, reader, sound_info, mca_detail);

@@ -74,6 +74,10 @@ public:
     virtual uint32_t GetSampleSize();
 
     mxfUL mEssenceCompressionLabel;
+
+private:
+    std::vector<mxfpp::MGAAudioMetadataSubDescriptor*> mMGAAudioMetadataSubDescriptors;
+    std::vector<mxfpp::SADMAudioMetadataSubDescriptor*> mSADMAudioMetadataSubDescriptors;
 };
 
 

@@ -30,6 +30,7 @@
  */
 
 #include "bmx/BMXTypes.h"
+#include "bmx/essence_parser/SADMEssenceParser.h"
 #include "mxf/mxf_types.h"
 #include <cmath>
 #ifdef HAVE_CONFIG_H
@@ -97,6 +98,8 @@ SADMDescriptorHelper::SADMDescriptorHelper()
 
 SADMDescriptorHelper::~SADMDescriptorHelper()
 {
+    mMGAAudioMetadataSubDescriptors.clear();
+    mSADMAudioMetadataSubDescriptors.clear();
 }
 
 void SADMDescriptorHelper::Initialize(FileDescriptor *file_descriptor,
@@ -119,6 +122,24 @@ void SADMDescriptorHelper::Initialize(FileDescriptor *file_descriptor,
         }
     }
     BMX_ASSERT(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
+
+    if (file_descriptor->haveSubDescriptors()) {
+        vector<SubDescriptor*> sub_descriptors = file_descriptor->getSubDescriptors();
+        for (size_t i = 0; i < sub_descriptors.size(); ++i) {
+            MGAAudioMetadataSubDescriptor *mga = dynamic_cast<MGAAudioMetadataSubDescriptor*>(sub_descriptors[i]);
+            if (mga) {
+                printf("SADMDescriptorHelper::Initialize. Push MGASubDesc\n");
+                mMGAAudioMetadataSubDescriptors.push_back(mga);
+                continue;
+            }
+            SADMAudioMetadataSubDescriptor *sadm = dynamic_cast<SADMAudioMetadataSubDescriptor*>(sub_descriptors[i]);
+            if (sadm) {
+                printf("SADMDescriptorHelper::Initialize. Push SADMSubDesc\n");
+                mSADMAudioMetadataSubDescriptors.push_back(sadm);
+                continue;
+            }
+        }
+    }
 }
 
 void SADMDescriptorHelper::SetSoundEssenceCompression(mxfUL label)
@@ -135,6 +156,7 @@ void SADMDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 FileDescriptor* SADMDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
     mFileDescriptor = new SADMDescriptor(header_metadata);
+
     UpdateFileDescriptor();
     return mFileDescriptor;
 }
@@ -184,8 +206,43 @@ void SADMDescriptorHelper::UpdateFileDescriptor(SADMEssenceParser *essence_parse
     descriptor->setMGASoundEssenceBlockAlign(1.0 * std::floor((float)(bitDepth + 7.0) / 8.0));
     descriptor->setMGASoundEssenceSequenceOffset(0);
 
-    int nSubDescriptors = essence_parser->GetCountMetadataSections();
-    printf("\nadd n subs: %d\n", nSubDescriptors);
+    for (auto it = essence_parser->GetSADMMetadataSectionInfo().cbegin();
+         it != essence_parser->GetSADMMetadataSectionInfo().cend();
+         ++it)
+    {
+        const SADMMetadataSectionInfo& info = it->second;
+        if (info.identifier != 0x02) {
+            throw BMXException("Header metadata identifier 0x01 not supported yet.");
+        }
+        HeaderMetadata *hm = mFileDescriptor->getHeaderMetadata();
+        MGAAudioMetadataSubDescriptor *mga = new MGAAudioMetadataSubDescriptor(hm);
+
+        // that correct?
+        mxfUUID linkId = generate_uuid();
+        mga->setMGALinkID(linkId);
+        mga->setMGAAudioMetadataIndex(info.index);
+        mga->setMGAAudioMetadataIdentifier(info.identifier);
+
+        // ST 2127-10:2022 , 10.2
+        if (info.identifier == 0x02) {
+            mxfUL sadmMetadataPayloadUL = {
+                0x06,0x0e,0x2b,0x34,
+                0x04,0x01,0x01,0x0d,
+                0x04,0x04,0x02,0x12,
+                0x00,0x00,0x00,0x00
+            };
+            std::vector<mxfUL> payloadULArray = { sadmMetadataPayloadUL };        
+            mga->setMGAAudioMetadataPayloadULArray(payloadULArray);
+        }
+
+        SADMAudioMetadataSubDescriptor *sadm = new SADMAudioMetadataSubDescriptor(hm);
+
+        sadm->setSADMMetadataSectionLinkID(linkId);
+        // TODO: add profile levels
+
+        mFileDescriptor->appendSubDescriptors(mga);
+        mFileDescriptor->appendSubDescriptors(sadm);
+    }
 }
 
 uint32_t SADMDescriptorHelper::GetSampleSize()

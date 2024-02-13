@@ -5552,7 +5552,7 @@ int main(int argc, const char** argv)
                     break;
                 case SADM:
                     // TODO: Markus: Fill that in
-                    log_info("TO-DO: init_clip track for SADM\n");
+                    //log_info("TO-DO: init_clip track for SADM\n");
                     break;
                 case IAB:
                     clip_track->SetSamplingRate(output_sound_info->sampling_rate);
