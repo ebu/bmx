@@ -61,7 +61,6 @@ ISXDDescriptorBase::~ISXDDescriptorBase()
 bool ISXDDescriptorBase::haveNamespaceURI() const
 {
     return haveItem(&MXF_ITEM_K(ISXDDescriptor, NamespaceURI));
-
 }
 
 std::string ISXDDescriptorBase::getNamespaceURI() const

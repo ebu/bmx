@@ -65,6 +65,9 @@ list(APPEND MXFpp_sources
     metadata/IABDescriptor.cpp
     metadata/ISXDDescriptor.cpp
     metadata/SADMDescriptor.cpp
+    metadata/MGAAudioMetadataSubDescriptor.cpp
+    metadata/SADMAudioMetadataSubDescriptor.cpp
+    metadata/MGASoundfieldGroupLabelSubDescriptor.cpp
 )
 
 list(APPEND MXFpp_headers
@@ -135,6 +138,9 @@ list(APPEND MXFpp_headers
     metadata/IABDescriptor.h
     metadata/ISXDDescriptor.h
     metadata/SADMDescriptor.h
+    metadata/MGAAudioMetadataSubDescriptor.h
+    metadata/SADMAudioMetadataSubDescriptor.h
+    metadata/MGASoundfieldGroupLabelSubDescriptor.h
 )
 
 add_subdirectory(base)

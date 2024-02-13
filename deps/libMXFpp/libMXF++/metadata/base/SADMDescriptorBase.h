@@ -35,7 +35,7 @@
 
 
 #include <libMXF++/metadata/GenericSoundEssenceDescriptor.h>
-
+#include <stdint.h>
 
 namespace mxfpp
 {
@@ -51,7 +51,15 @@ public:
     SADMDescriptorBase(HeaderMetadata *headerMetadata);
     virtual ~SADMDescriptorBase();
 
+    uint16_t getMGASoundEssenceBlockAlign() const;
+    void setMGASoundEssenceBlockAlign(uint16_t blockAlign);
 
+    uint32_t getMGASoundEssenceAverageBytesPerSecond() const;
+    void setMGASoundEssenceAverageBytesPerSecond(uint32_t bps);
+
+    bool haveMGASoundEssenceSequenceOffset() const;
+    uint8_t getMGASoundEssenceSequenceOffset() const;
+    void setMGASoundEssenceSequenceOffset(uint8_t offset);
 protected:
     SADMDescriptorBase(HeaderMetadata *headerMetadata,
                        ::MXFMetadataSet *cMetadataSet);

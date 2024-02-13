@@ -297,11 +297,12 @@ void HeaderMetadata::initialiseObjectFactory()
     REGISTER_CLASS(GenericDataEssenceDescriptor);
     REGISTER_CLASS(MultipleDescriptor);
     REGISTER_CLASS(WaveAudioDescriptor);
-    // Markus
     REGISTER_CLASS(IABDescriptor);
     REGISTER_CLASS(ISXDDescriptor);
     REGISTER_CLASS(SADMDescriptor);
-    // Markus END
+    REGISTER_CLASS(MGAAudioMetadataSubDescriptor);
+    REGISTER_CLASS(MGASoundfieldGroupLabelSubDescriptor);
+    REGISTER_CLASS(SADMAudioMetadataSubDescriptor);
     REGISTER_CLASS(AES3AudioDescriptor);
     REGISTER_CLASS(ANCDataDescriptor);
     REGISTER_CLASS(VBIDataDescriptor);

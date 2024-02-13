@@ -53,5 +53,43 @@ SADMDescriptorBase::SADMDescriptorBase(HeaderMetadata *headerMetadata, ::MXFMeta
 : GenericSoundEssenceDescriptor(headerMetadata, cMetadataSet)
 {}
 
-SADMDescriptorBase::~SADMDescriptorBase()
-{}
+SADMDescriptorBase::~SADMDescriptorBase() {}
+
+uint16_t SADMDescriptorBase::getMGASoundEssenceBlockAlign() const
+{
+    return getUInt16Item(&MXF_ITEM_K(SADMDescriptor, MGASoundEssenceBlockAlign));
+}
+
+void SADMDescriptorBase::setMGASoundEssenceBlockAlign(uint16_t blockAlign)
+{
+    setUInt16Item(&MXF_ITEM_K(SADMDescriptor, MGASoundEssenceBlockAlign),
+                  blockAlign);
+}
+
+uint32_t SADMDescriptorBase::getMGASoundEssenceAverageBytesPerSecond() const
+{
+    return getUInt32Item(&MXF_ITEM_K(SADMDescriptor, MGASoundEssenceAverageBytesPerSecond));
+}
+
+void SADMDescriptorBase::setMGASoundEssenceAverageBytesPerSecond(uint32_t bps)
+{
+    setUInt32Item(&MXF_ITEM_K(SADMDescriptor, MGASoundEssenceAverageBytesPerSecond),
+                  bps);
+}
+
+bool SADMDescriptorBase::haveMGASoundEssenceSequenceOffset() const
+{
+    return haveItem(&MXF_ITEM_K(SADMDescriptor, MGASoundEssenceSequenceOffset));
+}
+
+uint8_t SADMDescriptorBase::getMGASoundEssenceSequenceOffset() const
+{
+    return getUInt8Item(&MXF_ITEM_K(SADMDescriptor, MGASoundEssenceSequenceOffset));
+}
+
+void SADMDescriptorBase::setMGASoundEssenceSequenceOffset(uint8_t offset)
+{
+    setUInt8Item(&MXF_ITEM_K(SADMDescriptor, MGASoundEssenceSequenceOffset),
+                 offset);
+}
+
