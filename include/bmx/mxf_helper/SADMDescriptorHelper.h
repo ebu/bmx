@@ -78,6 +78,7 @@ public:
 private:
     std::vector<mxfpp::MGAAudioMetadataSubDescriptor*> mMGAAudioMetadataSubDescriptors;
     std::vector<mxfpp::SADMAudioMetadataSubDescriptor*> mSADMAudioMetadataSubDescriptors;
+    std::vector<mxfpp::MGASoundfieldGroupLabelSubDescriptor*> mMGASoundfieldGroupLabelSubDescriptors;
 };
 
 

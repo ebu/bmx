@@ -100,6 +100,7 @@ SADMDescriptorHelper::~SADMDescriptorHelper()
 {
     mMGAAudioMetadataSubDescriptors.clear();
     mSADMAudioMetadataSubDescriptors.clear();
+    mMGASoundfieldGroupLabelSubDescriptors.clear();
 }
 
 void SADMDescriptorHelper::Initialize(FileDescriptor *file_descriptor,
@@ -137,6 +138,10 @@ void SADMDescriptorHelper::Initialize(FileDescriptor *file_descriptor,
                 printf("SADMDescriptorHelper::Initialize. Push SADMSubDesc\n");
                 mSADMAudioMetadataSubDescriptors.push_back(sadm);
                 continue;
+            }
+            MGASoundfieldGroupLabelSubDescriptor *sfgl = dynamic_cast<MGASoundfieldGroupLabelSubDescriptor*>(sub_descriptors[i]);
+            if (sfgl) {
+                mMGASoundfieldGroupLabelSubDescriptors.push_back(sfgl);
             }
         }
     }
@@ -240,8 +245,27 @@ void SADMDescriptorHelper::UpdateFileDescriptor(SADMEssenceParser *essence_parse
         sadm->setSADMMetadataSectionLinkID(linkId);
         // TODO: add profile levels
 
+        MGASoundfieldGroupLabelSubDescriptor *sfgl = new MGASoundfieldGroupLabelSubDescriptor(hm);
+        // MGA related stuff
+        sfgl->setMGAMetadataSectionLinkID(linkId);
+        // generic soundfield stuff (ST2127-1:202 - Table 12)
+        mxfUL dictId = {
+            0x06,0x0e,0x2b,0x34,
+            0x04,0x01,0x01,0x0d,
+            0x03,0x02,0x02,0x22,
+            0x00,0x00,0x00,0x00
+        };
+        sfgl->setMCALabelDictionaryID(dictId);
+        sfgl->setMCALinkID(generate_uuid());
+        sfgl->setMCATagSymbol("MGASf");
+        sfgl->setMCATagName("MGA Soundfield");
+
         mFileDescriptor->appendSubDescriptors(mga);
+        mMGAAudioMetadataSubDescriptors.push_back(mga);
         mFileDescriptor->appendSubDescriptors(sadm);
+        mSADMAudioMetadataSubDescriptors.push_back(sadm);
+        mFileDescriptor->appendSubDescriptors(sfgl);
+        mMGASoundfieldGroupLabelSubDescriptors.push_back(sfgl);
     }
 }
 
