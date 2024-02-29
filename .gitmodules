@@ -1,8 +1,8 @@
 [submodule "libMXF"]
 	path = deps/libMXF
-	branch = iab
+	branch = sadm
 	url = git@github.com:MarkusPfundstein/dolby-libMXF.git
 [submodule "libMXFpp"]
 	path = deps/libMXFpp
-	branch = iab
+	branch = sadm
 	url = git@github.com:MarkusPfundstein/dolby-libMXFpp.git
