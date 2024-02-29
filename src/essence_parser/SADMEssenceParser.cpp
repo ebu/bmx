@@ -41,6 +41,7 @@
 #include "EssenceParserUtils.h"
 #include <bmx/Logging.h>
 #include <expat.h>
+#include <algorithm>
 
 using namespace std;
 using namespace bmx;
