@@ -64,8 +64,8 @@ OP1AIABTrack::OP1AIABTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
     // Essence Coding (4.10, SMPTE ST 2098-2)
     mxfUL label = {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x05, 0x0E, 0x09, 0x06, 0x04, 0x00, 0x00, 0x00, 0x00};
     mIABDescriptorHelper->SetSoundEssenceCompression(label);
+    // according to spec, channel count in IAB is never set 
     mIABDescriptorHelper->SetChannelCount(0);
-    //mIABDescriptorHelper->SetReferenceAudioAlignmentLevel(/* ? */);
 
     mPosition = 0;
 
@@ -111,4 +111,9 @@ void OP1AIABTrack::SetReferenceImageEditRate(Rational edit_rate)
 void OP1AIABTrack::SetQuantizationBits(uint32_t bitDepth)
 {
     mIABDescriptorHelper->SetQuantizationBits(bitDepth);
+}
+
+void OP1AIABTrack::SetChannelCount(uint32_t channelCount)
+{
+    mIABDescriptorHelper->SetChannelCount(channelCount);
 }

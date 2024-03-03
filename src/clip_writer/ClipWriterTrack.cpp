@@ -814,7 +814,17 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
         {
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
             if (pcm_track)
+            {
                 pcm_track->SetChannelCount(count);
+            }
+            else
+            {
+                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
+                if (iab_track)
+                {
+                    iab_track->SetChannelCount(count);
+                }
+            }
             break;
         }
         case CW_AVID_CLIP_TYPE:
@@ -836,6 +846,14 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
             RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
             if (pcm_track)
                 pcm_track->SetChannelCount(count);
+            else
+            {
+                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
+                if (iab_track)
+                {
+                    iab_track->SetChannelCount(count);
+                }
+            }
             break;
         }
         case CW_WAVE_CLIP_TYPE:

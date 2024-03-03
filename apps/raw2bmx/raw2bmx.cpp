@@ -4653,18 +4653,32 @@ int main(int argc, const char** argv)
                     throw false;
                 }
 
-                //iab_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+                log_debug("IAB sample rate: %d/%d\n",
+                          iab_parser->GetSampleRate().numerator,
+                          iab_parser->GetSampleRate().denominator);
 
+                log_debug("IAB bit depth: %d\n",
+                          iab_parser->GetBitDepth());
+
+                log_debug("IAB framerate: %d/%d\n",
+                          iab_parser->GetFrameRate().numerator,
+                          iab_parser->GetFrameRate().denominator);
+                                                    
+                log_debug("IAB parsed channel count: %d\n",
+                          iab_parser->GetChannelCount());
+                
+                log_debug("--iab-chan:  count: %d\n",
+                          input->iab_channel_count);
+
+                input->iab_channel_count = input->iab_channel_count != 0 ? input->iab_channel_count : iab_parser->GetChannelCount();                
+
+                if (input->iab_channel_count == 0) {
+                    log_warn("No channel count found in first IAFrame. Will use 0. You can use --iab-chan to explicitely set it.\n");
+                }
+                
                 input->sampling_rate       = iab_parser->GetSampleRate();
                 input->bits_per_sample     = iab_parser->GetBitDepth();
                 input->ref_image_edit_rate = iab_parser->GetFrameRate();       
-
-                input->iab_channel_count = input->iab_channel_count != 0 ? input->iab_channel_count : iab_parser->GetChannelCount();
-
-                if (input->iab_channel_count == 0) {
-                    log_error("Error reading channel count from first IAFrame and no channel count provided (use --iab-chan\n");
-                    throw false;
-                }
 
                 if (!frame_rate_set) {
                     if (iab_parser->HasFrameRate()) {
@@ -5558,6 +5572,7 @@ int main(int argc, const char** argv)
                     clip_track->SetSamplingRate(output_sound_info->sampling_rate);
                     clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
                     clip_track->SetReferenceImageEditRate(output_sound_info->ref_image_edit_rate);
+                    clip_track->SetChannelCount(input->iab_channel_count);
                     break;
                 case ISXD:
                     break;
@@ -5931,7 +5946,6 @@ int main(int argc, const char** argv)
         // write samples
         bmx::ByteArray pcm_buffer;
         int64_t total_read = 0;
-        log_info("have_samples_to_write: %d\n", have_samples_to_write);
         while (have_samples_to_write && (duration < 0 || total_read < duration)) {
 
             log_info("\33[2K\r");

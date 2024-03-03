@@ -65,14 +65,14 @@ enum IABElementId {
 inline void IsValidIABElement(IABElementId id)
 {
     bool valid = (id == IAB_ELEMENT_IA_FRAME 
-            || id == IAB_ELEMENT_BED_DEFINITION
-            || id == IAB_ELEMENT_BED_REMAP
-            || id == IAB_OBJECT_DEFINITION
-            || id == IAB_OBJECT_ZONE_DEFINITION19
-            || id == AUTHORING_TOOL_INFO
-            || id == USER_DATA
-            || id == AUDIO_DATA_DLC
-            || id == AUDIO_DATA_PCM);
+                  || id == IAB_ELEMENT_BED_DEFINITION
+                  || id == IAB_ELEMENT_BED_REMAP
+                  || id == IAB_OBJECT_DEFINITION
+                  || id == IAB_OBJECT_ZONE_DEFINITION19
+                  || id == AUTHORING_TOOL_INFO
+                  || id == USER_DATA
+                  || id == AUDIO_DATA_DLC
+                  || id == AUDIO_DATA_PCM);
 
     if (!valid) {
         log_error("Invalid IAB Element ID: %04x\n", id);
@@ -257,7 +257,7 @@ void IABEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
 {
     ResetFrameInfo();
 
-    log_debug("New IAB Frame\n");
+    log_debug("Parse New IAB Frame\n");
     // for early break
     mNecessaryFrameInfoAcquired = false;
 
@@ -286,6 +286,7 @@ void IABEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
 
 void IABEssenceParser::ReadPreamble()
 {
+    log_debug("Read Preamble\n");
     uint8_t preambleTag = mBitstreamParser->read(8);
     if (preambleTag != IAB_PREAMBLE_TAG) {
         throw InvalidData("Invalid Preamble Tag");
@@ -301,12 +302,15 @@ void IABEssenceParser::ReadPreamble()
 
 void IABEssenceParser::ReadIAElement()
 {
+    log_debug("ReadIAFrame()\n");
     // skip rest of stream if we have all info we need
     if (mNecessaryFrameInfoAcquired) {
+        log_debug("Done\n");
         return;
     }
 
     IABElementId elementId = (IABElementId)read_plex(mBitstreamParser, 8);
+
 
     IsValidIABElement(elementId);
 
@@ -336,6 +340,7 @@ void IABEssenceParser::ReadIAElement()
 
 void IABEssenceParser::ReadIAFrame()
 {
+    log_debug("ReadIAFrame()\n");
     // version (8)
     // sample rate (2)
     // bit depth (2)
@@ -363,12 +368,14 @@ void IABEssenceParser::ReadIAFrame()
     mFrameRate = static_cast<IABFrameRate>(framerate);
 
     for (uint32_t i =0 ; i < nSubElements; ++i) {
+
         ReadIAElement();
     }
 }
 
 void IABEssenceParser::ReadBedDefinition()
 {
+    log_debug("ReadBedDefinition()\n");
     // metaId (8)
     read_plex(mBitstreamParser, 8);
     
@@ -382,18 +389,20 @@ void IABEssenceParser::ReadBedDefinition()
     // channel count (4)
     uint32_t channelCount = read_plex(mBitstreamParser, 4);
 
-    //log_info("Channel Count: %d\n", channelCount);
+    log_debug("Channel Count: %d\n", channelCount);
 
     BMX_ASSERT(channelCount != 0);
     mChannelCount = channelCount;
 
     // done. no more data needed
+    log_debug("!!!! Set done flag\n");
     mNecessaryFrameInfoAcquired = true;
 }
 
 void IABEssenceParser::ResetFrameInfo()
 {
     mBitstreamParser->reset();
+    mNecessaryFrameInfoAcquired = false;
     mFrameLength = 0;
     mFrameHeaderParsed = false;
     mFrameRate = IAB_FRAMERATE_UNDEFINED;
