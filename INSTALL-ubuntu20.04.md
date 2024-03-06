@@ -23,6 +23,7 @@ git pull origin sadm
 cd ..
 cd deps/libMXF++
 git pull origin sadm
+cd ../../
 
 ### build
 mkdir build
