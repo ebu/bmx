@@ -4,4 +4,4 @@
 * Installation
 
 To setup this file with proper LSP integration on Emacs, you need to make sure that you create the build in the /build/ directory.
-Then run =bear cmake --build .= to create the compile-commands.json file. clangd will then find it.
+Then run =bear -- cmake --build .= to create the compile-commands.json file. clangd will then find it.
