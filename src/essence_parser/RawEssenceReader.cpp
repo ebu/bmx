@@ -152,10 +152,11 @@ void RawEssenceReader::Reset()
 
 bool RawEssenceReader::ReadAndParseSample()
 {
-    // log_info("----------->\n");
+    //log_info("----------->\n");
     BMX_CHECK(mEssenceParser);
 
     uint32_t sample_start_offset = mSampleDataSize;
+    //log_info("sample_start_offset: %d\n", sample_start_offset);
     uint32_t sample_num_read = mSampleBuffer.GetSize() - sample_start_offset;
     uint32_t num_read;
 
@@ -181,11 +182,13 @@ bool RawEssenceReader::ReadAndParseSample()
         sample_num_read += ReadBytes(READ_BLOCK_SIZE);
     }
 
+    //log_info("sample_num_read: %d\n", sample_num_read);
     uint32_t sample_size = 0;
     while (true) {
         sample_size = mEssenceParser->ParseFrameSize(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);
-        if (sample_size != ESSENCE_PARSER_NULL_OFFSET)
+        if (sample_size != ESSENCE_PARSER_NULL_OFFSET) {
             break;
+        }
 
         BMX_CHECK_M(mMaxSampleSize == 0 || mSampleBuffer.GetSize() - sample_start_offset <= mMaxSampleSize,
                    ("Max raw sample size (%u) exceeded", mMaxSampleSize));
@@ -203,6 +206,7 @@ bool RawEssenceReader::ReadAndParseSample()
         return false;
     } else if (sample_size == ESSENCE_PARSER_NULL_OFFSET) {
         // assume remaining data is valid sample data
+        //log_info("last sample read\n");
         mLastSampleRead = true;
         if (sample_num_read > 0) {
             mSampleDataSize = mSampleBuffer.GetSize();

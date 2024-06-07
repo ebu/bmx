@@ -5949,7 +5949,11 @@ int main(int argc, const char** argv)
         while (have_samples_to_write && (duration < 0 || total_read < duration)) {
 
             log_info("\33[2K\r");
-            log_info("frame: %ld | %ld", total_read, duration);
+            if (duration != -1) {
+                log_info("write frame: %ld | %ld", total_read, duration);
+            } else {
+                log_info("write frame: %ld", total_read);
+            }
             fflush(stdout);
                       // break if reached end of partial file regression test
             if (regtest_end >= 0 && total_read >= regtest_end)
@@ -6046,7 +6050,6 @@ int main(int argc, const char** argv)
                 rt_sleep(rt_factor, rt_start, frame_rate, total_read);
         }
 
-
         if (regtest_end < 0) { // only complete if not regression testing partial files
 
             // complete AS-10/11 descriptive metadata
@@ -6061,6 +6064,7 @@ int main(int argc, const char** argv)
 
             clip->CompleteWrite();
 
+            printf("\n");
             log_info("Duration: %" PRId64 " (%s)\n",
                      clip->GetDuration(),
                      get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());

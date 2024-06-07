@@ -84,8 +84,10 @@ void OP1AISXDTrack::PrepareWrite(uint8_t track_count)
 void OP1AISXDTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     if (mPosition == 0) {
+        //log_info("Write samples int\n");
         ISXDEssenceParser essence_parser;
         essence_parser.ParseFrameInfo(data, size);
+        //log_info("Update FD\n");
         mISXDDescriptorHelper->UpdateFileDescriptor(&essence_parser);
     }
 

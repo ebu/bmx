@@ -74,10 +74,11 @@ void ISXDEssenceParser::StartElement(void *user_data, const char *qname, const c
     // set RootElementKey for very first element that we encounter.
     if (parser->mRootElementKey == "")
     {
-        // log_info("ISXDEssenceParser. Set RootElementKey to %s with ns: %s\n", name.c_str(), ns.c_str());
-
         string ns, name;
         split_qname(qname, &ns, &name);
+#if 0
+        log_info("ISXDEssenceParser. Set RootElementKey to %s with ns: %s\n", name.c_str(), ns.c_str());
+#endif
 
         parser->mRootElementKey = name;
         parser->mNamespace = ns;
@@ -93,7 +94,12 @@ void ISXDEssenceParser::EndElement(void *user_data, const char *qname)
 
     if (name == parser->mRootElementKey)
     {
-        // log_info("ISXDEssenceParser. DONE %s, ns: %s\n", name.c_str(), ns.c_str());
+#if 0
+        log_info("ISXDEssenceParser. DONE %s, ns: %s\n", name.c_str(), ns.c_str());
+        log_info("mBytesRead: %d\n", parser->mBytesRead);
+        log_info("mPos: %d\n", parser->mPos);
+        log_info("STOP PARSER\n");
+#endif
         parser->mFullFrameParsed = true;
         XML_StopParser(parser->mParser, true);
     }
@@ -143,6 +149,8 @@ void ISXDEssenceParser::ResetParser()
     mBytesRead = 0;
     mFullFrameParsed = 0;
     mPos = 0;
+
+    //log_info("Reset ISXD parser\n");
 }
 
 uint32_t ISXDEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
@@ -156,12 +164,13 @@ uint32_t ISXDEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t 
 
 uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-  //log_info("ISXD Parse: %d\n", data_size);
+    //log_info("ISXD Parse: %d\n", data_size);
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     // done with file
     if (data_size == 0)
     {
+        //log_info("END OF FILE\n");
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
@@ -171,20 +180,13 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
     if (mFullFrameParsed)
     {
-          //if (data[mBytesRead] == '\n') {
-
-        if (mBytesRead + 1 >= data_size) {
-            // one more round
-            // log_info("\t\tONE MORE\n");
-            return ESSENCE_PARSER_NULL_OFFSET;
-        }
-
-        // log_info("\t\tADD ONE\n");
-        mBytesRead += 1;
-
-          //}
 #if 0
-        log_info("END mPos: %ld, data_size: %ld\n", mPos, data_size);
+        printf("$$$$$");
+        for (int i = 0; i < mBytesRead; ++i) {
+          printf("%c", data[i]);
+        }
+        printf("**********\n\n");
+        log_info("END mPos: %ld, mBytesRead: %d, data_size: %ld\n", mPos, mBytesRead, data_size);
         log_info("DONE: '%c' '%c' '%c'\n",
                    data[mBytesRead-2],
                    data[mBytesRead-1],
@@ -192,17 +194,28 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
 
 
-        printf("$$$$$");
-        for (int i = 0; i < mBytesRead; ++i) {
-          printf("%c", data[i]);
-        }
-        printf("$$$$$$\n\n");
 #endif
+
+        // doesnt seem to be necessary
+        if (mBytesRead + 1 >= data_size) {
+            // one more round
+            //log_info("\t\tLast one\n");
+            return ESSENCE_PARSER_NULL_OFFSET;
+        }
+
+        mBytesRead += 1;
+        if (data[mBytesRead] == '\n') {
+            mBytesRead += 1;
+        }
+        
+
         uint32_t len = mBytesRead;
+        //log_info("end of frame: %ld\n", len);
         ResetParser();
         return len;
     }
 
+    //log_info("NULL_OFFSET\n");
     return ESSENCE_PARSER_NULL_OFFSET;
 }
 
