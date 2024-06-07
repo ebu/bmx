@@ -23,6 +23,7 @@ bmx provides a set of file format text dumper and essence extraction tools:
 
 The following input and output wrapper formats and flavours are supported:
 
+* Repository Format
 * [AMWA AS-02](https://www.amwa.tv/specifications) MXF Versioning
 * [AMWA AS-10](https://www.amwa.tv/specifications) MXF for Production
 * [AMWA AS-11](https://www.amwa.tv/specifications) Media Contribution File Formats (MXF)
