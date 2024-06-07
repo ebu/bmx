@@ -35,7 +35,7 @@ The following input and output wrapper formats and flavours are supported:
 
 The following essence formats are supported:
 
-* [ISXD
+* ISXD - Isochronous Stream of XML Documents
 * [s-ADM](https://www.itu.int/rec/R-REC-BS.2076-2-201910-I/en) Serial Audio Definition Model
 * IAB - Immersive Audio Bitstream
 * [SMPTE RP 2027](https://ieeexplore.ieee.org/document/7290936) AVC-Intra video, class 50 / 100 / 200
