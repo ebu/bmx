@@ -1,4 +1,4 @@
-# bmx Library and Utilities
+# bmx Library and Utilities (Dolby fork)
 
 bmx is a library and set of utilities to read and write the [SMPTE ST 377-1 MXF file format](https://ieeexplore.ieee.org/document/7292073).
 
@@ -35,6 +35,9 @@ The following input and output wrapper formats and flavours are supported:
 
 The following essence formats are supported:
 
+* [ISXD
+* [s-ADM](https://www.itu.int/rec/R-REC-BS.2076-2-201910-I/en) Serial Audio Definition Model
+* IAB - Immersive Audio Bitstream
 * [SMPTE RP 2027](https://ieeexplore.ieee.org/document/7290936) AVC-Intra video, class 50 / 100 / 200
 * [SMPTE ST 356](https://ieeexplore.ieee.org/document/7290684) D-10 video, 30 / 40 / 50 MBit/s
 * [DV](https://en.wikipedia.org/wiki/DV) video, 25 / 50 / 100 MBit/s
@@ -73,7 +76,7 @@ The build process has been tested on Ubuntu, Debian, MacOS and Windows (Microsof
 
 ### Dependencies
 
-The [libMXF](https://github.com/bbc/libMXF) and [libMXF++](https://github.com/bbc/libMXFpp) libraries are required. They are included as git submodules in the `deps/` directory. Run
+The [libMXF](https://github.com/MarkusPfundstein/dolby-libMXF) and [libMXF++](https://github.com/MarkusPfundstein/dolby-libMXFpp) libraries are required. They are included as git submodules in the `deps/` directory. Run
 
 ```bash
 git submodule update --init
