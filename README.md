@@ -1,4 +1,4 @@
-# bmx Library and Utilities (Dolby fork)
+# bmx Library and Utilities (Dolby Repository Format Fork))
 
 bmx is a library and set of utilities to read and write the [SMPTE ST 377-1 MXF file format](https://ieeexplore.ieee.org/document/7292073).
 
