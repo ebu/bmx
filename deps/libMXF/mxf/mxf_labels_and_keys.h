@@ -413,9 +413,11 @@ static const mxfUL MXF_EC_L(AES3CustomWrapped) = MXF_AES3BWF_EC_L(0x05, 0x09);
     {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, regver, 0x0e, 0x09, 0x06, 0x07, 0x01, 0x01, 0x01, 0x03}
     // DOLBY PRIVATE UL
 
-static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x05);  // 0x05 dolby namespace
+//static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x05);  // 0x05 dolby namespace
+static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x07);  // 0x07 from standard
 
-#define MXF_ISXD_ITEM_TYPE  0x17  // From ST2067-202
+//#define MXF_ISXD_ITEM_TYPE  0x17  // From ST2067-202, should be 0x01??????
+#define MXF_ISXD_ITEM_TYPE  0x01
 
 #define MXF_ISXD_GENERIC_CONTAINER_ELEMENT_KEY(regver, itemtype, elecount, eletype, elenum) \
     {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, regver, 0x0e, 0x09, 0x05, 0x02, itemtype, elecount, eletype, elenum}
