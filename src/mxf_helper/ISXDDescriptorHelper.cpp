@@ -157,7 +157,9 @@ void ISXDDescriptorHelper::UpdateFileDescriptor(ISXDEssenceParser *essence_parse
     string root_element_key = essence_parser->GetRootElementKey();
 
     descriptor->setNamespaceURI(namespace_uri);
-    descriptor->setRootElementKey(root_element_key);
+    
+    // removed because of ST2067-202.
+    //descriptor->setRootElementKey(root_element_key);
 }
 
 mxfUL ISXDDescriptorHelper::ChooseEssenceContainerUL() const
