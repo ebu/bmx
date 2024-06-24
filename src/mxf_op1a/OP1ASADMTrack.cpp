@@ -98,13 +98,13 @@ void OP1ASADMTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
     // calculate bytes per second
     BMX_ASSERT(num_samples == 1);
 
-
     if (mPosition == 0) {
         // get metadata to update Descriptor. We do this only in the first
         // frame.
         SADMEssenceParser parser;
         parser.ParseFrameInfo(data, size);
         mSADMDescriptorHelper->UpdateFileDescriptor(&parser);
+        mSADMDescriptorHelper->UpdateAverageBytesPerSecond(0);
     }
 
     mBytesTotal += size;
