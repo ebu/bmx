@@ -441,7 +441,7 @@ static const mxfUL MXF_EC_L(SADMFrameWrapped) = MXF_SADM_EC_L(0x0D);
 #define MXF_SADM_ITEM_TYPE 0x16  // GC Sound Item 
 
 #define MXF_SADM_EE_K(elecount, eletype, elenum) \
-    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x07 /*regver*/, MXF_SADM_ITEM_TYPE, elecount, eletype, elenum)
+    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x01 /*regver*/, MXF_SADM_ITEM_TYPE, elecount, eletype, elenum)
 
 #define MXF_SADM_TRACK_NUM(elecount, eletype, elenum) \
     MXF_TRACK_NUM(MXF_SADM_ITEM_TYPE, elecount, eletype, elenum)
