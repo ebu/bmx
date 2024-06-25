@@ -91,7 +91,8 @@ SADMEssenceParser::SADMEssenceParser()
       mMetadataFormat(METADATA_FORMAT::XML),
       mNumberMetadataSections(0),
       mSampleRate(ZERO_RATIONAL),
-      mBitDepth(0)
+      mBitDepth(0),
+      mChannels(0)
 {
     ResetFrameInfo();
 }
@@ -300,6 +301,9 @@ void SADMEssenceParser::XML_StartElement(void *user_data, const char *qname, con
         }
     }
     if (name == "audioTrackUID") {
+        if (!parser->mMetadataParsed) {
+            parser->mChannels += 1;
+        }
         for (int i = 0; atts[i]; i += 2) {
             string attrName = atts[i];
             string attrVal = atts[i + 1];

@@ -206,9 +206,8 @@ void SADMDescriptorHelper::UpdateFileDescriptor(SADMEssenceParser *essence_parse
     uint32_t bitDepth = essence_parser->GetBitDepth();
     descriptor->setQuantizationBits(essence_parser->GetBitDepth());
     descriptor->setAudioSamplingRate(essence_parser->GetAudioSampleRate());
-    // I assume we have one channel PER audio and block align refers to this
-    // (and not to the whole array of files where each file is one channel)
-    descriptor->setMGASoundEssenceBlockAlign(1.0 * std::floor((float)(bitDepth + 7.0) / 8.0));
+    descriptor->setChannelCount(essence_parser->GetChannelCount());
+    descriptor->setMGASoundEssenceBlockAlign(essence_parser->GetChannelCount() * std::floor((float)(bitDepth + 7.0) / 8.0));
     descriptor->setMGASoundEssenceSequenceOffset(0);
 
     for (auto it = essence_parser->GetSADMMetadataSectionInfo().cbegin();

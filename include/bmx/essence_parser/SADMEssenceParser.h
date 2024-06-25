@@ -63,6 +63,7 @@ public:
     uint32_t GetBitDepth() const { return mBitDepth; }
     mxfRational GetAudioSampleRate() const { return mSampleRate; }
     uint32_t GetCountMetadataSections() const { return mNumberMetadataSections; }
+    uint32_t GetChannelCount() const { return mChannels; }
 
     const std::map<uint8_t, SADMMetadataSectionInfo>& GetSADMMetadataSectionInfo()
     {
@@ -133,6 +134,7 @@ private:
     uint32_t mNumberMetadataSections;
     mxfRational mSampleRate;
     uint32_t mBitDepth;
+    uint32_t mChannels;
 
     // metadata payload. gets overwritten for each section
     std::vector<unsigned char> mMetadata;
