@@ -65,7 +65,7 @@ bool ISXDDescriptorBase::haveNamespaceURI() const
 
 std::string ISXDDescriptorBase::getNamespaceURI() const
 {
-    return getStringItem(&MXF_ITEM_K(ISXDDescriptor, NamespaceURI));
+    return getUTF8StringItem(&MXF_ITEM_K(ISXDDescriptor, NamespaceURI));
 }
 
 bool ISXDDescriptorBase::haveRootRelementKey() const
@@ -81,7 +81,7 @@ std::string ISXDDescriptorBase::getRootElementKey() const
 // setters
 void ISXDDescriptorBase::setNamespaceURI(std::string value)
 {
-    setStringItem(&MXF_ITEM_K(ISXDDescriptor, NamespaceURI), value);
+    setUTF8StringItem(&MXF_ITEM_K(ISXDDescriptor, NamespaceURI), value);
 }
 
 void ISXDDescriptorBase::setRootElementKey(std::string value)
