@@ -125,34 +125,41 @@ uint32_t SADMEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
+    log_debug("s-ADM: ParseFrameSize (%d, %d)\n", mStreamPos, data_size);
     // done with file
     if (data_size == 0) {
+        log_debug("s-ADM: End of data");
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
-    try {
-        ParseSection(data, data_size);
+    while (mStreamPos < data_size) {
+        try {
+            ParseSection(data, data_size);
 
-        // end of section reached
-        if (mSectionPos == mSectionSize) {
-            ResetSectionInfo();
+            // end of section reached
+            if (mSectionPos == mSectionSize) {
+                ResetSectionInfo();
+                log_debug("s-ADM: Section Done. On to next\n");
 
-            // last section reached
-            if (mCurrentSectionIndex == mSections - 1) {
-                uint32_t tmp = mFrameLength;
-                ResetFrameInfo();
-                mNumberFramesParsed++;
-                return tmp;
+                // last section reached
+                if (mCurrentSectionIndex == mSections - 1) {
+                    log_debug("s-ADM: Last Section. Done\n");
+                    uint32_t tmp = mFrameLength;
+                    ResetFrameInfo();
+                    mNumberFramesParsed++;
+                    return tmp;
+                }
             }
+        } catch (NotEnoughDataError &e) {
+            log_debug("HELP!!!!! Need more data");
+            return ESSENCE_PARSER_NULL_OFFSET;
+        } catch (InvalidDataError &e) {
+            log_error("InvalidDataError: %s\n", e.msg());
+            return ESSENCE_PARSER_NULL_FRAME_SIZE;
         }
-    } catch (NotEnoughDataError &e) {
-        log_debug("HELP!!!!! Need more data");
-        return ESSENCE_PARSER_NULL_OFFSET;
-    } catch (InvalidDataError &e) {
-        log_error("InvalidDataError: %s\n", e.msg());
-        return ESSENCE_PARSER_NULL_FRAME_SIZE;
-    }
 
+        log_debug("s-ADM: Need more data (!!!)\n");
+    }
     // need more data
     return ESSENCE_PARSER_NULL_OFFSET;
 }
@@ -164,18 +171,20 @@ void SADMEssenceParser::ParseFrameInfo(const unsigned char *data,
     // AVAILABLE IN ONE GO
 
     // parse first section
+    log_debug("s-ADM: Start with FrameInfo\n");
     ParseSection(data, data_size);
     ResetSectionInfo();
     for (uint32_t i = 1; i < mSections; ++i) {
         ParseSection(data, data_size);
         ResetSectionInfo();
     }
+    log_debug("s-ADM: Done with FrameInfo\n");
 }
 
 void SADMEssenceParser::ParseSection(const unsigned char *data,
                                        uint32_t data_size)
 {
-    log_debug("ParseMGAFrame (%d / %d)\n", mStreamPos, data_size);
+    log_debug("s-ADM: ParseSection (Pos: %d / data_size: %d)\n", mStreamPos, data_size);
     if (!mSections) {
         // log_info("parse number sections\n");
         mSections = ReadByte(data, data_size);
@@ -186,6 +195,7 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
     }
 
     if (!mSectionHeaderParsed) {
+        log_debug("s-ADM: parse section header\n");
         const uint32_t SECTION_HEADER_LENGTH = 6;
 
         if ((data_size - mStreamPos) < SECTION_HEADER_LENGTH) {
@@ -216,9 +226,16 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
             }
         }
 
+        log_debug("s-ADM: Got section: %s\n", mCurrentSectionIdentifier == AUDIO_ESSENCE ? "Audio Essence" : (
+            mCurrentSectionIdentifier == AUDIO_METADATA_PAYLOAD ? "Audio Metadata Payload" : (
+                mCurrentSectionIdentifier == AUDIO_METADATA_METADATA_PACK ? "Audio Metadata Pack" : "FILL"
+            )
+        ));
 
         mSectionSize = data[mStreamPos] << 24 | data[mStreamPos + 1] << 16 |
                        data[mStreamPos + 2] << 8 | data[mStreamPos + 3];
+
+        log_debug("s-ADM: Section size: %d\n", mSectionSize);
         mStreamPos += 4;
         mSectionPos = 0;
 
@@ -229,6 +246,7 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
     }
 
     if (mSectionHeaderParsed) {
+        log_debug("s-ADM: Section header parsed\n");
 
         // SKIP AUDIO AND FILL. Parse METADATA. But only for first frame.
         // Store all metadata in an array of structs that we can then use
@@ -265,11 +283,16 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
             uint8_t mMetadataFormat = ReadByte(data, data_size);
             BMX_ASSERT(mMetadataFormat == METADATA_FORMAT::XML ||
                        mMetadataFormat == METADATA_FORMAT::GZIP);
+            if (mMetadataFormat != METADATA_FORMAT::XML) {
+                log_error("Only XML supported in s-ADM\n");
+                BMX_ASSERT(false);
+            }
 
             mMetadataHeaderParsed = true;
         }
 
         if (mMetadataHeaderParsed) {
+            log_debug("s-ADM: Metadata header parsed\n");
             uint32_t bytesToCopy = BytesAvailable(data_size);
             for (uint32_t i = 0; i < bytesToCopy; ++i) {
                 mMetadata.push_back(data[mStreamPos]);
@@ -297,6 +320,9 @@ void SADMEssenceParser::XML_StartElement(void *user_data, const char *qname, con
             string attrVal = atts[i + 1];
             if (attrName == "type" && attrVal != "full") {
                 throw InvalidDataError("Only full MGA Frames are supported");
+            }
+            if (attrName == "frameFormatID") {
+                log_debug("s-ADM: Frame FormatID: %s\n", attrVal.c_str());
             }
         }
     }

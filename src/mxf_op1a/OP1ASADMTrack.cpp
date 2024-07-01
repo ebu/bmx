@@ -101,10 +101,12 @@ void OP1ASADMTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
     if (mPosition == 0) {
         // get metadata to update Descriptor. We do this only in the first
         // frame.
+        log_debug("OP1ASADMTrack: First frame. Parse metadata once\n");
         SADMEssenceParser parser;
         parser.ParseFrameInfo(data, size);
         mSADMDescriptorHelper->UpdateFileDescriptor(&parser);
         mSADMDescriptorHelper->UpdateAverageBytesPerSecond(0);
+        log_debug("OP1ASADMTrack: Done updating Descriptor\n");
     }
 
     mBytesTotal += size;
