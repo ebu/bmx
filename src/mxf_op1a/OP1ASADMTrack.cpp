@@ -105,21 +105,8 @@ void OP1ASADMTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
         SADMEssenceParser parser;
         parser.ParseFrameInfo(data, size);
         mSADMDescriptorHelper->UpdateFileDescriptor(&parser);
-        mSADMDescriptorHelper->UpdateAverageBytesPerSecond(0);
+        //mSADMDescriptorHelper->UpdateAverageBytesPerSecond(0);
         log_debug("OP1ASADMTrack: Done updating Descriptor\n");
-    }
-
-    mBytesTotal += size;
-
-    uint32_t rounded_rate = (uint32_t)((mFrameRate.numerator + mFrameRate.denominator/2) / mFrameRate.denominator);
-
-    int64_t edit_unit = (mPosition + 1) % rounded_rate;
-    int64_t sec = (mPosition + 1) / rounded_rate;
-    
-    if (edit_unit == 0) {
-        uint32_t avgBytes = std::round((double)mBytesTotal / (double)sec);
-        // TO-DO
-        mSADMDescriptorHelper->UpdateAverageBytesPerSecond(avgBytes);
     }
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);

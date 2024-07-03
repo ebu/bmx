@@ -210,6 +210,10 @@ void SADMDescriptorHelper::UpdateFileDescriptor(SADMEssenceParser *essence_parse
     descriptor->setMGASoundEssenceBlockAlign(essence_parser->GetChannelCount() * std::floor((float)(bitDepth + 7.0) / 8.0));
     descriptor->setMGASoundEssenceSequenceOffset(0);
 
+    uint32_t avgBytes = essence_parser->GetChannelCount() * essence_parser->GetAudioSampleRate().numerator * bitDepth / 8.0;
+
+    descriptor->setMGASoundEssenceAverageBytesPerSecond(avgBytes);
+
     for (auto it = essence_parser->GetSADMMetadataSectionInfo().cbegin();
          it != essence_parser->GetSADMMetadataSectionInfo().cend();
          ++it)

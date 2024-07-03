@@ -56,6 +56,7 @@ OP1AIABTrack::OP1AIABTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
     const int elenum = 0x00;
 
     mEssenceElementKey = MXF_IAB_EE_K(elecount, MXF_IAB_FRAME_WRAPPED_EE_TYPE, elenum);
+    //060e2b34.01020101.0d010301.16nn10cc
     mTrackNumber = MXF_IAB_TRACK_NUM(elecount, MXF_IAB_FRAME_WRAPPED_EE_TYPE, elenum);
 
     mIABDescriptorHelper = dynamic_cast<IABDescriptorHelper *>(mDescriptorHelper);

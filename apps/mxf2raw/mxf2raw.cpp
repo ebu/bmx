@@ -820,8 +820,6 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
 
     info_writer->WriteEnumStringItem("essence_kind", ESSENCE_KIND_EINFO, track_info->data_def);
     
-    bmx::EssenceType essencetype = track_info->essence_type;
-    
     info_writer->WriteStringItem("essence_type", essence_type_to_enum_string(track_info->essence_type));
     info_writer->WriteAUIDItem("ec_label", track_info->essence_container_label);
     info_writer->WriteRationalItem("edit_rate", track_info->edit_rate);
