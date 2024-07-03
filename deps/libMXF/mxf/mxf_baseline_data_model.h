@@ -1386,8 +1386,9 @@ MXF_SET_DEFINITION(GenericDataEssenceDescriptor, ISXDDescriptor,
 
     MXF_ITEM_DEFINITION(ISXDDescriptor, NamespaceURI,
         MXF_LABEL(0x06,0x0E,0x2B,0x34,0x01,0x01,0x01,0x05,0x0E,0x09,0x04,0x00,0x00,0x00,0x00,0x00),
+        //         06    0e    2b  34.01     01   01   05.  0e   09   04   00.  00   00   00  00
         0x0000,
-        MXF_UTF16STRING_TYPE,
+        MXF_UTF8STRING_TYPE,
         1
     );
 

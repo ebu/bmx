@@ -413,8 +413,8 @@ static const mxfUL MXF_EC_L(AES3CustomWrapped) = MXF_AES3BWF_EC_L(0x05, 0x09);
     {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, regver, 0x0e, 0x09, 0x06, 0x07, 0x01, 0x01, 0x01, 0x03}
     // DOLBY PRIVATE UL
 
-//static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x05);  // 0x05 dolby namespace
-static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x07);  // 0x07 from standard
+static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x05);  // 0x05 dolby namespace
+//static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x07);  // 0x07 from standard
 
 //#define MXF_ISXD_ITEM_TYPE  0x17  // From ST2067-202, should be 0x01??????
 #define MXF_ISXD_ITEM_TYPE  0x01
@@ -450,22 +450,26 @@ static const mxfUL MXF_EC_L(SADMFrameWrapped) = MXF_SADM_EC_L(0x0D);
 
 // ST-2067-201, Annex D
 #define MXF_IAB_EC_L(regver) \
-    MXF_GENERIC_CONTAINER_LABEL(regver, 0x1D, 0x00, 0x00)
+    MXF_GENERIC_CONTAINER_LABEL(regver, 0x1D, 0x01, 0x02)
 
 // Frame wrap only (Essence Container UL)
 static const mxfUL MXF_EC_L(IABFrameWrapped) = MXF_IAB_EC_L(0x0D);
+// from SMPTE submission: 060e2b34.0401010d.0d010301.021d0102
 
 #define MXF_IAB_ITEM_TYPE  0x16 // GC Sound Item. Like in IMF Plugin
 
 // {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, regver, 0x0d, 0x01, 0x03, 0x01, itemtype, elecount, eletype, elenum}
-// 06.0E.2B.34.01.01.01.07.0E.09.<TBD>
+
+// FrameWrappedIABSoundElement
+
 #define MXF_IAB_EE_K(elecount, eletype, elenum) \
-    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x07 /*regver */, MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
+    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x01 /*regver */, MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
+// 060e2b34.01020101.0d010301.16nn10cc
 
 #define MXF_IAB_TRACK_NUM(elecount, eletype, elenum) \
     MXF_TRACK_NUM(MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
 
-#define MXF_IAB_FRAME_WRAPPED_EE_TYPE   0x0e // IMF plugin clip-wrapped = 0D
+#define MXF_IAB_FRAME_WRAPPED_EE_TYPE   0x10 // IMF plugin clip-wrapped = 0D
 
 /* IEC-DV and DV-based mappings */
 
