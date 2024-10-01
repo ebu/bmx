@@ -72,7 +72,7 @@ void OutputFileManager::SetSoundDeinterleave(bool enable)
     mSoundDeinterleave = enable;
 }
 
-void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *track_info, bool wrap_klv, std::string track_file_name_suffix)
+void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *track_info, bool wrap_klv, std::string track_file_name_suffix, bool no_ddef_addon = false)
 {
     const char *ddef_letter = "x";
     switch (track_info->data_def)
@@ -98,7 +98,11 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
 
         uint32_t c;
         for (c = 0; c < sound_info->channel_count; c++) {
-            bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u_%d%s", track_index, ddef_letter, ddef_count, c, suffix);
+            if (no_ddef_addon) {
+                bmx_snprintf(buffer, sizeof(buffer), "_t%u_%d%s", track_index, c, suffix);
+            } else {
+                bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u_%d%s", track_index, ddef_letter, ddef_count, c, suffix);
+            }
 
             FileInfo file_info;
             file_info.filename = mPrefix + buffer;
@@ -113,7 +117,11 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
     } else if (track_info->essence_type == TIMED_TEXT) {
         TimedTextManifest *manifest = dynamic_cast<const MXFDataTrackInfo*>(track_info)->timed_text_manifest;
 
-        bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u.xml", track_index, ddef_letter, ddef_count);
+        if (no_ddef_addon) {
+            bmx_snprintf(buffer, sizeof(buffer), "_t%u.xml", track_index);
+        } else {
+            bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u.xml", track_index, ddef_letter, ddef_count);
+        }
 
         FileInfo file_info;
         file_info.filename = mPrefix + buffer;
@@ -129,7 +137,7 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
         size_t i;
         for (i = 0; i < anc_resources.size(); i++) {
             bmx_snprintf(buffer, sizeof(buffer), "_%s%u_%d.raw", ddef_letter, ddef_count,
-                         anc_resources[i].stream_id);
+                            anc_resources[i].stream_id);
 
             FileInfo file_info;
             file_info.filename = mPrefix + buffer;
@@ -150,7 +158,11 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
             suffix = (string(".") + track_file_name_suffix).c_str();
         }
 
-        bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u%s", track_index, ddef_letter, ddef_count, suffix);
+        if (no_ddef_addon) {
+            bmx_snprintf(buffer, sizeof(buffer), "_t%u%s", track_index, suffix);
+        } else {
+            bmx_snprintf(buffer, sizeof(buffer), "_t%u_%s%u%s", track_index, ddef_letter, ddef_count, suffix);
+        }
 
         FileInfo file_info;
         file_info.filename = mPrefix + buffer;

@@ -47,7 +47,7 @@ public:
     void SetPrefix(const std::string &prefix);
     void SetSoundDeinterleave(bool enable);
 
-    void AddTrackFile(size_t track_index, const bmx::MXFTrackInfo *track_info, bool wrap_klv, std::string track_file_name);
+    void AddTrackFile(size_t track_index, const bmx::MXFTrackInfo *track_info, bool wrap_klv, std::string track_file_name, bool no_ddef_addon);
 
     void GetTrackFile(size_t track_index, uint32_t child_index, FILE **file, std::string *filename);
     void GetTrackFile(size_t track_index, FILE **file, std::string *filename);

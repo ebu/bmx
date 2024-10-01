@@ -1704,6 +1704,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, " -p | --ess-out <prefix>\n");
     fprintf(stderr, "                       Extract essence to files starting with <prefix> and suffix '.raw'\n");
+    fprintf(stderr, " --ess-out-suffices <extensions>\n");
+    fprintf(stderr, "                       Comma separated list of file extensions. Must be used together with -p or --ess-out. ALL file extensions must be\n");
+    fprintf(stderr, "                       defined and they must be in the order of the tracks.\n");
+    fprintf(stderr, "                       If omitted, raw2mxf will try to deduct the file extension from the essence type.\n");
+    fprintf(stderr, " --keep-datadef-count  Keep data essence counter in file extensions (e.g. _d0.raw, _d2.raw, etc.). False by default. \n");
     fprintf(stderr, " --wrap-klv <mask>     Wrap essence frames in KLV using the input Key and an 8-byte Length\n");
     fprintf(stderr, "                       The filename suffix is '.klv' rather than '.raw'\n");
     fprintf(stderr, "                       <mask> is a sequence of characters which identify which data types to wrap\n");
@@ -1712,7 +1717,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --deint               De-interleave multi-channel / AES-3 sound\n");
     fprintf(stderr, " --start <count>       Set the start edit unit to read from. Default is 0\n");
     fprintf(stderr, " --dur <count>         Set the duration in edit units. Default is minimum available duration\n");
-    fprintf(stderr, " --end <edit_unit>     Set the last edit unit to read.");
+    fprintf(stderr, " --end <edit_unit>     Set the last edit unit to read (inclusive).");
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
@@ -1795,6 +1800,7 @@ int main(int argc, const char** argv)
     int64_t end = -1;
     bool no_precharge = false;
     bool no_rollout = false;
+    bool no_data_def = true;
 #if defined(_WIN32)
     int file_flags = MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
 #else
@@ -2373,6 +2379,10 @@ int main(int argc, const char** argv)
 
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--keep-datadef-count") == 0)
+        {
+            no_data_def = false;
+        }
         else if (strcmp(argv[cmdln_index], "--tracks") == 0)
         {
             if (cmdln_index + 1 >= argc) {
@@ -2488,6 +2498,7 @@ int main(int argc, const char** argv)
 
     if (end != -1) {
         duration = end - start;
+        //duration = (end + 1) - start;
         if (duration <= 0) {
             log_error("invalid duration specified: %d\n", duration);
             return 1;
@@ -2814,11 +2825,16 @@ int main(int argc, const char** argv)
                     if (!reader->GetTrackReader(i)->IsEnabled())
                         continue;
 
-                    const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
+                    const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo(); 
+
+                    // if user provided extensions, use them. otherwise try to deduct.
+                    const char *file_ext = extract_track_names.size() > 0 ? extract_track_names[0][i].c_str() : essence_type_to_file_extension(track_info->essence_type);
+
                     output_file_manager.AddTrackFile(i, 
                                                      track_info,
                                                      (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
-                                                     extract_track_names.size() > 0 ? extract_track_names[0][i] : "raw");
+                                                     file_ext,
+                                                     no_data_def);
 
                     if (track_info->data_def == MXF_PICTURE_DDEF)
                         have_video = true;
