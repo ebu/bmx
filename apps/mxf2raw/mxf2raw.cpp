@@ -1743,6 +1743,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "                       and suffix '.xml' if it is XML and otherwise '.txt'\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Input options:\n");
+    fprintf(stderr, " --tracks <tracks>         A comma separated list of track indexes and/or ranges to select when extracting essence data.\n");
+    fprintf(stderr, "                           A track is identified by the index reported by mxf2raw\n");
+    fprintf(stderr, "                           A range of track indexes is specified as '<first>-<last>', e.g. 0-3\n");
     fprintf(stderr, " --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.\n");
     fprintf(stderr, "                           A track is identified by the index reported by mxf2raw\n");
     fprintf(stderr, "                           A range of track indexes is specified as '<first>-<last>', e.g. 0-3\n");
@@ -1788,7 +1791,8 @@ int main(int argc, const char** argv)
     const char *ess_output_prefix = 0;
     set<MXFDataDefEnum> wrap_klv_mask;
     map<size_t, set<size_t> > disable_track_indexes;
-    std::map<size_t, std::set<size_t>> selected_tracks;
+    map<size_t, set<size_t>> selected_tracks;
+    map<size_t, vector<string> > selected_tracks_types;
     map<size_t, vector<string> > extract_track_names;
     map<size_t, bool> disable_audio;
     map<size_t, bool> disable_video;
