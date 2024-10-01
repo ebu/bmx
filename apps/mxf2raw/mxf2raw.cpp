@@ -1749,9 +1749,10 @@ static void usage(const char *cmd)
     fprintf(stderr, " --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.\n");
     fprintf(stderr, "                           A track is identified by the index reported by mxf2raw\n");
     fprintf(stderr, "                           A range of track indexes is specified as '<first>-<last>', e.g. 0-3\n");
-    fprintf(stderr, " --disable-audio       Disable audio tracks when reading essence data\n");
-    fprintf(stderr, " --disable-video       Disable video tracks when reading essence data\n");
-    fprintf(stderr, " --disable-data        Disable data tracks when reading essence data\n");
+    fprintf(stderr, " --disable-audio           Disable audio tracks when reading essence data\n");
+    fprintf(stderr, " --disable-video           Disable video tracks when reading essence data\n");
+    fprintf(stderr, " --disable-data            Disable data tracks when reading essence data\n");
+    fprintf(stderr, " --select-essence-types    A comma separated list of essence types to select (e.g. avc,sadm) when extracting essence data\n");
     fprintf(stderr, "\n");
 }
 
@@ -2411,6 +2412,30 @@ int main(int argc, const char** argv)
 
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--select-essence-types") == 0)
+        {
+            if (cmdln_index + 1 >= argc) {
+                log_error("--select-essence-types option requires a comma-separated list of essence types\n");
+                return 1;
+            }
+            
+            if (!parse_extract_tracks(argv[cmdln_index + 1], &selected_tracks_types[input_filenames.size()]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+
+            printf("selected essence types: ");
+            for (auto it = selected_tracks_types.begin(); it != selected_tracks_types.end(); ++it) {
+                for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+                    printf("%s ", it2->c_str());
+                }
+            }
+            printf("\n");
+
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--disable-audio") == 0)
         {
             disable_audio[input_filenames.size()] = true;
@@ -2609,15 +2634,40 @@ int main(int argc, const char** argv)
                 throw false;
             }
 
-            if (selected_tracks[0].size() > 0) {
+            if (selected_tracks_types[0].size() > 0 && selected_tracks[0].size() > 0) {
+                log_error("--tracks and --select-essence-types can't be used together\n");
+                return 1;
+            }
+
+            if (selected_tracks_types[0].size() > 0) {
+                vector<string> extensions = selected_tracks_types[0];
                 for (size_t i = 0; i < file_reader->GetNumTrackReaders(); i++) {
-                    if (!selected_tracks[0].count(i)) {
+                    MXFTrackInfo *track_info = file_reader->GetTrackReader(i)->GetTrackInfo();
+                    const char* ext = essence_type_to_file_extension(track_info->essence_type);
+
+                    bool found = false;
+                    for (vector<string>::iterator it = extensions.begin(); it != extensions.end(); ++it) {
+                        printf("%s == %s\n", ext, it->c_str());
+                        if (strcmp(ext, it->c_str()) == 0) {
+                            found = true;
+                            break;
+                            
+                        }
+                    }
+                    if (!found) {
+                        disable_track_indexes[0].insert(i);    
+                    }
+                }
+            }
+            else if (selected_tracks[0].size() > 0) {
+                set<size_t> tracks = selected_tracks[0];
+                for (size_t i = 0; i < file_reader->GetNumTrackReaders(); i++) {
+                    if (!tracks.count(i)) {
                         disable_track_indexes[0].insert(i);  // Add unselected tracks to disable list
                     }
                 }
             }
 
-            // Disable all tracks except those specified in --tracks option
             disable_tracks(file_reader, disable_track_indexes[0],
                            disable_audio[0], disable_video[0], disable_data[0]);
 
