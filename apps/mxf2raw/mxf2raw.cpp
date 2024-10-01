@@ -399,6 +399,7 @@ static void disable_tracks(MXFReader *reader, const set<size_t> &track_indexes,
             (disable_video && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF) ||
             (disable_data  && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_DATA_DDEF))
         {
+            printf("disable for reader: %lu\n", i);
             reader->GetTrackReader(i)->SetEnable(false);
         }
     }
@@ -1711,6 +1712,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --deint               De-interleave multi-channel / AES-3 sound\n");
     fprintf(stderr, " --start <count>       Set the start edit unit to read from. Default is 0\n");
     fprintf(stderr, " --dur <count>         Set the duration in edit units. Default is minimum available duration\n");
+    fprintf(stderr, " --end <edit_unit>     Set the last edit unit to read.");
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
@@ -1781,6 +1783,7 @@ int main(int argc, const char** argv)
     const char *ess_output_prefix = 0;
     set<MXFDataDefEnum> wrap_klv_mask;
     map<size_t, set<size_t> > disable_track_indexes;
+    std::map<size_t, std::set<size_t>> selected_tracks;
     map<size_t, vector<string> > extract_track_names;
     map<size_t, bool> disable_audio;
     map<size_t, bool> disable_video;
@@ -1789,6 +1792,7 @@ int main(int argc, const char** argv)
     int64_t start = 0;
     bool start_set = false;
     int64_t duration = -1;
+    int64_t end = -1;
     bool no_precharge = false;
     bool no_rollout = false;
 #if defined(_WIN32)
@@ -1811,7 +1815,6 @@ int main(int argc, const char** argv)
     bool mca_detail = false;
     unsigned int uvalue;
     int cmdln_index;
-
 
     if (argc == 1) {
         usage(argv[0]);
@@ -2171,6 +2174,22 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--end") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &end) != 1 || end < 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--nopc") == 0)
         {
             no_precharge = true;
@@ -2333,7 +2352,7 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
-        if (strcmp(argv[cmdln_index], "--ess-out-suffices") == 0)
+        else if (strcmp(argv[cmdln_index], "--ess-out-suffices") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
@@ -2351,6 +2370,30 @@ int main(int argc, const char** argv)
             for (size_t i = 0; i < extract_track_names[input_filenames.size()].size(); ++i) {
                 log_info("Extract track %d to suffix: %s\n", i, extract_track_names[input_filenames.size()][i].c_str());
             }
+
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--tracks") == 0)
+        {
+            if (cmdln_index + 1 >= argc) {
+                log_error("--tracks option requires a comma-separated list of track indices\n");
+                return 1;
+            }
+            
+            if (!parse_track_indexes(argv[cmdln_index + 1], &selected_tracks[input_filenames.size()]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+
+            printf("selected tracks: ");
+            for (auto it = selected_tracks.begin(); it != selected_tracks.end(); ++it) {
+                for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+                    printf("%lu ", *it2);
+                }
+            }
+            printf("\n");
 
             cmdln_index++;
         }
@@ -2443,6 +2486,13 @@ int main(int argc, const char** argv)
         return cmd_result;
     }
 
+    if (end != -1) {
+        duration = end - start;
+        if (duration <= 0) {
+            log_error("invalid duration specified: %d\n", duration);
+            return 1;
+        }
+    }
 
     try
     {
@@ -2492,6 +2542,7 @@ int main(int argc, const char** argv)
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
+
                 disable_tracks(grp_file_reader, disable_track_indexes[i],
                                disable_audio[i], disable_video[i], disable_data[i]);
                 group_reader->AddReader(grp_file_reader);
@@ -2542,6 +2593,16 @@ int main(int argc, const char** argv)
                           MXFFileReader::ResultToString(result).c_str());
                 throw false;
             }
+
+            if (selected_tracks[0].size() > 0) {
+                for (size_t i = 0; i < file_reader->GetNumTrackReaders(); i++) {
+                    if (!selected_tracks[0].count(i)) {
+                        disable_track_indexes[0].insert(i);  // Add unselected tracks to disable list
+                    }
+                }
+            }
+
+            // Disable all tracks except those specified in --tracks option
             disable_tracks(file_reader, disable_track_indexes[0],
                            disable_audio[0], disable_video[0], disable_data[0]);
 
@@ -2757,7 +2818,7 @@ int main(int argc, const char** argv)
                     output_file_manager.AddTrackFile(i, 
                                                      track_info,
                                                      (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
-                                                     extract_track_names[0][i]);
+                                                     extract_track_names.size() > 0 ? extract_track_names[0][i] : "raw");
 
                     if (track_info->data_def == MXF_PICTURE_DDEF)
                         have_video = true;
