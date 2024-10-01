@@ -2647,7 +2647,6 @@ int main(int argc, const char** argv)
 
                     bool found = false;
                     for (vector<string>::iterator it = extensions.begin(); it != extensions.end(); ++it) {
-                        printf("%s == %s\n", ext, it->c_str());
                         if (strcmp(ext, it->c_str()) == 0) {
                             found = true;
                             break;
