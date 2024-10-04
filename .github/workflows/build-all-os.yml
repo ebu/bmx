@@ -96,28 +96,39 @@ jobs:
           cmake --build build ${{ matrix.cmake_build_args }}
 
 
-      - name: Zip artifact (Ubuntu, Mac)
+      - name: Collect artifact (Ubuntu, Mac)
         if: ${{ !contains(matrix.os, 'windows') }}
         shell: bash
         run: |
           cp build/apps/mxf2raw/mxf2raw mxf2raw
           cp build/apps/raw2bmx/raw2bmx raw2bmx
-          tar -czvf build.tar.gz mxf2raw raw2bmx
+          # tar -czvf build.tar.gz mxf2raw raw2bmx
 
-      - name: Zip artifact (Win)
+      - name: Collect artifact (Win)
         if: ${{ contains(matrix.os, 'windows') }}
         shell: bash
         run: |
           cp build/apps/mxf2raw/Release/mxf2raw.exe mxf2raw.exe
           cp build/apps/raw2bmx/Release/raw2bmx.exe raw2bmx.exe
-          tar -czvf build.tar.gz mxf2raw.exe raw2bmx.exe
+          # tar -czvf build.tar.gz mxf2raw.exe raw2bmx.exe
 
-      - name: Upload binary release
+      - name: Upload binary release (Ubuntu, Mac)
+        if: ${{ !contains(matrix.os, 'windows') }}
         uses: actions/upload-artifact@v3
         with:
           name: build-${{matrix.name}}.tar.gz
           path: |
-            build.tar.gz
+            mxf2raw
+            raw2bmx
+
+      - name: Upload binary release (Windows)
+        if: ${{ contains(matrix.os, 'windows') }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-${{matrix.name}}.tar.gz
+          path: |
+            mxf2raw.exe
+            raw2bmx.exe
 
 
 
