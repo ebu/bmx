@@ -100,13 +100,17 @@ jobs:
         if: ${{ !contains(matrix.os, 'windows') }}
         shell: bash
         run: |
-          tar -czvf build.tar.gz build/apps/mxf2raw/mxf2raw build/apps/raw2bmx/raw2bmx
+          cp build/apps/mxf2raw/mxf2raw mxf2raw
+          cp build/apps/raw2bmx/raw2bmx raw2bmx
+          tar -czvf build.tar.gz mxf2raw raw2bmx
 
       - name: Zip artifact (Win)
         if: ${{ contains(matrix.os, 'windows') }}
         shell: bash
         run: |
-          tar -czvf build.tar.gz build/apps/mxf2raw/Release/mxf2raw.exe build/apps/raw2bmx/Release/raw2bmx.exe
+          cp build/apps/mxf2raw/Release/mxf2raw.exe mxf2raw.exe
+          cp build/apps/raw2bmx/Release/raw2bmx.exe raw2bmx.exe
+          tar -czvf build.tar.gz mxf2raw.exe raw2bmx.exe
 
       - name: Upload binary release
         uses: actions/upload-artifact@v3
