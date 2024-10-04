@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: ubuntu-20
+          - name: ubuntu-20.04
             os: ubuntu-20.04
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
@@ -25,7 +25,7 @@ jobs:
               -DBMX_BUILD_TESTING=OFF \
               -DBMX_BUILD_TOOLS=OFF \
               -DBMX_BUILD_WITH_LIBCURL=ON
-          - name: macos
+          - name: macos-latest
             os: macos-latest
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
@@ -111,7 +111,7 @@ jobs:
       - name: Upload binary release
         uses: actions/upload-artifact@v3
         with:
-          name: release
+          name: build-${{matrix.name}}.tar.gz
           path: |
             build.tar.gz
 
