@@ -9,7 +9,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: ubuntu
+          - name: ubuntu-20
+            os: ubuntu-20.04
+            cmake_config_args: >-
+              -DCMAKE_BUILD_TYPE=Release
+              -DBUILD_SHARED_LIBS=OFF \
+              -DBMX_BUILD_TESTING=OFF \
+              -DBMX_BUILD_TOOLS=OFF \
+              -DBMX_BUILD_WITH_LIBCURL=ON
+          - name: ubuntu-latest
             os: ubuntu-latest
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
