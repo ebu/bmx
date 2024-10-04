@@ -43,6 +43,19 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+
+      - name: Zip artifact (Ubuntu, Mac)
+        if: ${{ !contains(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          zip test.zip Dockerfile
+
+      - name: Zip artifact (Win)
+        if: ${{ contains(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          zip test.zip Dockerfile
+
       - name: Install dependencies (Ubuntu)
         if: ${{ contains(matrix.os, 'ubuntu') }}
         shell: bash
@@ -95,7 +108,10 @@ jobs:
         run: |
           cmake --build out/build ${{ matrix.cmake_build_args }}
 
-      - name: Install
-        shell: bash
-        run: |
-          cmake --build out/build --target install ${{ matrix.cmake_build_args }}
+      #- name: Install
+      #  shell: bash
+      #  run: |
+      #    cmake --build out/build --target install ${{ matrix.cmake_build_args }}
+
+
+
