@@ -108,5 +108,12 @@ jobs:
         run: |
           tar -czvf build.tar.gz build/apps/mxf2raw/Release/mxf2raw.exe build/apps/raw2bmx/Release/raw2bmx.exe
 
+      - name: Upload binary release
+        uses: actions/upload-artifact@v3
+        with:
+          name: release
+          path: |
+            build.tar.gz
+
 
 
