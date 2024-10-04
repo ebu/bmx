@@ -43,19 +43,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-
-      - name: Zip artifact (Ubuntu, Mac)
-        if: ${{ !contains(matrix.os, 'windows') }}
-        shell: bash
-        run: |
-          zip test.zip Dockerfile
-
-      - name: Zip artifact (Win)
-        if: ${{ contains(matrix.os, 'windows') }}
-        shell: bash
-        run: |
-          tar test.zip Dockerfile
-
       - name: Install dependencies (Ubuntu)
         if: ${{ contains(matrix.os, 'ubuntu') }}
         shell: bash
@@ -92,9 +79,9 @@ jobs:
       - name: Configure
         shell: bash
         run: |
-          mkdir -p out/build
+          mkdir -p build
           cmake \
-            -B out/build \
+            -B build \
             ${{ matrix.cmake_config_args }} \
             -DCMAKE_INSTALL_PREFIX:PATH=out/install \
             -DLIBMXF_BUILD_EXAMPLES=OFF \
@@ -106,12 +93,20 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          cmake --build out/build ${{ matrix.cmake_build_args }}
+          cmake --build build ${{ matrix.cmake_build_args }}
 
-      #- name: Install
-      #  shell: bash
-      #  run: |
-      #    cmake --build out/build --target install ${{ matrix.cmake_build_args }}
+
+      - name: Zip artifact (Ubuntu, Mac)
+        if: ${{ !contains(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          tar -czvf build.tar.gz build/apps/mxf2raw/mxf2raw build/apps/raw2bmx/raw2bmx
+
+      - name: Zip artifact (Win)
+        if: ${{ contains(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          tar -czvf build.tar.gz apps/mxf2raw/Release/mxf2raw.exe apps/raw2bmx/Release/raw2bmx.exe
 
 
 
