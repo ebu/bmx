@@ -54,7 +54,7 @@ jobs:
         if: ${{ contains(matrix.os, 'windows') }}
         shell: bash
         run: |
-          zip test.zip Dockerfile
+          tar test.zip Dockerfile
 
       - name: Install dependencies (Ubuntu)
         if: ${{ contains(matrix.os, 'ubuntu') }}
