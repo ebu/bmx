@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
 jobs:
-  build_and_test:
+  build:
     if: ${{ true }}
     strategy:
       fail-fast: false
@@ -106,7 +106,7 @@ jobs:
         if: ${{ contains(matrix.os, 'windows') }}
         shell: bash
         run: |
-          tar -czvf build.tar.gz apps/mxf2raw/Release/mxf2raw.exe apps/raw2bmx/Release/raw2bmx.exe
+          tar -czvf build.tar.gz build/apps/mxf2raw/Release/mxf2raw.exe build/apps/raw2bmx/Release/raw2bmx.exe
 
 
 
