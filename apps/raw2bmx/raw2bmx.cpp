@@ -70,6 +70,7 @@
 #include <bmx/essence_parser/ISXDEssenceParser.h>
 #include <bmx/essence_parser/SADMEssenceParser.h>
 #include <bmx/essence_parser/HEVCEssenceParser.h>
+#include <bmx/essence_parser/HEVCRawEssenceReader.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
@@ -317,6 +318,10 @@ static bool open_raw_reader(RawInput *input)
              input->essence_type == D10_50)
     {
         input->raw_reader = new D10RawEssenceReader(essence_source);
+    }
+    else if (input->essence_type_group == HEVC_ESSENCE_GROUP)
+    {
+        input->raw_reader = new HEVCRawEssenceReader(essence_source);
     }
     else
     {
@@ -4628,14 +4633,16 @@ int main(int argc, const char** argv)
             }
             else if (input->essence_type_group == HEVC_ESSENCE_GROUP)
             {
-                HEVCEssenceParser *avc_parser = new HEVCEssenceParser();
-                input->raw_reader->SetEssenceParser(avc_parser);
+                HEVCEssenceParser *hevc_parser = new HEVCEssenceParser();
+                input->raw_reader->SetEssenceParser(hevc_parser);
                 input->raw_reader->ReadSamples(1);
                 if (input->raw_reader->GetNumSamples() != 1) {
                     log_error("Error reading first frame\n");
                     return 1;
                 }
-                avc_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+                
+                hevc_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+                input->essence_type = hevc_parser->GetEssenceType();
             }
             else if (input->essence_type == ISXD)
             {
@@ -5465,6 +5472,9 @@ int main(int argc, const char** argv)
                     if (BMX_OPT_PROP_IS_SET(input->afd))
                         clip_track->SetAFD(input->afd);
                     break;
+                case HEVC_MAIN:
+                    log_info("Set HEVC main\n");
+                    break;
                 case UNC_SD:
                 case UNC_HD_1080I:
                 case UNC_HD_1080P:
@@ -5756,6 +5766,12 @@ int main(int argc, const char** argv)
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new AVCEssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(50000000);
+                    break;
+                case HEVC_MAIN:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new HEVCEssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(50000000);
                     break;
                 case D10_30:

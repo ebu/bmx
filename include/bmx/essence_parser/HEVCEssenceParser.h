@@ -66,7 +66,12 @@ private:
     uint32_t NextStartCodePrefix(const unsigned char* data, uint32_t size);
 
 private:
+    // offset in CURRENT frame
     uint32_t mOffset;
+    uint64_t mFrameNum;
+
+    uint32_t mNalUnitType;
+    uint32_t mLastNalUnitType;
 };
 
 

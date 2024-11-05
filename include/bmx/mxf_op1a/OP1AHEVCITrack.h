@@ -32,25 +32,14 @@
 #ifndef BMX_OP1A_HEVCI_TRACK_H_
 #define BMX_OP1A_HEVCI_TRACK_H_
 
-#include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
-#include <bmx/writer_helper/AVCIWriterHelper.h>
+//#include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
+//#include <bmx/writer_helper/AVCIWriterHelper.h>
 #include <bmx/mxf_op1a/OP1APictureTrack.h>
 
 
 
 namespace bmx
 {
-
-
-typedef enum
-{
-    OP1A_AVCI_FIRST_OR_ALL_FRAME_HEADER_MODE = 0,
-    OP1A_AVCI_FIRST_FRAME_HEADER_MODE,
-    OP1A_AVCI_ALL_FRAME_HEADER_MODE,
-    OP1A_AVCI_NO_OR_ALL_FRAME_HEADER_MODE,
-    OP1A_AVCI_NO_FRAME_HEADER_MODE
-} OP1AHEVCIMode;
-
 
 class OP1AHEVCITrack : public OP1APictureTrack
 {
@@ -59,22 +48,17 @@ public:
                   mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1AHEVCITrack();
 
-    void SetMode(OP1AHEVCIMode mode);                            // default OP1A_AVCI_ALL_FRAME_HEADER_MODE
-    void SetHeader(const unsigned char *data, uint32_t size);
-    void SetReplaceHeader(bool enable);                         // default false; requires SetHeader if true
-    void SetUseAVCSubDescriptor(bool enable);
-
 public:
-    uint32_t GetSampleWithoutHeaderSize();
 
 protected:
     virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
-    virtual void CompleteWrite();
+    //virtual void CompleteWrite();
 
 private:
-    AVCIMXFDescriptorHelper *mAVCIDescriptorHelper;
-    AVCIWriterHelper mWriterHelper;
+    //AVCIMXFDescriptorHelper *mAVCIDescriptorHelper;
+    //AVCIWriterHelper mWriterHelper;
+    int64_t mPosition;
 };
 
 

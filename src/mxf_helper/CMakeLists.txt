@@ -28,6 +28,7 @@ list(APPEND bmx_sources
     mxf_helper/IABDescriptorHelper.cpp
     mxf_helper/ISXDDescriptorHelper.cpp
     mxf_helper/SADMDescriptorHelper.cpp
+    mxf_helper/HEVCMXFDescriptorHelper.cpp
 )
 
 set(bmx_sources ${bmx_sources} PARENT_SCOPE)
