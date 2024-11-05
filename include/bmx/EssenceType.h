@@ -154,10 +154,12 @@ typedef enum {
   SADM,
   // ISXD
   ISXD,
+
+  // HEVC
+  HEVC_MAIN
 } EssenceType;
 
 const char *essence_type_to_file_extension(EssenceType essence_type);
-
 
 const char* essence_type_to_string(EssenceType essence_type);
 const char* essence_type_to_enum_string(EssenceType essence_type);

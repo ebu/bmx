@@ -69,6 +69,7 @@
 #include <bmx/essence_parser/IABEssenceParser.h>
 #include <bmx/essence_parser/ISXDEssenceParser.h>
 #include <bmx/essence_parser/SADMEssenceParser.h>
+#include <bmx/essence_parser/HEVCEssenceParser.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
@@ -105,6 +106,7 @@ typedef enum
     D10_ESSENCE_GROUP,
     AVCI_ESSENCE_GROUP,
     AVC_ESSENCE_GROUP,
+    HEVC_ESSENCE_GROUP,
 } EssenceTypeGroup;
 
 
@@ -3154,6 +3156,19 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--hevc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type_group = HEVC_ESSENCE_GROUP;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--unc") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -4610,6 +4625,17 @@ int main(int argc, const char** argv)
 
                     // TODO: other parameters?
                 }
+            }
+            else if (input->essence_type_group == HEVC_ESSENCE_GROUP)
+            {
+                HEVCEssenceParser *avc_parser = new HEVCEssenceParser();
+                input->raw_reader->SetEssenceParser(avc_parser);
+                input->raw_reader->ReadSamples(1);
+                if (input->raw_reader->GetNumSamples() != 1) {
+                    log_error("Error reading first frame\n");
+                    return 1;
+                }
+                avc_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
             }
             else if (input->essence_type == ISXD)
             {

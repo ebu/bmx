@@ -147,7 +147,8 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {TIMED_TEXT,                DATA_ESSENCE,           "Timed Text",                           "Timed_Text",                       NULL},
     {IAB,                       SOUND_ESSENCE,          "Immersive Audio Bitstream",            "IAB",                              "iab"},
     {SADM,                      SOUND_ESSENCE,          "Serial Audio Definition Model",        "MGA",                              "sadm"},
-    {ISXD,                      DATA_ESSENCE,           "ISXD Data Essence",                    "ISXD",                             "isxd"}
+    {ISXD,                      DATA_ESSENCE,           "ISXD Data Essence",                    "ISXD",                             "isxd"},
+    {HEVC_MAIN,                 PICTURE_ESSENCE,        "HEVC Main",                            "HEVC_Main",                        "hevc"},
 };
 
 
