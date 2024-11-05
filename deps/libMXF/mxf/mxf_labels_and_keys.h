@@ -247,7 +247,10 @@ static const mxfUL MXF_CMDEF_L(AVCI_200_1080_25_P) = MXF_AVC_INTRA_CMDEV_L(0x0d,
 static const mxfUL MXF_CMDEF_L(AVCI_200_720_60_P)  = MXF_AVC_INTRA_CMDEV_L(0x0d, 0x32, 0x08);
 static const mxfUL MXF_CMDEF_L(AVCI_200_720_50_P)  = MXF_AVC_INTRA_CMDEV_L(0x0d, 0x32, 0x09);
 
+/* HEVC */
 
+// MARKUS
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN)                 = MXF_AVC_PRED_CMDEV_L(0xef, 0xe, 0xef);
 
 /* MPEG-2 Long GOP */
 
