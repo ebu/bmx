@@ -42,6 +42,7 @@
 namespace bmx
 {
 
+class AVCGetBitBuffer;
 class HEVCEssenceParser : public EssenceParser
 {
 public:
@@ -64,6 +65,12 @@ private:
     void ResetFrameSize();
     void ResetFrameInfo();
     uint32_t NextStartCodePrefix(const unsigned char* data, uint32_t size);
+    void ParseSeqParameterSet(AVCGetBitBuffer *bs);
+    void ParseVUIParameters(AVCGetBitBuffer *bs);
+    void ParseProfileTierLevel(AVCGetBitBuffer *bs, uint8_t max_sub_layers_minus1);
+    void ParseScalingListData(AVCGetBitBuffer *bs);
+    void ParseShortTermRefPicSet(AVCGetBitBuffer *bs, uint8_t stRpsIdx, uint8_t num_short_term_ref_pic_sets);
+
 
 private:
     // offset in CURRENT frame

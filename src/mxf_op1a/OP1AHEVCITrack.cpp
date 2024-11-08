@@ -35,6 +35,7 @@
 
 #include <bmx/mxf_op1a/OP1AHEVCITrack.h>
 #include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/essence_parser/HEVCEssenceParser.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -81,6 +82,9 @@ void OP1AHEVCITrack::PrepareWrite(uint8_t track_count)
 
 void OP1AHEVCITrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
+    HEVCEssenceParser essence_parser;
+    essence_parser.ParseFrameInfo(data, size);
+
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
     
     mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true, false);

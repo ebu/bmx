@@ -53,29 +53,6 @@
 using namespace std;
 using namespace bmx;
 
-#define ESSENCE_PARSER_NEED_MORE_DATA ESSENCE_PARSER_NULL_OFFSET
-
-
-/*
-
-def print_nal(nal, n = 50):
-    length = len(nal)
-    str = []
-    if n < 20: n = 20
-    if length < n:
-        for i in range(0, length):
-            str.append('0x{:02x}'.format(nal[i]))
-    else:
-        for i in range(0, n//2):
-            str.append('0x{:02x}'.format(nal[i]))
-        str.append("........")
-        for i in range(length - n//2, length):
-            str.append('0x{:02x}'.format(nal[i]))
-    
-    print(', '.join(str))
-    
-    */
-
 void print_buf(const unsigned char *data, uint32_t data_size, uint32_t n) {
     if (n < 20) {
         n = 20;
@@ -83,15 +60,15 @@ void print_buf(const unsigned char *data, uint32_t data_size, uint32_t n) {
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
     if (data_size < n) {
-        for (int i = 0; i < n; ++i) {
+        for (uint32_t i = 0; i < n; ++i) {
             ss << std::setw(2) << static_cast<unsigned>(data[i]) << ".";
         }
     } else {
-        for (int i = 0; i < n/2; ++i) {
+        for (uint32_t i = 0; i < n/2; ++i) {
             ss << std::setw(2) << static_cast<unsigned>(data[i])  << ".";
         }
         ss << ".........";
-        for (int i = data_size - n/2; i < data_size; ++i) {
+        for (uint32_t i = data_size - n/2; i < data_size; ++i) {
             ss << std::setw(2) << static_cast<unsigned>(data[i]);
             if (i < data_size - 1) {
                  ss << ".";
@@ -151,15 +128,15 @@ uint32_t HEVCEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t 
         return ESSENCE_PARSER_NULL_OFFSET;
     }
 
-    log_info("YO: %d\n", offset);
+    //log_info("YO: %d\n", offset);
 
     return offset - 1;
 }
 
 uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-    log_info("\nParseFrameSize: %lu\n", data_size);
-    log_info("mOffset: %d\n", mOffset);
+    //log_info("\nParseFrameSize: %lu\n", data_size);
+    //log_info("mOffset: %d\n", mOffset);
     
     // End of stream
     if (data_size == 0) {
@@ -175,9 +152,9 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     if (data_size == ESSENCE_PARSER_NULL_OFFSET) {
         end_pos = mOffset + 5; // add the 5 deducted from loop below to get to EOS
 
-        log_info("!!! EOS\n");
-        log_info("---> GOT FULL ACCESS UNIT @ pos %d\n", end_pos);
-        print_buf(data, end_pos, 50);
+        //log_info("!!! EOS\n");
+        //log_info("---> GOT FULL ACCESS UNIT @ pos %d\n", end_pos);
+        //print_buf(data, end_pos, 50);
         have_frame_end = true;
     }
 
@@ -187,9 +164,7 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
             // advance start code
             mOffset += 3;
-            /* extract nal header */
 
-            log_info("got start\n");
             uint8_t b1 = data[mOffset];
 
             // advance nal header
@@ -199,8 +174,7 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
             mLastNalUnitType = mNalUnitType;
             mNalUnitType = nal_unit_type;
 
-            log_info("got unit type: %d\n", nal_unit_type);
-
+            //log_info("got unit type: %d\n", nal_unit_type);
             /*
             if ((mNalUnitType == NAL_TYPE::AUD_NUT && mFrameNum > 0) 
                 || mLastNalUnitType == NAL_TYPE::IDR_W_RADL
@@ -217,8 +191,9 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
                 //if (data[end_pos -1 ] == 0x00)
                 //    end_pos--;
 
-                log_info("---> GOT FULL ACCESS UNIT @ pos %d\n", end_pos);
-                print_buf(data, end_pos, 50);
+                //log_info("---> GOT FULL ACCESS UNIT @ pos %d\n", end_pos);
+                //print_buf(data, end_pos, 50);
+
                 have_frame_end = true;
                 break;
             }
@@ -226,24 +201,14 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
             mOffset++;
         }
     }
-    log_info("data_size: %ld, mOffset: %ld\n", data_size, mOffset);
-    // check if we have last frame
-    /*
-    if (!have_frame_end && data_size - mOffset <= 5) {
-        end_pos = mOffset + (data_size - mOffset);
-        log_info("---> GOT FULL ACCESS UNIT @ pos %d\n", end_pos);
-        print_buf(data, end_pos, 50);
-        have_frame_end = true;
-    }
-    */
-    
+    //log_info("data_size: %ld, mOffset: %ld\n", data_size, mOffset);
 
     uint32_t frame_size = ESSENCE_PARSER_NULL_OFFSET; // need more data
     if (have_frame_end) {
         frame_size = end_pos;
-        log_info("FRAME SIZE: %d\n", frame_size);
+        //log_info("FRAME SIZE: %d\n", frame_size);
         mFrameNum++;
-        log_info("Got frame: %d\n", mFrameNum);
+        //log_info("Got frame: %d\n", mFrameNum);
         // done. start again!
         mOffset = 0;
     }
@@ -251,10 +216,500 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     return frame_size;
 }
 
+void HEVCEssenceParser::ParseSeqParameterSet(AVCGetBitBuffer *bs)
+{
+    uint8_t sps_video_parameter_set_id = 0;
+    bs->GetU(4, &sps_video_parameter_set_id);
+    
+    uint8_t sps_max_sub_layers_minus1 = 0;
+    bs->GetU(3, &sps_max_sub_layers_minus1);
+    
+    uint8_t sps_temporal_id_nesting_flag = 0;
+    bs->GetU(1, &sps_temporal_id_nesting_flag);
+
+    ParseProfileTierLevel(bs, sps_max_sub_layers_minus1);
+
+    uint8_t sps_seq_parameter_set_id = 0;
+    bs->GetUE(&sps_seq_parameter_set_id, 31);
+
+    uint8_t chroma_format_idc = 0;
+    bs->GetUE(&chroma_format_idc, 3);
+
+    //log_info(" sps_seq_parameter_set_id %llu\n", sps_seq_parameter_set_id);
+    //log_info(" chroma_format_idc %llu\n", chroma_format_idc);
+
+    // mChromaFormat
+    uint8_t separate_colour_plane_flag = 0;
+    // chroma sampling, 0 to 3 incl.
+    if (chroma_format_idc == 3) {
+        bs->GetU(1, &separate_colour_plane_flag);
+        //log_info(" separate_colour_plane_flag %u\n", separate_colour_plane_flag);
+    }
+
+    uint64_t pic_width_in_luma_samples = 0;
+    bs->GetUE(&pic_width_in_luma_samples);
+
+    uint64_t pic_height_in_luma_samples = 0;
+    bs->GetUE(&pic_height_in_luma_samples);
+
+    log_info(" pic_width_in_luma_samples %llu\n", pic_width_in_luma_samples);
+    log_info(" pic_height_in_luma_samples %llu\n", pic_height_in_luma_samples);
+
+    uint8_t conformance_window_flag = 0;
+    bs->GetU(1, &conformance_window_flag);
+    if (conformance_window_flag) {
+        uint64_t conf_win_left_offset = 0;
+        bs->GetUE(&conf_win_left_offset);
+        uint64_t conf_win_right_offset = 0;
+        bs->GetUE(&conf_win_right_offset);
+        uint64_t conf_win_top_offset = 0;
+        bs->GetUE(&conf_win_top_offset);
+        uint64_t conf_win_bottom_offset = 0;
+        bs->GetUE(&conf_win_bottom_offset);
+    }
+
+    // mComponentDepth = bit_depth_luma_minus8 + 8;
+    uint64_t bit_depth_luma_minus8 = 0;
+    bs->GetUE(&bit_depth_luma_minus8);
+    uint64_t bit_depth_chroma_minus8 = 0;
+    bs->GetUE(&bit_depth_chroma_minus8);
+
+    log_info("bit_depth_luma_minus8: %d\n", bit_depth_luma_minus8);
+    log_info("bit_depth_chroma_minus8: %d\n", bit_depth_chroma_minus8);
+
+    uint64_t log2_max_pic_order_cnt_lsb_minus4 = 0;
+    bs->GetUE(&log2_max_pic_order_cnt_lsb_minus4);
+
+    uint8_t sps_sub_layer_ordering_info_present_flag = 0;
+    bs->GetU(1, &sps_sub_layer_ordering_info_present_flag);
+    uint32_t start = sps_sub_layer_ordering_info_present_flag ? 0 : sps_max_sub_layers_minus1;
+    for (uint8_t i = start; i <= sps_max_sub_layers_minus1; ++i) {
+        uint64_t sps_max_dec_pic_buffering_minus1 = 0;
+        bs->GetUE(&sps_max_dec_pic_buffering_minus1);
+        uint64_t sps_max_num_reorder_pics = 0;
+        bs->GetUE(&sps_max_num_reorder_pics);
+        uint64_t sps_max_latency_increase_plus1 = 0;
+        bs->GetUE(&sps_max_latency_increase_plus1);
+    }
+
+    uint64_t log2_min_luma_coding_block_size_minus3 = 0;
+    bs->GetUE(&log2_min_luma_coding_block_size_minus3);
+    uint64_t log2_diff_max_min_luma_coding_block_size = 0;
+    bs->GetUE(&log2_diff_max_min_luma_coding_block_size);
+    uint64_t log2_min_transform_block_size_minus2 = 0;
+    bs->GetUE(&log2_min_transform_block_size_minus2);
+    uint64_t log2_diff_max_min_transform_block_size = 0;
+    bs->GetUE(&log2_diff_max_min_transform_block_size);
+
+    uint64_t max_transform_hierarchy_depth_inter = 0;
+    bs->GetUE(&max_transform_hierarchy_depth_inter);
+    uint64_t max_transform_hierarchy_depth_intra = 0;
+    bs->GetUE(&max_transform_hierarchy_depth_intra);
+
+    uint8_t scaling_list_enabled_flag = 0;
+    bs->GetU(1, &scaling_list_enabled_flag);
+    if (scaling_list_enabled_flag) {
+        
+        uint8_t sps_scaling_list_data_present_flag = 0;
+        bs->GetU(1, &sps_scaling_list_data_present_flag);
+        if (sps_scaling_list_data_present_flag) {
+            ParseScalingListData(bs);  // You will need to define this function
+        }
+    }
+
+    uint8_t amp_enabled_flag = 0;
+    bs->GetU(1, &amp_enabled_flag);
+
+    uint8_t sample_adaptive_offset_enabled_flag = 0;
+    bs->GetU(1, &sample_adaptive_offset_enabled_flag);
+
+    uint8_t pcm_enabled_flag = 0;
+    bs->GetU(1, &pcm_enabled_flag);
+    if (pcm_enabled_flag) {
+        uint64_t pcm_sample_bit_depth_luma_minus1 = 0;
+        bs->GetUE(&pcm_sample_bit_depth_luma_minus1);
+        uint64_t pcm_sample_bit_depth_chroma_minus1 = 0;
+        bs->GetUE(&pcm_sample_bit_depth_chroma_minus1);
+
+        uint64_t log2_min_pcm_luma_coding_block_size_minus3 = 0;
+        bs->GetUE(&log2_min_pcm_luma_coding_block_size_minus3);
+        uint64_t log2_diff_max_min_pcm_luma_coding_block_size = 0;
+        bs->GetUE(&log2_diff_max_min_pcm_luma_coding_block_size);
+
+        uint8_t pcm_loop_filter_disabled_flag = 0;
+        bs->GetU(1, &pcm_loop_filter_disabled_flag);
+    }
+
+    uint64_t num_short_term_ref_pic_sets = 0;
+    bs->GetUE(&num_short_term_ref_pic_sets);
+    for (uint64_t i = 0; i < num_short_term_ref_pic_sets; ++i) {
+        ParseShortTermRefPicSet(bs, i, num_short_term_ref_pic_sets);
+    }
+
+    uint8_t long_term_ref_pics_present_flag = 0;
+    bs->GetU(1, &long_term_ref_pics_present_flag);
+    if (long_term_ref_pics_present_flag) {
+        uint64_t num_long_term_ref_pics_sps = 0;
+        bs->GetUE(&num_long_term_ref_pics_sps);
+        for (uint64_t i = 0; i < num_long_term_ref_pics_sps; ++i) {
+            // The number of bits used to represent lt_ref_pic_poc_lsb_sps[ i ] is equal to log2_max_pic_order_cnt_lsb_minus4 + 4.
+            uint64_t bits = log2_max_pic_order_cnt_lsb_minus4 + 4;
+            uint8_t lt_ref_pic_poc_lsb_sps = 0;   //u(v)
+            bs->GetU(bits, &lt_ref_pic_poc_lsb_sps);
+            uint8_t used_by_curr_pic_lt_sps_flag = 0;
+            bs->GetU(1, &used_by_curr_pic_lt_sps_flag);
+        }
+    }
+
+    uint8_t sps_temporal_mvp_enabled_flag = 0;
+    bs->GetU(1, &sps_temporal_mvp_enabled_flag);
+
+    uint8_t strong_intra_smoothing_enabled_flag = 0;
+    bs->GetU(1, &strong_intra_smoothing_enabled_flag);
+
+    uint8_t vui_parameters_present_flag = 0;
+    bs->GetU(1, &vui_parameters_present_flag);
+    if (vui_parameters_present_flag) {
+        ParseVUIParameters(bs);
+    }
+
+    uint8_t sps_extension_flag = 0;
+    bs->GetU(1, &sps_extension_flag);
+    /*if (sps_extension_flag) {
+        while (MoreRBSPData(bs)) {
+            // ParseSPSExtension(bs);
+        }
+    }*/
+
+    // RBSPTrailingBits(bs); 
+}
+
+void HEVCEssenceParser::ParseScalingListData(AVCGetBitBuffer *bs)
+{
+    // we skip everything in this section. just need to make sure we parse it in order to advance the bitstream
+    uint8_t scaling_list_pred_mode_flag;
+    uint64_t scaling_list_pred_matrix_id_delta;
+    int32_t scaling_list_dc_coef_minus8, scaling_list_delta_coef;
+
+    for (int sizeId = 0; sizeId < 4; sizeId++) {
+        int numMatrices = (sizeId == 3) ? 2 : 6;
+        for (int matrixId = 0; matrixId < numMatrices; matrixId++) {
+            bs->GetU(1, &scaling_list_pred_mode_flag);
+
+            if (!scaling_list_pred_mode_flag) {
+                bs->GetUE(&scaling_list_pred_matrix_id_delta);
+            } else {
+                int coefNum = std::min(64, 1 << (4 + (sizeId << 1)));
+                if (sizeId > 1) {
+                    bs->GetSE(&scaling_list_dc_coef_minus8);
+                }
+
+                for (int i = 0; i < coefNum; i++) {
+                    bs->GetSE(&scaling_list_delta_coef);
+                }
+            }
+        }
+    }
+}
+
+void HEVCEssenceParser::ParseShortTermRefPicSet(AVCGetBitBuffer* bs, uint8_t stRpsIdx, uint8_t num_short_term_ref_pic_sets) {
+    // we skip everything in this section. just need to make sure we parse it in order to advance the bitstream
+    uint8_t inter_ref_pic_set_prediction_flag = 0;
+    if (stRpsIdx != 0) {
+        bs->GetU(1, &inter_ref_pic_set_prediction_flag);
+    }
+
+    if (inter_ref_pic_set_prediction_flag) {
+        if (stRpsIdx == num_short_term_ref_pic_sets) {
+            uint64_t delta_idx_minus1;
+            bs->GetUE(&delta_idx_minus1);
+        }
+
+        uint8_t delta_rps_sign;
+        bs->GetU(1, &delta_rps_sign);
+        uint64_t abs_delta_rps_minus1;
+        bs->GetUE(&abs_delta_rps_minus1);
+
+        for (uint8_t j = 0; j <= 0; j++) { // Assuming NumDeltaPocs is set externally
+            uint8_t used_by_curr_pic_flag;
+            bs->GetU(1, &used_by_curr_pic_flag);
+            if (!used_by_curr_pic_flag) {
+                uint8_t use_delta_flag;
+                bs->GetU(1, &use_delta_flag);
+            }
+        }
+    } else {
+        uint64_t num_negative_pics;
+        bs->GetUE(&num_negative_pics);
+        uint64_t num_positive_pics;
+        bs->GetUE(&num_positive_pics);
+
+        for (uint8_t i = 0; i < num_negative_pics; i++) {
+            uint64_t delta_poc_s0_minus1;
+            bs->GetUE(&delta_poc_s0_minus1);
+            uint8_t used_by_curr_pic_s0_flag;
+            bs->GetU(1, &used_by_curr_pic_s0_flag);
+        }
+
+        for (uint8_t i = 0; i < num_positive_pics; i++) {
+            uint64_t delta_poc_s1_minus1;
+            bs->GetUE(&delta_poc_s1_minus1);
+            uint8_t used_by_curr_pic_s1_flag;
+            bs->GetU(1, &used_by_curr_pic_s1_flag);
+        }
+    }
+}
+
+#define EXTENDED_SAR 255
+
+void HEVCEssenceParser::ParseVUIParameters(AVCGetBitBuffer *bs)
+{
+    uint8_t aspect_ratio_info_present_flag = 0;
+    bs->GetU(1, &aspect_ratio_info_present_flag);
+    if (aspect_ratio_info_present_flag) {
+        uint8_t aspect_ratio_idc = 0;
+        bs->GetU(8, &aspect_ratio_idc);
+        log_info("aspect_ratio_idc: %d\n", aspect_ratio_idc);
+        if (aspect_ratio_idc == EXTENDED_SAR) {
+            uint64_t sar_width = 0;
+            uint64_t sar_height = 0;
+            bs->GetU(16, &sar_width);
+            bs->GetU(16, &sar_height);
+        }
+    }
+
+    uint8_t overscan_info_present_flag = 0;
+    bs->GetU(1, &overscan_info_present_flag);
+    if (overscan_info_present_flag) {
+        uint8_t overscan_appropriate_flag = 0;
+        bs->GetU(1, &overscan_appropriate_flag);
+    }
+
+    uint8_t video_signal_type_present_flag = 0;
+    bs->GetU(1, &video_signal_type_present_flag);
+    if (video_signal_type_present_flag) {
+        // mVideoFormat
+        uint8_t video_format = 0;
+        bs->GetU(3, &video_format);
+
+        log_info("video_format: %d\n", video_format);
+
+        uint8_t video_full_range_flag = 0;
+        bs->GetU(1, &video_full_range_flag);
+        uint8_t colour_description_present_flag = 0;
+        bs->GetU(1, &colour_description_present_flag);
+        if (colour_description_present_flag) {
+            // mColorPrimaries
+            uint8_t colour_primaries = 0;
+            bs->GetU(8, &colour_primaries);
+
+            log_info("colour_primaries: %d\n", colour_primaries);
+            // mTransferCharacteristics
+            uint8_t transfer_characteristics = 0;
+            bs->GetU(8, &transfer_characteristics);
+
+            log_info("Transfer characteristics: %d\n", transfer_characteristics);
+            // mMatrixCoefficients
+            uint8_t matrix_coeffs = 0;
+            bs->GetU(8, &matrix_coeffs);
+
+            log_info("Matrix Coeffs: %d\n", matrix_coeffs);
+        }
+    }
+
+    uint8_t chroma_loc_info_present_flag = 0;
+    bs->GetU(1, &chroma_loc_info_present_flag);
+    if (chroma_loc_info_present_flag) {
+        uint64_t chroma_sample_loc_type_top_field = 0;
+        bs->GetUE(&chroma_sample_loc_type_top_field);
+        uint64_t chroma_sample_loc_type_bottom_field = 0;
+        bs->GetUE(&chroma_sample_loc_type_bottom_field);
+    }
+
+    uint8_t neutral_chroma_indication_flag = 0;
+    bs->GetU(1, &neutral_chroma_indication_flag);
+    uint8_t field_seq_flag = 0;
+    bs->GetU(1, &field_seq_flag);
+    uint8_t frame_field_info_present_flag = 0;
+    bs->GetU(1, &frame_field_info_present_flag);
+
+    uint8_t default_display_window_flag = 0;
+    bs->GetU(1, &default_display_window_flag);
+    if (default_display_window_flag) {
+        uint64_t def_disp_win_left_offset = 0;
+        bs->GetUE(&def_disp_win_left_offset);
+        uint64_t def_disp_win_right_offset = 0;
+        bs->GetUE(&def_disp_win_right_offset);
+        uint64_t def_disp_win_top_offset = 0;
+        bs->GetUE(&def_disp_win_top_offset);
+        uint64_t def_disp_win_bottom_offset = 0;
+        bs->GetUE(&def_disp_win_bottom_offset);
+    }
+
+    uint8_t vui_timing_info_present_flag = 0;
+    bs->GetU(1, &vui_timing_info_present_flag);
+    if (vui_timing_info_present_flag) {
+        uint64_t vui_num_units_in_tick = 0;
+        uint64_t vui_time_scale = 0;
+        bs->GetU(32, &vui_num_units_in_tick);
+        bs->GetU(32, &vui_time_scale);
+        uint8_t vui_poc_proportional_to_timing_flag = 0;
+        bs->GetU(1, &vui_poc_proportional_to_timing_flag);
+        if (vui_poc_proportional_to_timing_flag) {
+            uint64_t vui_num_ticks_poc_diff_one_minus1 = 0;
+            bs->GetUE(&vui_num_ticks_poc_diff_one_minus1);
+        }
+    }
+
+    uint8_t vui_hrd_parameters_present_flag = 0;
+    bs->GetU(1, &vui_hrd_parameters_present_flag);
+    if (vui_hrd_parameters_present_flag) {
+        //ParseHRDParameters(bs, sps_max_sub_layers_minus1);  // Need to define this function
+    }
+
+    uint8_t bitstream_restriction_flag = 0;
+    bs->GetU(1, &bitstream_restriction_flag);
+    if (bitstream_restriction_flag) {
+        uint8_t tiles_fixed_structure_flag = 0;
+        bs->GetU(1, &tiles_fixed_structure_flag);
+        uint8_t motion_vectors_over_pic_boundaries_flag = 0;
+        bs->GetU(1, &motion_vectors_over_pic_boundaries_flag);
+        uint8_t restricted_ref_pic_lists_flag = 0;
+        bs->GetU(1, &restricted_ref_pic_lists_flag);
+        uint64_t min_spatial_segmentation_idc = 0;
+        bs->GetUE(&min_spatial_segmentation_idc);
+        uint64_t max_bytes_per_pic_denom = 0;
+        bs->GetUE(&max_bytes_per_pic_denom);
+        uint64_t max_bits_per_min_cu_denom = 0;
+        bs->GetUE(&max_bits_per_min_cu_denom);
+        uint64_t log2_max_mv_length_horizontal = 0;
+        bs->GetUE(&log2_max_mv_length_horizontal);
+        uint64_t log2_max_mv_length_vertical = 0;
+        bs->GetUE(&log2_max_mv_length_vertical);
+    }
+}
+
+void HEVCEssenceParser::ParseProfileTierLevel(AVCGetBitBuffer *bs, uint8_t max_sub_layers_minus1)
+{
+    std::vector<uint8_t> general_profile_compatibility_flag(32, 0);
+
+    uint8_t general_profile_space = 0;
+    bs->GetU(2, &general_profile_space);
+
+    uint8_t general_tier_flag = 0;
+    bs->GetU(1, &general_tier_flag);
+
+    uint8_t general_profile_idc = 0;
+    bs->GetU(5, &general_profile_idc);
+
+    for (int j = 0; j < 32; ++j) {
+        bs->GetU(1, &general_profile_compatibility_flag[j]);
+    }
+
+    uint8_t general_progressive_source_flag = 0;
+    bs->GetU(1, &general_progressive_source_flag);
+
+    uint8_t general_interlaced_source_flag = 0;
+    bs->GetU(1, &general_interlaced_source_flag);
+
+    uint8_t general_non_packed_constraint_flag = 0;
+    bs->GetU(1, &general_non_packed_constraint_flag);
+
+    uint8_t general_frame_only_constraint_flag = 0;
+    bs->GetU(1, &general_frame_only_constraint_flag);
+
+    uint64_t general_reserved_zero_44bits = 0;
+    bs->GetU(44, &general_reserved_zero_44bits);
+
+    uint8_t general_level_idc = 0;
+    bs->GetU(8, &general_level_idc);
+
+    std::vector<uint8_t> sub_layer_profile_present_flag(max_sub_layers_minus1, 0);
+    std::vector<uint8_t> sub_layer_level_present_flag(max_sub_layers_minus1, 0);
+    for (uint8_t i = 0; i < max_sub_layers_minus1; ++i) {
+        bs->GetU(1, &sub_layer_profile_present_flag[i]);
+        bs->GetU(1, &sub_layer_level_present_flag[i]);
+    }
+
+    if (max_sub_layers_minus1 > 0) {
+        for (uint8_t i = max_sub_layers_minus1; i < 8; ++i) {
+            bs->SkipRBSPBytes(2);
+        }
+    }
+
+    std::vector<uint8_t> sub_layer_profile_space(max_sub_layers_minus1, 0);
+    std::vector<uint8_t> sub_layer_tier_flag(max_sub_layers_minus1, 0);
+    std::vector<uint8_t> sub_layer_profile_idc(max_sub_layers_minus1, 0);
+    std::vector<uint8_t> sub_layer_progressive_source_flag(max_sub_layers_minus1, 0);
+    std::vector<uint8_t> sub_layer_interlaced_source_flag(max_sub_layers_minus1, 0);
+    std::vector<uint8_t> sub_layer_non_packed_constraint_flag(max_sub_layers_minus1, 0);
+    std::vector<uint8_t> sub_layer_frame_only_constraint_flag(max_sub_layers_minus1, 0);
+    std::vector<uint8_t> sub_layer_level_idc(max_sub_layers_minus1, 0);
+
+    for (uint8_t i = 0; i < max_sub_layers_minus1; ++i) {
+        if (sub_layer_profile_present_flag[i]) {
+            bs->GetU(2, &sub_layer_profile_space[i]);
+            bs->GetU(1, &sub_layer_tier_flag[i]);
+            bs->GetU(5, &sub_layer_profile_idc[i]);
+            for (int j = 0; j < 32; ++j) {
+                bs->SkipRBSPBytes(1);
+            }
+            bs->GetU(1, &sub_layer_progressive_source_flag[i]);
+            bs->GetU(1, &sub_layer_interlaced_source_flag[i]);
+            bs->GetU(1, &sub_layer_non_packed_constraint_flag[i]);
+            bs->GetU(1, &sub_layer_frame_only_constraint_flag[i]);
+            bs->SkipRBSPBytes(44);
+        }
+        if (sub_layer_level_present_flag[i]) {
+            bs->GetU(8, &sub_layer_level_idc[i]);
+        }
+    }
+
+    /*log_info("  general_profile_compatibility_flag:");
+    for (auto flag : general_profile_compatibility_flag) {
+        printf(" %u", flag);
+    }
+    printf("\n end profile tier level\n");*/
+}
+
 void HEVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
-    log_info("ParseFrameInfo: %lu\n", data_size);
+    //log_info("ParseFrameInfo: %lu\n", data_size);
+    
     ResetFrameInfo();
+
+    bool have_enough_info = false;
+    while (!have_enough_info && mOffset < data_size - 5) {
+        if (data[mOffset] == 0x00 && data[mOffset+1] == 0x00 && data[mOffset+2] == 0x01) {
+
+            // advance start code
+            mOffset += 3;
+            /* extract nal header */
+
+            uint8_t b1 = data[mOffset];
+
+            // advance nal header
+            mOffset += 2;
+
+            uint32_t nal_unit_type = (b1 & 0x7e) >> 1;
+            
+            if (nal_unit_type == NAL_TYPE::VPS_NUT) {
+                //log_info("GOT VPS\n");    
+            }
+            else if (nal_unit_type == NAL_TYPE::SPS_NUT) {
+                //log_info("GOT SPS\n");
+                AVCGetBitBuffer bs(data + mOffset, data_size - mOffset);
+                ParseSeqParameterSet(&bs);
+                //log_info("bitpos bs: %d\n", bs.GetBitPos());
+                have_enough_info = true;
+            }
+            else if (nal_unit_type == NAL_TYPE::PPS_NUT) {
+                //log_info("GOT PPS\n");
+            }
+        } else {
+            mOffset++;
+        }
+    }
 }
 
 uint32_t HEVCEssenceParser::NextStartCodePrefix(const unsigned char *data, uint32_t size)
