@@ -477,12 +477,14 @@ static const mxfUL MXF_EC_L(IABFrameWrapped) = MXF_IAB_EC_L(0x0D);
 #define MXF_HEVC_CMDEV_L(version, category, profile, variant) \
     {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, version, 0x04, 0x01, 0x02, 0x02, 0x01, category, profile, variant}
 
-// Essence Container                                                      // version, category, profile  variant
+// Essence Coding
 
 // H.265/HEVC Main Profile Unconstrained Coding
 // urn:smpte:ul:060e2b34.0401010d.04010202.01411001
 static const mxfUL MXF_CMDEF_L(HEVC_MAIN)                 = MXF_HEVC_CMDEV_L(0x0d,    0x41,     0x10,    0x01);
-static const mxfUL MXF_CMDEF_L(HEVC_MAIN_10)              = MXF_HEVC_CMDEV_L(0x0d,    0x41,     0x02,    0x01);
+
+// urn:smpte:ul:060e2b34.0401010d.04010202.01412001
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN_10)              = MXF_HEVC_CMDEV_L(0x0d,    0x41,     0x20,    0x01);
 // Intra profiles
 // H.265/HEVC Main Intra Profile Unconstrained Coding
 // urn:smpte:ul:060e2b34.0401010d.04010202.01441001
@@ -490,6 +492,8 @@ static const mxfUL MXF_CMDEF_L(HEVC_MAIN_10_INTRA)        = MXF_HEVC_CMDEV_L(0x0
 // H.265/HEVC Main 4:2:2 10 Intra Profile Unconstrained Coding
 // urn:smpte:ul:060e2b34.0401010d.04010202.01452001
 static const mxfUL MXF_CMDEF_L(HEVC_MAIN_422_10_INTRA)    = MXF_HEVC_CMDEV_L(0x0d,    0x45,     0x20,    0x01);
+
+// Essence Container
 
 // MXF-GC HEVC Byte Stream With VideoStream-0 SID
 #define MXF_HEVC_BYTESTREAM_EC_L(wrapping) \
