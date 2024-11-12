@@ -94,6 +94,7 @@ public:
     bool NextBits(uint8_t num_bits, uint64_t *next_value);
 
     void SkipRBSPBytes(uint32_t count);
+    void SkipBits(uint32_t count);
 
 private:
     void GetRBSPBits(uint8_t num_bits, uint64_t *value);

@@ -54,6 +54,9 @@ typedef struct
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
     {MXF_CMDEF_L(HEVC_MAIN),                 HEVC_MAIN},
+    {MXF_CMDEF_L(HEVC_MAIN_10),              HEVC_MAIN_10},
+    {MXF_CMDEF_L(HEVC_MAIN_10_INTRA),        HEVC_MAIN_10_INTRA},
+    {MXF_CMDEF_L(HEVC_MAIN_422_10_INTRA),    HEVC_MAIN_422_10_INTRA},
 };
 
 
@@ -411,9 +414,9 @@ void HEVCMXFDescriptorHelper::UpdateFileDescriptor(HEVCEssenceParser *essence_pa
 mxfUL HEVCMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     if (mFrameWrapped)
-        return MXF_EC_L(AVCFrameWrapped);
-    else
-        return MXF_EC_L(AVCClipWrapped);
+        return MXF_EC_L(HEVCFrameWrapped);
+    log_error("Clip wrapping not supported");
+    BMX_ASSERT(false);
 }
 
 void HEVCMXFDescriptorHelper::UpdateEssenceIndex()

@@ -156,7 +156,19 @@ typedef enum {
   ISXD,
 
   // HEVC
-  HEVC_MAIN
+  HEVC_MAIN,
+  HEVC_MAIN_10,
+  //HEVC_MAIN_STILL_PICTURE,
+  // HEVC Extended
+  //HEVC_MAIN_INTRA,
+  HEVC_MAIN_10_INTRA,
+  //HEVC_MAIN_12_INTRA,
+  HEVC_MAIN_422_10_INTRA,
+  //HEVC_MAIN_422_12_INTRA,
+  //HEVC_MAIN_444_INTRA,
+  //HEVC_MAIN_444_10_INTRA,
+  //HEVC_MAIN_444_12_INTRA,
+  //HEVC_MAIN_444_16_INTRA
 } EssenceType;
 
 const char *essence_type_to_file_extension(EssenceType essence_type);

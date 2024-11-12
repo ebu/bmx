@@ -5473,7 +5473,12 @@ int main(int argc, const char** argv)
                         clip_track->SetAFD(input->afd);
                     break;
                 case HEVC_MAIN:
-                    log_info("Set HEVC main\n");
+                case HEVC_MAIN_10:
+                    log_info("Set HEVC\n");
+                    break;
+                case HEVC_MAIN_10_INTRA:
+                case HEVC_MAIN_422_10_INTRA:
+                    log_info("Set HEVC Intra\n");
                     break;
                 case UNC_SD:
                 case UNC_HD_1080I:
@@ -5769,6 +5774,9 @@ int main(int argc, const char** argv)
                     input->raw_reader->SetCheckMaxSampleSize(50000000);
                     break;
                 case HEVC_MAIN:
+                case HEVC_MAIN_10:
+                case HEVC_MAIN_10_INTRA:
+                case HEVC_MAIN_422_10_INTRA:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new HEVCEssenceParser());
