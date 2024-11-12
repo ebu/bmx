@@ -247,11 +247,6 @@ static const mxfUL MXF_CMDEF_L(AVCI_200_1080_25_P) = MXF_AVC_INTRA_CMDEV_L(0x0d,
 static const mxfUL MXF_CMDEF_L(AVCI_200_720_60_P)  = MXF_AVC_INTRA_CMDEV_L(0x0d, 0x32, 0x08);
 static const mxfUL MXF_CMDEF_L(AVCI_200_720_50_P)  = MXF_AVC_INTRA_CMDEV_L(0x0d, 0x32, 0x09);
 
-/* HEVC */
-
-// MARKUS
-static const mxfUL MXF_CMDEF_L(HEVC_MAIN)                 = MXF_AVC_PRED_CMDEV_L(0xef, 0xe, 0xef);
-
 /* MPEG-2 Long GOP */
 
 static const mxfUL MXF_CMDEF_L(MPEG2_MP_ML_LONGGOP) =
@@ -451,7 +446,9 @@ static const mxfUL MXF_EC_L(SADMFrameWrapped) = MXF_SADM_EC_L(0x0D);
 
 #define MXF_SADM_FRAME_WRAPPED_EE_TYPE 0x0E //Frame-wrapped MGA Sound Element
 
-// ST-2067-201, Annex D
+/* IAB */
+
+// ST-2067-201, Annex D. 0x02 from RDD
 #define MXF_IAB_EC_L(regver) \
     MXF_GENERIC_CONTAINER_LABEL(regver, 0x1D, 0x01, 0x02)
 
@@ -473,6 +470,33 @@ static const mxfUL MXF_EC_L(IABFrameWrapped) = MXF_IAB_EC_L(0x0D);
     MXF_TRACK_NUM(MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
 
 #define MXF_IAB_FRAME_WRAPPED_EE_TYPE   0x10 // IMF plugin clip-wrapped = 0D
+
+/* HEVC */
+
+
+#define MXF_HEVC_CMDEV_L(version, category, profile, variant) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, version, 0x04, 0x01, 0x02, 0x02, 0x01, category, profile, variant}
+
+// Essence Container                                                      // version, category, profile  variant
+
+// H.265/HEVC Main Profile Unconstrained Coding
+// urn:smpte:ul:060e2b34.0401010d.04010202.01411001
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN)                 = MXF_HEVC_CMDEV_L(0x0d,    0x41,     0x10,    0x01);
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN_10)              = MXF_HEVC_CMDEV_L(0x0d,    0x41,     0x02,    0x01);
+// Intra profiles
+// H.265/HEVC Main Intra Profile Unconstrained Coding
+// urn:smpte:ul:060e2b34.0401010d.04010202.01441001
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN_10_INTRA)        = MXF_HEVC_CMDEV_L(0x0d,    0x44,     0x10,    0x01);
+// H.265/HEVC Main 4:2:2 10 Intra Profile Unconstrained Coding
+// urn:smpte:ul:060e2b34.0401010d.04010202.01452001
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN_422_10_INTRA)    = MXF_HEVC_CMDEV_L(0x0d,    0x45,     0x20,    0x01);
+
+// MXF-GC HEVC Byte Stream With VideoStream-0 SID
+#define MXF_HEVC_BYTESTREAM_EC_L(wrapping) \
+    MXF_GENERIC_CONTAINER_LABEL(0x22, 0x20, 0x60, wrapping) /* stream id 0 */
+
+// MXF-GC HEVC Byte Stream With VideoStream-0 SID Frame Wrapped
+static const mxfUL MXF_EC_L(HEVCFrameWrapped) = MXF_HEVC_BYTESTREAM_EC_L(0x01);
 
 /* IEC-DV and DV-based mappings */
 
