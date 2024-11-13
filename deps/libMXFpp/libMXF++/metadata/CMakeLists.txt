@@ -68,6 +68,7 @@ list(APPEND MXFpp_sources
     metadata/MGAAudioMetadataSubDescriptor.cpp
     metadata/SADMAudioMetadataSubDescriptor.cpp
     metadata/MGASoundfieldGroupLabelSubDescriptor.cpp
+    metadata/HEVCSubDescriptor.cpp
 )
 
 list(APPEND MXFpp_headers
@@ -141,6 +142,7 @@ list(APPEND MXFpp_headers
     metadata/MGAAudioMetadataSubDescriptor.h
     metadata/SADMAudioMetadataSubDescriptor.h
     metadata/MGASoundfieldGroupLabelSubDescriptor.h
+    metadata/HEVCSubDescriptor.h
 )
 
 add_subdirectory(base)

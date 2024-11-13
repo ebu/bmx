@@ -68,6 +68,7 @@ list(APPEND MXFpp_sources
     metadata/base/MGAAudioMetadataSubDescriptorBase.cpp
     metadata/base/SADMAudioMetadataSubDescriptorBase.cpp
     metadata/base/MGASoundfieldGroupLabelSubDescriptorBase.cpp
+    metadata/base/HEVCSubDescriptorBase.cpp
 )
 
 list(APPEND MXFpp_headers
@@ -140,6 +141,7 @@ list(APPEND MXFpp_headers
     metadata/base/MGAAudioMetadataSubDescriptorBase.h
     metadata/base/SADMAudioMetadataSubDescriptorBase.h
     metadata/base/MGASoundfieldGroupLabelSubDescriptorBase.h
+    metadata/base/HEVCSubDescriptorBase.h
 )
 
 set(MXFpp_sources ${MXFpp_sources} PARENT_SCOPE)
