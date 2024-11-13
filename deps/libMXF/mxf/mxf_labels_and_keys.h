@@ -496,8 +496,12 @@ static const mxfUL MXF_CMDEF_L(HEVC_MAIN_422_10_INTRA)    = MXF_HEVC_CMDEV_L(0x0
 // Essence Container
 
 // MXF-GC HEVC Byte Stream With VideoStream-0 SID
+// SMPTE registry: MXFGCHEVCByteStreamWithVideoStream0SIDFrameWrapped
+// urn:smpte:ul:060e2b34.0401010d.0d010301.02206001
+// bmx:              060e2b34,04010122,0d010301 02206001
+
 #define MXF_HEVC_BYTESTREAM_EC_L(wrapping) \
-    MXF_GENERIC_CONTAINER_LABEL(0x22, 0x20, 0x60, wrapping) /* stream id 0 */
+    MXF_GENERIC_CONTAINER_LABEL(0x0d, 0x20, 0x60, wrapping) /* stream id 0 */
 
 // MXF-GC HEVC Byte Stream With VideoStream-0 SID Frame Wrapped
 static const mxfUL MXF_EC_L(HEVCFrameWrapped) = MXF_HEVC_BYTESTREAM_EC_L(0x01);
