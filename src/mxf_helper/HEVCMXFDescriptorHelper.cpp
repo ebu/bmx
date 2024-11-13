@@ -108,20 +108,26 @@ void HEVCMXFDescriptorHelper::MapColorPrimaries(uint8_t avc_value, PictureMXFDes
             cdci_descriptor->setColorPrimaries(ITU709_COLOR_PRIM);
             break;
         case 4:
+            cdci_descriptor->setColorPrimaries(ITU470_PAL_COLOR_PRIM);
+            break;
         case 5:
             cdci_descriptor->setColorPrimaries(ITU470_PAL_COLOR_PRIM);
             break;
         case 6:
-        case 7:
             cdci_descriptor->setColorPrimaries(SMPTE170M_COLOR_PRIM);
             break;
         case 9:
             cdci_descriptor->setColorPrimaries(ITU2020_COLOR_PRIM);
             break;
-        case 10:
+        case 11: 
+            // SMPTE P3DCI, ST 2113
             cdci_descriptor->setColorPrimaries(SMPTE_DCDM_COLOR_PRIM);
             break;
+        case 12:
+            cdci_descriptor->setColorPrimaries(P3D65_COLOR_PRIM);
+            break;
         default:
+            log_warn("ColorPrimaries with value %d not mapped to SMPTE UL\n");
             break;
     }
 }
@@ -133,7 +139,6 @@ void HEVCMXFDescriptorHelper::MapTransferCharacteristic(uint8_t avc_value, Pictu
 
     switch (avc_value) {
         case 1:
-        case 6:
             cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
             break;
         case 4:
@@ -153,19 +158,20 @@ void HEVCMXFDescriptorHelper::MapTransferCharacteristic(uint8_t avc_value, Pictu
             cdci_descriptor->setCaptureGamma(ITU1361_TRANSFER_CH);
             break;
         case 14:
+            cdci_descriptor->setCaptureGamma(ITU2020_TRANSFER_CH);
+            break;
         case 15:
             cdci_descriptor->setCaptureGamma(ITU2020_TRANSFER_CH);
             break;
         case 16:
             cdci_descriptor->setCaptureGamma(SMPTE_ST2084_TRANSFER_CH);
             break;
-        case 17:
-            cdci_descriptor->setCaptureGamma(SMPTE_DCDM_TRANSFER_CH);
-            break;
         case 18:
+            // ITU-R BT.2100-2 hybrid log gamma (HLG)
             cdci_descriptor->setCaptureGamma(HLG_OETF_TRANSFER_CH);
             break;
         default:
+            log_warn("HEVC - Transfer Characteristic with value %d not mapped to SMPTE UL\n");
             break;
     }
 }
@@ -174,12 +180,15 @@ void HEVCMXFDescriptorHelper::MapMatrixCoefficients(uint8_t avc_value, PictureMX
 {
     switch (avc_value) {
         case 0:
+            // identity
             pict_helper->SetCodingEquationsMod(GBR_CODING_EQ);
             break;
         case 1:
             pict_helper->SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
             break;
         case 5:
+            pict_helper->SetCodingEquationsMod(ITUR_BT601_CODING_EQ);
+            break;
         case 6:
             pict_helper->SetCodingEquationsMod(ITUR_BT601_CODING_EQ);
             break;
@@ -192,7 +201,12 @@ void HEVCMXFDescriptorHelper::MapMatrixCoefficients(uint8_t avc_value, PictureMX
         case 9:
             pict_helper->SetCodingEquationsMod(ITU2020_NCL_CODING_EQ);
             break;
+        case 10:
+            // Constant Luminance System
+            //pict_helper->SetCodingEquationsMod(ITU2020_NCL_CODING_EQ);
+            break;
         default:
+            log_warn("HEVC - MatrixCoeff with value %d not mapped to SMPTE UL\n");
             break;
     }
 }
@@ -306,109 +320,99 @@ void HEVCMXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc_in)
 
 void HEVCMXFDescriptorHelper::UpdateFileDescriptor(HEVCEssenceParser *essence_parser)
 {
-    UpdateFileDescriptor();
-#if 0
+    BMX_ASSERT(essence_parser);
+    if (essence_parser->GetEssenceType() != HEVC_MAIN_422_10_INTRA) {
+        log_error("HEVCMXFDescriptorHelper only supports HEVC Main 4:2:2 10 INTRA\n");
+        BMX_ASSERT(false);
+    }
+
+    const HEVCSeqParameterSet &seq_param_set = essence_parser->GetSeqParameterSet();
+
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
 
-    cdci_descriptor->setStoredWidth(essence_parser->GetStoredWidth());
-    cdci_descriptor->setStoredHeight(essence_parser->GetStoredHeight());
-    cdci_descriptor->setDisplayWidth(essence_parser->GetDisplayWidth());
-    cdci_descriptor->setDisplayHeight(essence_parser->GetDisplayHeight());
-    cdci_descriptor->setDisplayXOffset(essence_parser->GetDisplayXOffset());
-    cdci_descriptor->setDisplayYOffset(essence_parser->GetDisplayYOffset());
-    cdci_descriptor->setSampledWidth(essence_parser->GetStoredWidth());
-    cdci_descriptor->setSampledHeight(essence_parser->GetStoredHeight());
+    // To-DO: We can for now assume that we have 422:10bit essence ONLY!
+    cdci_descriptor->setStoredWidth(seq_param_set.pic_width_in_luma_samples);
+    cdci_descriptor->setStoredHeight(seq_param_set.pic_height_in_luma_samples);
+    cdci_descriptor->setDisplayWidth(seq_param_set.pic_width_in_luma_samples);
+    cdci_descriptor->setDisplayHeight(seq_param_set.pic_height_in_luma_samples);
+    cdci_descriptor->setDisplayXOffset(0);
+    cdci_descriptor->setDisplayYOffset(0);
+    cdci_descriptor->setSampledWidth(seq_param_set.pic_width_in_luma_samples);
+    cdci_descriptor->setSampledHeight(seq_param_set.pic_height_in_luma_samples);
     cdci_descriptor->setSampledXOffset(0);
     cdci_descriptor->setSampledYOffset(0);
     cdci_descriptor->setImageStartOffset(0);
     cdci_descriptor->setPaddingBits(0);
+    cdci_descriptor->setComponentDepth(seq_param_set.bit_depth_luma_minus8 + 8);
 
-    // TODO: Display/StoredF2Offset
-    // TODO: need to parse the pic_timing SEI to set this
-    //if (!cdci_descriptor->haveFieldDominance()) ...
+    // 4:2:2 only
+    if (seq_param_set.chroma_format_idc == 2) {
+        cdci_descriptor->setHorizontalSubsampling(2);
+        cdci_descriptor->setVerticalSubsampling(2);
+        SetColorSitingMod(MXF_COLOR_SITING_COSITING);
+    }
 
-    cdci_descriptor->setComponentDepth(essence_parser->GetComponentDepth());
-
-    // TODO: check existing chroma siting doesn't contradict chroma format
-    switch (essence_parser->GetChromaFormat())
-    {
-        case 1: // 4:2:0
-            cdci_descriptor->setHorizontalSubsampling(2);
-            cdci_descriptor->setVerticalSubsampling(2);
-            // TODO: assuming chroma sample locations are identical on both fields
-            if (!cdci_descriptor->haveColorSiting()) {
-                switch (essence_parser->GetChromaLocation())
-                {
-                    case 0:
-                        SetColorSitingMod(MXF_COLOR_SITING_VERT_MIDPOINT);
-                        break;
-                    case 1:
-                        SetColorSitingMod(MXF_COLOR_SITING_QUINCUNX);
-                        break;
-                    case 2:
-                        SetColorSitingMod(MXF_COLOR_SITING_COSITING);
-                        break;
-                    case 3:
-                        SetColorSitingMod(MXF_COLOR_SITING_HORIZ_MIDPOINT);
-                        break;
-                    default:
-                        break;
-                }
-            }
+    switch (seq_param_set.video_format) {
+        case 0: // Component
             break;
-        case 2: // 4:2:2
-            cdci_descriptor->setHorizontalSubsampling(2);
-            cdci_descriptor->setVerticalSubsampling(1);
-            if (!cdci_descriptor->haveColorSiting())
-                SetColorSitingMod(MXF_COLOR_SITING_COSITING);
+        case 1: // PAL
             break;
-        case 3: // 4:4:4
-            cdci_descriptor->setHorizontalSubsampling(1);
-            cdci_descriptor->setVerticalSubsampling(1);
-            if (!cdci_descriptor->haveColorSiting())
-                SetColorSitingMod(MXF_COLOR_SITING_COSITING);
+        case 2: // NTSC
             break;
-        case 0: // Monochrome
+        case 3: // SECAM
+            break;
+        case 4: // MAC
+            break;
+        case 5: // Unspecified
+            //cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_ITU601);
+            break;
         default:
             break;
     }
 
-    // TODO: extract BlackRefLevel, WhiteRefLevel, ColorRange if possible
-    // TODO: check levels and range don't component depth (and possibly full range flag?)
+    MapColorPrimaries(seq_param_set.color_primaries, this);
+    MapTransferCharacteristic(seq_param_set.transfer_characteristics, this);
+    MapMatrixCoefficients(seq_param_set.matrix_coeffs, this);
 
-    if (!cdci_descriptor->haveSignalStandard()) {
-        switch (essence_parser->GetVideoFormat()) {
-            case 1:
-            case 2:
-                cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_ITU601);
-                break;
-            default:
-                break;
+    Rational aspect_ratio = ZERO_RATIONAL;
+    if (seq_param_set.aspect_ratio_idc == HEVC_ASPECT_RATIO_IDC_EXTENDED_SAR) {
+        aspect_ratio.numerator   = (int32_t)(seq_param_set.sar_width  * seq_param_set.pic_width_in_luma_samples);
+        aspect_ratio.denominator = (int32_t)(seq_param_set.sar_height * seq_param_set.pic_height_in_luma_samples);
+    } else {
+        static const Rational aspect_ratios[] =
+        {
+            {  0,  1},
+            {  1,  1},
+            { 12, 11},
+            { 10, 11},
+            { 16, 11},
+            { 40, 33},
+            { 24, 11},
+            { 20, 11},
+            { 32, 11},
+            { 80, 33},
+            { 18, 11},
+            { 15, 11},
+            { 64, 33},
+            {160, 99},
+            {  4,  3},
+            {  3,  2},
+            {  2,  1},
+        };
+        if (seq_param_set.aspect_ratio_idc >= BMX_ARRAY_SIZE(aspect_ratios)) {
+            log_warn("Invalid aspect_ratio_idc %u\n", seq_param_set.aspect_ratio_idc);
+        } else {
+            aspect_ratio = aspect_ratios[seq_param_set.aspect_ratio_idc];
         }
     }
-    if (!cdci_descriptor->haveColorPrimaries())
-        MapColorPrimaries(essence_parser->GetColorPrimaries(), this);
-    if (!cdci_descriptor->haveCaptureGamma())
-        MapTransferCharacteristic(essence_parser->GetTransferCharacteristics(), this);
-    if (!cdci_descriptor->haveCodingEquations())
-        MapMatrixCoefficients(essence_parser->GetMatrixCoefficients(), this);
-
-    if (!cdci_descriptor->haveAspectRatio() && essence_parser->GetSampleAspectRatio().numerator > 0) {
-        // TODO: this calculation will not always be correct because the "clean area" is unknown
-        Rational sample_aspect_ratio = essence_parser->GetSampleAspectRatio();
-        Rational calc_aspect_ratio;
-        calc_aspect_ratio.numerator   = (int32_t)(sample_aspect_ratio.numerator   * essence_parser->GetDisplayWidth());
-        calc_aspect_ratio.denominator = (int32_t)(sample_aspect_ratio.denominator * essence_parser->GetDisplayHeight());
-        cdci_descriptor->setAspectRatio(reduce_rational(calc_aspect_ratio));
-    }
+    cdci_descriptor->setAspectRatio(reduce_rational(aspect_ratio));
 
     //BMX_ASSERT(mAVCSubDescriptor);
 
     //mAVCSubDescriptor->setAVCProfile(essence_parser->GetProfile());
     //mAVCSubDescriptor->setAVCProfileConstraint(essence_parser->GetProfileConstraint());
     //mAVCSubDescriptor->setAVCLevel(essence_parser->GetLevel());
-#endif
 }
 
 mxfUL HEVCMXFDescriptorHelper::ChooseEssenceContainerUL() const

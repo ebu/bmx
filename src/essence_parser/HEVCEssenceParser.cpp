@@ -601,8 +601,6 @@ void HEVCEssenceParser::ParseShortTermRefPicSet(AVCGetBitBuffer* bs, uint8_t stR
     }
 }
 
-#define EXTENDED_SAR 255
-
 void HEVCEssenceParser::ParseVUIParameters(AVCGetBitBuffer *bs, uint8_t max_sub_layers_minus1)
 {
     uint8_t aspect_ratio_info_present_flag = 0;
@@ -613,7 +611,7 @@ void HEVCEssenceParser::ParseVUIParameters(AVCGetBitBuffer *bs, uint8_t max_sub_
         bs->GetU(8, &aspect_ratio_idc);
         mSeqParameterSet.aspect_ratio_idc = aspect_ratio_idc;
 
-        if (aspect_ratio_idc == EXTENDED_SAR) {
+        if (aspect_ratio_idc == HEVC_ASPECT_RATIO_IDC_EXTENDED_SAR) {
             uint64_t sar_width = 0;
             uint64_t sar_height = 0;
             bs->GetU(16, &sar_width);
@@ -636,7 +634,7 @@ void HEVCEssenceParser::ParseVUIParameters(AVCGetBitBuffer *bs, uint8_t max_sub_
         mSeqParameterSet.have_video_format = true;
         uint8_t video_format = 0;
         bs->GetU(3, &video_format);
-        log_info("video_format: %d\n", video_format);
+        // log_info("video_format: %d\n", video_format);
         mSeqParameterSet.video_format = video_format;
 
         uint8_t video_full_range_flag = 0;
@@ -647,17 +645,17 @@ void HEVCEssenceParser::ParseVUIParameters(AVCGetBitBuffer *bs, uint8_t max_sub_
             mSeqParameterSet.have_color_description = true;
             uint8_t colour_primaries = 0;
             bs->GetU(8, &colour_primaries);
-            log_info("colour_primaries: %d\n", colour_primaries);
+            // log_info("colour_primaries: %d\n", colour_primaries);
             mSeqParameterSet.color_primaries = colour_primaries;
             
             uint8_t transfer_characteristics = 0;
             bs->GetU(8, &transfer_characteristics);
-            log_info("Transfer characteristics: %d\n", transfer_characteristics);
+            // log_info("Transfer characteristics: %d\n", transfer_characteristics);
             mSeqParameterSet.transfer_characteristics = transfer_characteristics;
 
             uint8_t matrix_coeffs = 0;
             bs->GetU(8, &matrix_coeffs);
-            log_info("Matrix Coeffs: %d\n", matrix_coeffs);
+            // log_info("Matrix Coeffs: %d\n", matrix_coeffs);
             mSeqParameterSet.matrix_coeffs = matrix_coeffs;
         }
     }
@@ -1021,11 +1019,24 @@ void HEVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
             /* extract nal header */
 
             uint8_t b1 = data[mOffset];
+            uint8_t b2 = data[mOffset+1];
 
             // advance nal header
             mOffset += 2;
 
             uint32_t nal_unit_type = (b1 & 0x7e) >> 1;
+
+            uint8_t nuh_layer_id_part1 = b1 & 0x01;            
+            uint8_t nuh_layer_id_part2 = (b2 & 0xF8) >> 3;
+
+            /* 
+            In bitstreams conforming to the Main Intra, Main 10 Intra, Main 12 Intra, Main 4:2:2 10 Intra, Main 4:2:2 12 Intra,
+            Main 4:4:4 Intra, Main 4:4:4 10 Intra, Main 4:4:4 12 Intra or Main 4:4:4 16 Intra profiles, all pictures with
+            nuh_layer_id equal to 0 shall be IRAP pictures and the output order indicated in the bitstream among these pictures
+            shall be the same as the decoding order.
+            */
+            uint16_t nuh_layer_id = nuh_layer_id_part1 | nuh_layer_id_part2;
+            (void)nuh_layer_id; // to-do: do something with it?
             
             if (nal_unit_type == NAL_TYPE::SPS_NUT) {
                 AVCGetBitBuffer bs(data + mOffset, data_size - mOffset);
@@ -1045,8 +1056,6 @@ void HEVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
     }
 
     CheckConformance();
-
-    log_info("done\n");
 }
 
 void HEVCEssenceParser::CheckConformance()
@@ -1056,6 +1065,11 @@ void HEVCEssenceParser::CheckConformance()
         log_error("HEVC Intra Only allowed but general_intra_constraint_flag != 0\n");
         err = true;
     }
+    if (mSeqParameterSet.chroma_format_idc != 2) {
+        log_error("Only 4:2:2 chroma format is supported as of now.\n");
+        err = true;
+    }
+    /*
     if (mSeqParameterSet.general_max_420chroma_constraint_flag) {
         log_error("4:2:0 essence unsupported but general_max_420chroma_constraint_flag == 1\n");
         err = true;
@@ -1064,6 +1078,7 @@ void HEVCEssenceParser::CheckConformance()
         log_error("4:4:4 essence unsupported but general_max_422chroma_constraint_flag == 0\n");
         err = true;
     }
+    */
     if (!mSeqParameterSet.general_max_10bit_constraint_flag || mSeqParameterSet.general_max_8bit_constraint_flag) {
         log_error("Only 10-bit essence supported but general_max_10bit_constraint_flag != 0 or mSeqParameterSet.general_max_8bit_constraint_flag == 1\n");
         err = true;

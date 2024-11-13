@@ -32,11 +32,8 @@
 #ifndef BMX_OP1A_HEVCI_TRACK_H_
 #define BMX_OP1A_HEVCI_TRACK_H_
 
-//#include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
-//#include <bmx/writer_helper/AVCIWriterHelper.h>
 #include <bmx/mxf_op1a/OP1APictureTrack.h>
-
-
+#include <bmx/mxf_helper/HEVCMXFDescriptorHelper.h>
 
 namespace bmx
 {
@@ -56,8 +53,7 @@ protected:
     //virtual void CompleteWrite();
 
 private:
-    //AVCIMXFDescriptorHelper *mAVCIDescriptorHelper;
-    //AVCIWriterHelper mWriterHelper;
+    HEVCMXFDescriptorHelper *mHEVCDescriptorHelper;
     int64_t mPosition;
 };
 

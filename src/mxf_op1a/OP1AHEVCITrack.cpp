@@ -51,25 +51,19 @@ static const mxfKey VIDEO_ELEMENT_KEY = MXF_MPEG_PICT_EE_K(0x01, MXF_MPEG_PICT_F
 
 OP1AHEVCITrack::OP1AHEVCITrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
                              mxfRational frame_rate, EssenceType essence_type)
-: OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
+: OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type),
+  mPosition(0)
 {
-    //mWriterHelper.SetDescriptorHelper(dynamic_cast<HEVCMXFDescriptorHelper*>(mDescriptorHelper));
-    //mAVCIDescriptorHelper = dynamic_cast<AVCIMXFDescriptorHelper*>(mDescriptorHelper);
-    //BMX_ASSERT(mAVCIDescriptorHelper);
-    //mWriterHelper.SetDescriptorHelper(mAVCIDescriptorHelper);
-
+    mHEVCDescriptorHelper = dynamic_cast<HEVCMXFDescriptorHelper*>(mDescriptorHelper);
+    BMX_ASSERT(mHEVCDescriptorHelper != nullptr);
+    
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
-    mPosition = 0;
-
-
-    //if ((mOP1AFile->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) && mode != OP1A_AVCI_ALL_FRAME_HEADER_MODE)
-    //    BMX_EXCEPTION(("ARD ZDF HDF flavour requires all AVC-I frames to contain SPS+PPS header data"));
-    
 }
 
 OP1AHEVCITrack::~OP1AHEVCITrack()
 {
+    mHEVCDescriptorHelper = nullptr;
 }
 
 void OP1AHEVCITrack::PrepareWrite(uint8_t track_count)
@@ -82,8 +76,11 @@ void OP1AHEVCITrack::PrepareWrite(uint8_t track_count)
 
 void OP1AHEVCITrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    HEVCEssenceParser essence_parser;
-    essence_parser.ParseFrameInfo(data, size);
+    if (mPosition == 0) {
+        HEVCEssenceParser essence_parser;
+        essence_parser.ParseFrameInfo(data, size);
+        mHEVCDescriptorHelper->UpdateFileDescriptor(&essence_parser);
+    }
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
     
@@ -91,10 +88,3 @@ void OP1AHEVCITrack::WriteSamplesInt(const unsigned char *data, uint32_t size, u
 
     mPosition++;
 }
-
-//void OP1AHEVCITrack::CompleteWrite()
-//{
-    //mWriterHelper.CompleteProcess();
-
-    //OP1APictureTrack::CompleteWrite();
-//}

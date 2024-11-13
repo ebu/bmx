@@ -52,17 +52,7 @@ enum HEVCVideoFormat {
     HEVC_VF_UNSPECIFIED = 5,
 };
 
-enum HEVCTransferCharacteristics {
-    HEVC_TC_UNKNWON = -1,
-};
-
-enum HEVCColorPrimaries {
-    HEVC_CP_DEFAULT = 2,
-};
-
-enum HEVCMatrixCoeffs {
-    HEVC_MC_UNKNOWN = -1,
-};
+#define HEVC_ASPECT_RATIO_IDC_EXTENDED_SAR 255
 
 class HEVCSeqParameterSet {
 
