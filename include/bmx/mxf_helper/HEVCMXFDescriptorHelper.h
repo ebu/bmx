@@ -79,7 +79,7 @@ private:
 
 private:
     size_t mEssenceIndex;
-    //mxfpp::HEVCSubDescriptor *mHEVCSubDescriptor;
+    mxfpp::HEVCSubDescriptor *mHEVCSubDescriptor;
 };
 
 

@@ -216,7 +216,7 @@ HEVCMXFDescriptorHelper::HEVCMXFDescriptorHelper()
 {
     mEssenceIndex = 0;
     mEssenceType = SUPPORTED_ESSENCE[0].essence_type;
-    //mAVCSubDescriptor = 0;
+    mHEVCSubDescriptor = nullptr;
 }
 
 HEVCMXFDescriptorHelper::~HEVCMXFDescriptorHelper()
@@ -248,9 +248,9 @@ void HEVCMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16
     if (file_descriptor->haveSubDescriptors()) {
         vector<SubDescriptor*> sub_descriptors = file_descriptor->getSubDescriptors();
         for (i = 0; i < sub_descriptors.size(); i++) {
-            //mAVCSubDescriptor = dynamic_cast<AVCSubDescriptor*>(sub_descriptors[i]);
-            //if (mAVCSubDescriptor)
-            //    break;
+            mHEVCSubDescriptor = dynamic_cast<HEVCSubDescriptor*>(sub_descriptors[i]);
+            if (mHEVCSubDescriptor)
+                break;
         }
     }
 }
@@ -269,8 +269,8 @@ FileDescriptor* HEVCMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetad
     UpdateEssenceIndex();
 
     mFileDescriptor = new CDCIEssenceDescriptor(header_metadata);
-    //mAVCSubDescriptor = new AVCSubDescriptor(header_metadata);
-    //mFileDescriptor->appendSubDescriptors(mAVCSubDescriptor);
+    mHEVCSubDescriptor = new HEVCSubDescriptor(header_metadata);
+    mFileDescriptor->appendSubDescriptors(mHEVCSubDescriptor);
 
     UpdateFileDescriptor();
 
@@ -408,11 +408,26 @@ void HEVCMXFDescriptorHelper::UpdateFileDescriptor(HEVCEssenceParser *essence_pa
     }
     cdci_descriptor->setAspectRatio(reduce_rational(aspect_ratio));
 
-    //BMX_ASSERT(mAVCSubDescriptor);
+    BMX_ASSERT(mHEVCSubDescriptor);
 
-    //mAVCSubDescriptor->setAVCProfile(essence_parser->GetProfile());
-    //mAVCSubDescriptor->setAVCProfileConstraint(essence_parser->GetProfileConstraint());
-    //mAVCSubDescriptor->setAVCLevel(essence_parser->GetLevel());
+    
+    // only INTRA 422 10 bit
+    mHEVCSubDescriptor->setDecodingDelay(0);
+    mHEVCSubDescriptor->setConstantBPictureFlag(true);
+    mHEVCSubDescriptor->setCodedContentKind(1); // progressive
+    mHEVCSubDescriptor->setClosedGOPIndicator(true);
+    mHEVCSubDescriptor->setIdenticalGOPIndicator(true);
+    mHEVCSubDescriptor->setMaximumGOPSize(1);
+    mHEVCSubDescriptor->setMaximumBPictureCount(0);
+    mHEVCSubDescriptor->setProfile(seq_param_set.general_profile_idc);
+    mHEVCSubDescriptor->setProfileConstraint(seq_param_set.profile_constraint);
+    mHEVCSubDescriptor->setLevel(seq_param_set.general_level_idc);
+    mHEVCSubDescriptor->setTier(seq_param_set.general_tier_flag);
+    mHEVCSubDescriptor->setMaximumRefFrames(0);
+    uint8_t flag = 0b00000101;
+    mHEVCSubDescriptor->setSequenceParameterSetFlag(flag);
+    mHEVCSubDescriptor->setPictureParameterSetFlag(flag);
+    mHEVCSubDescriptor->setVideoParameterSetFlag(flag);
 }
 
 mxfUL HEVCMXFDescriptorHelper::ChooseEssenceContainerUL() const
