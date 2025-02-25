@@ -71,6 +71,8 @@ void ISXDEssenceParser::StartElement(void *user_data, const char *qname, const c
     ISXDEssenceParser *parser = static_cast<ISXDEssenceParser*>(user_data);
     (void)atts;
 
+    string ns, name;
+    split_qname(qname, &ns, &name);
     // set RootElementKey for very first element that we encounter.
     if (parser->mRootElementKey == "")
     {
@@ -82,6 +84,24 @@ void ISXDEssenceParser::StartElement(void *user_data, const char *qname, const c
 
         parser->mRootElementKey = name;
         parser->mNamespace = ns;
+    }
+
+    // if we dont have a namespace yet, we try to get it from DolbyVisionGlobalData element and version attribute
+    if (parser->mNamespace == "" && name == "DolbyVisionGlobalData")
+    {
+        for (int i = 0; atts[i] != nullptr; i += 2) {
+            string attr_ns, attr_name;
+            split_qname(atts[i], &attr_ns, &attr_name);
+            
+            const char* value = atts[i + 1];
+            
+            //log_info("Attribute: %s = %s\n", attr_name.c_str(), value);
+            if (attr_name == "version") {
+                if (strncmp(value, "2.0", 3) == 0) {
+                    parser->mNamespace = "http://www.dolby.com/schemas/dvmd/2_0_5";
+                }
+            }
+        }
     }
 }
 
