@@ -35,7 +35,7 @@ jobs:
           mv ../binary_release/bmx-*/out/package ./binary_release
 
       - name: Upload source release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: source-release
           path: |
@@ -43,7 +43,7 @@ jobs:
             source_release/*.tar.gz
 
       - name: Upload binary release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binary-release
           path: |

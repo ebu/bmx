@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload binary release (Ubuntu, Mac)
         if: ${{ !contains(matrix.os, 'windows') }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-${{matrix.name}}.tar.gz
           path: |
@@ -123,7 +123,7 @@ jobs:
 
       - name: Upload binary release (Windows)
         if: ${{ contains(matrix.os, 'windows') }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-${{matrix.name}}.tar.gz
           path: |
