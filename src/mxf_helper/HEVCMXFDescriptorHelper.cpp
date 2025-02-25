@@ -424,6 +424,7 @@ void HEVCMXFDescriptorHelper::UpdateFileDescriptor(HEVCEssenceParser *essence_pa
     mHEVCSubDescriptor->setLevel(seq_param_set.general_level_idc);
     mHEVCSubDescriptor->setTier(seq_param_set.general_tier_flag);
     mHEVCSubDescriptor->setMaximumRefFrames(0);
+    //in-band at every access unit + constant
     uint8_t flag = 0b00000101;
     mHEVCSubDescriptor->setSequenceParameterSetFlag(flag);
     mHEVCSubDescriptor->setPictureParameterSetFlag(flag);
