@@ -13,28 +13,28 @@ jobs:
             os: ubuntu-20.04
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
-              -DBUILD_SHARED_LIBS=OFF \
-              -DBMX_BUILD_TESTING=OFF \
-              -DBMX_BUILD_TOOLS=OFF \
-              -DBMX_BUILD_WITH_LIBCURL=ON \
+              -DBUILD_SHARED_LIBS=OFF
+              -DBMX_BUILD_TESTING=OFF
+              -DBMX_BUILD_TOOLS=OFF
+              -DBMX_BUILD_WITH_LIBCURL=ON
               -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: ubuntu-latest
             os: ubuntu-latest
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
-              -DBUILD_SHARED_LIBS=OFF \
-              -DBMX_BUILD_TESTING=OFF \
-              -DBMX_BUILD_TOOLS=OFF \
-              -DBMX_BUILD_WITH_LIBCURL=ON \
+              -DBUILD_SHARED_LIBS=OFF
+              -DBMX_BUILD_TESTING=OFF
+              -DBMX_BUILD_TOOLS=OFF
+              -DBMX_BUILD_WITH_LIBCURL=ON
               -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: macos-latest
             os: macos-latest
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
-              -DBUILD_SHARED_LIBS=OFF \
-              -DBMX_BUILD_TESTING=OFF \
-              -DBMX_BUILD_TOOLS=OFF \
-              -DBMX_BUILD_WITH_LIBCURL=ON \
+              -DBUILD_SHARED_LIBS=OFF
+              -DBMX_BUILD_TESTING=OFF
+              -DBMX_BUILD_TOOLS=OFF
+              -DBMX_BUILD_WITH_LIBCURL=ON
               -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: windows
             os: windows-latest
