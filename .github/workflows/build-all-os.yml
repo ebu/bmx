@@ -16,7 +16,8 @@ jobs:
               -DBUILD_SHARED_LIBS=OFF \
               -DBMX_BUILD_TESTING=OFF \
               -DBMX_BUILD_TOOLS=OFF \
-              -DBMX_BUILD_WITH_LIBCURL=ON
+              -DBMX_BUILD_WITH_LIBCURL=ON \
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: ubuntu-latest
             os: ubuntu-latest
             cmake_config_args: >-
@@ -24,7 +25,8 @@ jobs:
               -DBUILD_SHARED_LIBS=OFF \
               -DBMX_BUILD_TESTING=OFF \
               -DBMX_BUILD_TOOLS=OFF \
-              -DBMX_BUILD_WITH_LIBCURL=ON
+              -DBMX_BUILD_WITH_LIBCURL=ON \
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: macos-latest
             os: macos-latest
             cmake_config_args: >-
@@ -32,7 +34,8 @@ jobs:
               -DBUILD_SHARED_LIBS=OFF \
               -DBMX_BUILD_TESTING=OFF \
               -DBMX_BUILD_TOOLS=OFF \
-              -DBMX_BUILD_WITH_LIBCURL=ON
+              -DBMX_BUILD_WITH_LIBCURL=ON \
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: windows
             os: windows-latest
             cmake_build_args: >-
@@ -56,14 +59,12 @@ jobs:
             gcc \
             cmake \
             uuid-dev \
-            liburiparser-dev \
-            libexpat1-dev \
             libcurl4-openssl-dev
       - name: Install dependencies (MacOS)
         if: ${{ contains(matrix.os, 'macos') }}
         shell: bash
         run: |
-          brew install git cmake expat uriparser curl
+          brew install git cmake curl
 
       - name: Show Versions
         shell: bash
