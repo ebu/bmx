@@ -17,8 +17,7 @@ jobs:
               -DBMX_BUILD_TESTING=OFF \
               -DBMX_BUILD_TOOLS=OFF \
               -DBMX_BUILD_WITH_LIBCURL=ON \
-              -DBMX_BUILD_URIPARSER_SOURCE=ON \
-              -DBMX_BUILD_EXPAT_SOURCE=ON
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: ubuntu-latest
             os: ubuntu-latest
             cmake_config_args: >-
@@ -27,8 +26,7 @@ jobs:
               -DBMX_BUILD_TESTING=OFF \
               -DBMX_BUILD_TOOLS=OFF \
               -DBMX_BUILD_WITH_LIBCURL=ON \
-              -DBMX_BUILD_URIPARSER_SOURCE=ON \
-              -DBMX_BUILD_EXPAT_SOURCE=ON
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: macos-latest
             os: macos-latest
             cmake_config_args: >-
@@ -37,8 +35,7 @@ jobs:
               -DBMX_BUILD_TESTING=OFF \
               -DBMX_BUILD_TOOLS=OFF \
               -DBMX_BUILD_WITH_LIBCURL=ON \
-              -DBMX_BUILD_URIPARSER_SOURCE=ON \
-              -DBMX_BUILD_EXPAT_SOURCE=ON
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
           - name: windows
             os: windows-latest
             cmake_build_args: >-
@@ -67,7 +64,7 @@ jobs:
         if: ${{ contains(matrix.os, 'macos') }}
         shell: bash
         run: |
-          brew install git cmake curl
+          brew install git cmake uriparser curl
 
       - name: Show Versions
         shell: bash
