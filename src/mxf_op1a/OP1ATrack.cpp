@@ -57,6 +57,7 @@
 #include <bmx/mxf_op1a/OP1AIABTrack.h>
 #include <bmx/mxf_op1a/OP1ASADMTrack.h>
 #include <bmx/mxf_op1a/OP1AISXDTrack.h>
+#include <bmx/mxf_op1a/OP1AHEVCITrack.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -151,7 +152,11 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {TIMED_TEXT,               {{-1, -1}, {0, 0}}},
     {IAB,                      {{-1, -1}, {0, 0}}},
     {SADM,                     {{-1, -1}, {0, 0}}},
-    {ISXD,                     {{-1, -1}, {0, 0}}}
+    {ISXD,                     {{-1, -1}, {0, 0}}},
+    {HEVC_MAIN,                {{-1, -1}, {0, 0}}},
+    {HEVC_MAIN_10,             {{-1, -1}, {0, 0}}},
+    {HEVC_MAIN_10_INTRA,       {{-1, -1}, {0, 0}}},
+    {HEVC_MAIN_422_10_INTRA,   {{-1, -1}, {0, 0}}},
 };
 
 
@@ -274,7 +279,15 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
             return new OP1AIABTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case ISXD:
             return new OP1AISXDTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case HEVC_MAIN:
+        case HEVC_MAIN_10:
+            // MARKUS: Should it throw for now?
+            return new OP1AHEVCITrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case HEVC_MAIN_10_INTRA:
+        case HEVC_MAIN_422_10_INTRA:
+            return new OP1AHEVCITrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         default:
+            log_error("Essence Type not supported in OP1ATrack.\n");
             BMX_ASSERT(false);
     }
 

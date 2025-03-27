@@ -13,26 +13,32 @@ jobs:
             os: ubuntu-20.04
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
-              -DBUILD_SHARED_LIBS=OFF \
-              -DBMX_BUILD_TESTING=OFF \
-              -DBMX_BUILD_TOOLS=OFF \
+              -DBUILD_SHARED_LIBS=OFF
+              -DBMX_BUILD_TESTING=OFF
+              -DBMX_BUILD_TOOLS=OFF
               -DBMX_BUILD_WITH_LIBCURL=ON
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
+              -DBMX_BUILD_EXPAT_SOURCE=ON
           - name: ubuntu-latest
             os: ubuntu-latest
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
-              -DBUILD_SHARED_LIBS=OFF \
-              -DBMX_BUILD_TESTING=OFF \
-              -DBMX_BUILD_TOOLS=OFF \
+              -DBUILD_SHARED_LIBS=OFF
+              -DBMX_BUILD_TESTING=OFF
+              -DBMX_BUILD_TOOLS=OFF
               -DBMX_BUILD_WITH_LIBCURL=ON
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
+              -DBMX_BUILD_EXPAT_SOURCE=ON
           - name: macos-latest
             os: macos-latest
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Release
-              -DBUILD_SHARED_LIBS=OFF \
-              -DBMX_BUILD_TESTING=OFF \
-              -DBMX_BUILD_TOOLS=OFF \
+              -DBUILD_SHARED_LIBS=OFF
+              -DBMX_BUILD_TESTING=OFF
+              -DBMX_BUILD_TOOLS=OFF
               -DBMX_BUILD_WITH_LIBCURL=ON
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
+              -DBMX_BUILD_EXPAT_SOURCE=ON
           - name: windows
             os: windows-latest
             cmake_build_args: >-
@@ -56,14 +62,12 @@ jobs:
             gcc \
             cmake \
             uuid-dev \
-            liburiparser-dev \
-            libexpat1-dev \
             libcurl4-openssl-dev
       - name: Install dependencies (MacOS)
         if: ${{ contains(matrix.os, 'macos') }}
         shell: bash
         run: |
-          brew install git cmake expat uriparser curl
+          brew install git cmake curl
 
       - name: Show Versions
         shell: bash
@@ -114,7 +118,7 @@ jobs:
 
       - name: Upload binary release (Ubuntu, Mac)
         if: ${{ !contains(matrix.os, 'windows') }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-${{matrix.name}}.tar.gz
           path: |
@@ -123,7 +127,7 @@ jobs:
 
       - name: Upload binary release (Windows)
         if: ${{ contains(matrix.os, 'windows') }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-${{matrix.name}}.tar.gz
           path: |

@@ -69,6 +69,8 @@
 #include <bmx/essence_parser/IABEssenceParser.h>
 #include <bmx/essence_parser/ISXDEssenceParser.h>
 #include <bmx/essence_parser/SADMEssenceParser.h>
+#include <bmx/essence_parser/HEVCEssenceParser.h>
+#include <bmx/essence_parser/HEVCRawEssenceReader.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
@@ -105,6 +107,7 @@ typedef enum
     D10_ESSENCE_GROUP,
     AVCI_ESSENCE_GROUP,
     AVC_ESSENCE_GROUP,
+    HEVC_ESSENCE_GROUP,
 } EssenceTypeGroup;
 
 
@@ -315,6 +318,10 @@ static bool open_raw_reader(RawInput *input)
              input->essence_type == D10_50)
     {
         input->raw_reader = new D10RawEssenceReader(essence_source);
+    }
+    else if (input->essence_type_group == HEVC_ESSENCE_GROUP)
+    {
+        input->raw_reader = new HEVCRawEssenceReader(essence_source);
     }
     else
     {
@@ -3154,6 +3161,19 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--hevc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type_group = HEVC_ESSENCE_GROUP;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--unc") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -4611,6 +4631,19 @@ int main(int argc, const char** argv)
                     // TODO: other parameters?
                 }
             }
+            else if (input->essence_type_group == HEVC_ESSENCE_GROUP)
+            {
+                HEVCEssenceParser *hevc_parser = new HEVCEssenceParser();
+                input->raw_reader->SetEssenceParser(hevc_parser);
+                input->raw_reader->ReadSamples(1);
+                if (input->raw_reader->GetNumSamples() != 1) {
+                    log_error("Error reading first frame\n");
+                    return 1;
+                }
+                
+                hevc_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+                input->essence_type = hevc_parser->GetEssenceType();
+            }
             else if (input->essence_type == ISXD)
             {
                 log_info("got isxd\n");
@@ -5439,6 +5472,14 @@ int main(int argc, const char** argv)
                     if (BMX_OPT_PROP_IS_SET(input->afd))
                         clip_track->SetAFD(input->afd);
                     break;
+                case HEVC_MAIN:
+                case HEVC_MAIN_10:
+                    log_info("Set HEVC\n");
+                    break;
+                case HEVC_MAIN_10_INTRA:
+                case HEVC_MAIN_422_10_INTRA:
+                    log_info("Set HEVC Intra\n");
+                    break;
                 case UNC_SD:
                 case UNC_HD_1080I:
                 case UNC_HD_1080P:
@@ -5730,6 +5771,15 @@ int main(int argc, const char** argv)
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new AVCEssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(50000000);
+                    break;
+                case HEVC_MAIN:
+                case HEVC_MAIN_10:
+                case HEVC_MAIN_10_INTRA:
+                case HEVC_MAIN_422_10_INTRA:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new HEVCEssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(50000000);
                     break;
                 case D10_30:

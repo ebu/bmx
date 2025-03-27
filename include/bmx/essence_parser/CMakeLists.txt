@@ -21,6 +21,8 @@ list(APPEND bmx_headers
     bmx/essence_parser/IABEssenceParser.h
     bmx/essence_parser/ISXDEssenceParser.h
     bmx/essence_parser/SADMEssenceParser.h
+    bmx/essence_parser/HEVCEssenceParser.h
+    bmx/essence_parser/HEVCRawEssenceReader.h
 )
 
 set(bmx_headers ${bmx_headers} PARENT_SCOPE)

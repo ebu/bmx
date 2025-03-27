@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
 jobs:
-  build_and_test:
+  build:
     if: ${{ false }}
     strategy:
       fail-fast: false
