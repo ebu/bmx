@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, British Broadcasting Corporation
+ * Copyright (C) 2023, Dolby Laboratories
  * All Rights Reserved.
  *
  * Author: Markus Pfundstein

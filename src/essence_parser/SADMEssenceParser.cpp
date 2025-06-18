@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, British Broadcasting Corporation
+ * Copyright (C) 2023, Dolby Laboratories
  * All Rights Reserved.
  *
  * Author: Markus Pfundstein
@@ -28,6 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 #include "bmx/essence_parser/EssenceParser.h"
 #ifdef HAVE_CONFIG_H

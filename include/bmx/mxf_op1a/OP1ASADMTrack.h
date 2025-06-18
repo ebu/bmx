@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2023, Dolby Laboratories
  * All Rights Reserved.
  *
- * Author: Philip de Nier, Markus Pfundstein
+ * Author: Markus Pfundstein
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 #ifndef BMX_OP1A_SADM_TRACK_H_
 #define BMX_OP1A_SADM_TRACK_H_
