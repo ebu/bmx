@@ -178,7 +178,7 @@ private:
     void ParseSeqParameterSet(AVCGetBitBuffer *bs);
     void ParseVUIParameters(AVCGetBitBuffer *bs, uint8_t max_sub_layers_minus1);
     void ParseHRDParameters(AVCGetBitBuffer *bs, uint8_t common_inf_present_flag, uint8_t max_sub_layers_minus1);
-    void ParseSubLayerHRDParameters(AVCGetBitBuffer *bs, uint8_t i, uint8_t sub_pic_hrd_params_present_flag, uint8_t cpb_cnt);
+    void ParseSubLayerHRDParameters(AVCGetBitBuffer *bs, uint8_t sub_pic_hrd_params_present_flag, uint8_t cpb_cnt);
     void ParseProfileTierLevel(AVCGetBitBuffer *bs, uint8_t max_sub_layers_minus1);
     void ParseScalingListData(AVCGetBitBuffer *bs);
     void ParseShortTermRefPicSet(AVCGetBitBuffer *bs, uint8_t stRpsIdx, uint8_t num_short_term_ref_pic_sets);

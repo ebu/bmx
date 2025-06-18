@@ -187,7 +187,6 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
 {
     log_debug("s-ADM: ParseSection (Pos: %d / data_size: %d)\n", mStreamPos, data_size);
     if (!mSections) {
-        // log_info("parse number sections\n");
         mSections = ReadByte(data, data_size);
         if (mSections < 2) {
             throw InvalidDataError("Invalid s-ADM. Minimum of 2 sections required");

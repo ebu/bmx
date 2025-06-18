@@ -73,14 +73,10 @@ void ISXDEssenceParser::StartElement(void *user_data, const char *qname, const c
 
     string ns, name;
     split_qname(qname, &ns, &name);
-    // set RootElementKey for very first element that we encounter.
     if (parser->mRootElementKey == "")
     {
         string ns, name;
         split_qname(qname, &ns, &name);
-#if 0
-        log_info("ISXDEssenceParser. Set RootElementKey to %s with ns: %s\n", name.c_str(), ns.c_str());
-#endif
 
         parser->mRootElementKey = name;
         parser->mNamespace = ns;
@@ -95,7 +91,6 @@ void ISXDEssenceParser::StartElement(void *user_data, const char *qname, const c
             
             const char* value = atts[i + 1];
             
-            //log_info("Attribute: %s = %s\n", attr_name.c_str(), value);
             if (attr_name == "version") {
                 if (strncmp(value, "2.0", 3) == 0) {
                     parser->mNamespace = "http://www.dolby.com/schemas/dvmd/2_0_5";
@@ -114,12 +109,6 @@ void ISXDEssenceParser::EndElement(void *user_data, const char *qname)
 
     if (name == parser->mRootElementKey)
     {
-#if 0
-        log_info("ISXDEssenceParser. DONE %s, ns: %s\n", name.c_str(), ns.c_str());
-        log_info("mBytesRead: %d\n", parser->mBytesRead);
-        log_info("mPos: %d\n", parser->mPos);
-        log_info("STOP PARSER\n");
-#endif
         parser->mFullFrameParsed = true;
         XML_StopParser(parser->mParser, true);
     }
@@ -169,8 +158,6 @@ void ISXDEssenceParser::ResetParser()
     mBytesRead = 0;
     mFullFrameParsed = 0;
     mPos = 0;
-
-    //log_info("Reset ISXD parser\n");
 }
 
 uint32_t ISXDEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
@@ -184,13 +171,11 @@ uint32_t ISXDEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t 
 
 uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-    //log_info("ISXD Parse: %d\n", data_size);
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     // done with file
     if (data_size == 0)
     {
-        //log_info("END OF FILE\n");
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
@@ -200,26 +185,9 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
 
     if (mFullFrameParsed)
     {
-#if 0
-        printf("$$$$$");
-        for (int i = 0; i < mBytesRead; ++i) {
-          printf("%c", data[i]);
-        }
-        printf("**********\n\n");
-        log_info("END mPos: %ld, mBytesRead: %d, data_size: %ld\n", mPos, mBytesRead, data_size);
-        log_info("DONE: '%c' '%c' '%c'\n",
-                   data[mBytesRead-2],
-                   data[mBytesRead-1],
-                   data[mBytesRead]);
-
-
-
-#endif
-
         // doesnt seem to be necessary
         if (mBytesRead + 1 >= data_size) {
             // one more round
-            //log_info("\t\tLast one\n");
             return ESSENCE_PARSER_NULL_OFFSET;
         }
 
@@ -230,27 +198,16 @@ uint32_t ISXDEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
         
 
         uint32_t len = mBytesRead;
-        //log_info("end of frame: %ld\n", len);
         ResetParser();
         return len;
     }
 
-    //log_info("NULL_OFFSET\n");
     return ESSENCE_PARSER_NULL_OFFSET;
 }
 
 void ISXDEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
     const char *data_start = (const char*)data + mPos;
-#if 0
-    log_info("START: '%c' '%c' '%c' '%c'\n",
-             data[mPos],
-             data[mPos+1],
-             data[mPos+2],
-             data[mPos+3]);
-
-    log_info("START mPos: %ld, data_size: %ld\n", mPos, data_size);
-#endif
     
     XML_Status status = XML_Parse(mParser, data_start, data_size - mPos, 0);
     if (status == XML_STATUS_ERROR)

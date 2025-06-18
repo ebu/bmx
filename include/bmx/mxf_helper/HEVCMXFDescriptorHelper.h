@@ -69,8 +69,6 @@ public:
     virtual void UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in);
     void UpdateFileDescriptor(HEVCEssenceParser *essence_parser);
 
-    //mxfpp::HEVCSubDescriptor* GetHEVCSubDescriptor() const { return mHEVCSubDescriptor; }
-
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
 

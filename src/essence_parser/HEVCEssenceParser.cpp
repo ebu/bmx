@@ -54,152 +54,6 @@
 using namespace std;
 using namespace bmx;
 
-#if 0
-  // the latest https://www.itu.int/rec/T-REC-H.265/en
-  switch (general_profile_idc) {
-    case 1:
-      return HEVCPROFILE_MAIN;
-    case 2:
-      return HEVCPROFILE_MAIN10;
-    case 3:
-      return HEVCPROFILE_MAIN_STILL_PICTURE;
-    case 4:
-      return HEVCPROFILE_REXT;
-    case 5:
-      return HEVCPROFILE_HIGH_THROUGHPUT;
-    case 6:
-      return HEVCPROFILE_MULTIVIEW_MAIN;
-    case 7:
-      return HEVCPROFILE_SCALABLE_MAIN;
-    case 8:
-      return HEVCPROFILE_3D_MAIN;
-    case 9:
-      return HEVCPROFILE_SCREEN_EXTENDED;
-    case 10:
-      return HEVCPROFILE_SCALABLE_REXT;
-    case 11:
-      return HEVCPROFILE_HIGH_THROUGHPUT_SCREEN_EXTENDED;
-  }
-  return VIDEO_CODEC_PROFILE_UNKNOWN;
-
-static H265ExtensionProfile profiles[] = {
-    {GST_H265_PROFILE_MONOCHROME,
-        0, 1, 1, 1, 1, 1, 1, 0, 0, TRUE, 0},
-    {GST_H265_PROFILE_MONOCHROME_10,
-        0, 1, 1, 0, 1, 1, 1, 0, 0, TRUE, 1},
-    {GST_H265_PROFILE_MONOCHROME_12,
-        0, 1, 0, 0, 1, 1, 1, 0, 0, TRUE, 2},
-    {GST_H265_PROFILE_MONOCHROME_16,
-        0, 0, 0, 0, 1, 1, 1, 0, 0, TRUE, 3},
-    {GST_H265_PROFILE_MAIN_12,
-        0, 1, 0, 0, 1, 1, 0, 0, 0, TRUE, 4},
-    {GST_H265_PROFILE_MAIN_422_10,
-        0, 1, 1, 0, 1, 0, 0, 0, 0, TRUE, 5},
-    {GST_H265_PROFILE_MAIN_422_12,
-        0, 1, 0, 0, 1, 0, 0, 0, 0, TRUE, 6},
-    {GST_H265_PROFILE_MAIN_444,
-        0, 1, 1, 1, 0, 0, 0, 0, 0, TRUE, 7},
-    {GST_H265_PROFILE_MAIN_444_10,
-        0, 1, 1, 0, 0, 0, 0, 0, 0, TRUE, 8},
-    {GST_H265_PROFILE_MAIN_444_12,
-        0, 1, 0, 0, 0, 0, 0, 0, 0, TRUE, 9},
-    {GST_H265_PROFILE_MAIN_INTRA,
-        0, 1, 1, 1, 1, 1, 0, 1, 0, FALSE, 10},
-    {GST_H265_PROFILE_MAIN_10_INTRA,
-        0, 1, 1, 0, 1, 1, 0, 1, 0, FALSE, 11},
-    {GST_H265_PROFILE_MAIN_12_INTRA,
-        0, 1, 0, 0, 1, 1, 0, 1, 0, FALSE, 12},
-    {GST_H265_PROFILE_MAIN_422_10_INTRA,
-        0, 1, 1, 0, 1, 0, 0, 1, 0, FALSE, 13},
-    {GST_H265_PROFILE_MAIN_422_12_INTRA,
-        0, 1, 0, 0, 1, 0, 0, 1, 0, FALSE, 14},
-    {GST_H265_PROFILE_MAIN_444_INTRA,
-        0, 1, 1, 1, 0, 0, 0, 1, 0, FALSE, 15},
-    {GST_H265_PROFILE_MAIN_444_10_INTRA,
-        0, 1, 1, 0, 0, 0, 0, 1, 0, FALSE, 16},
-    {GST_H265_PROFILE_MAIN_444_12_INTRA,
-        0, 1, 0, 0, 0, 0, 0, 1, 0, FALSE, 17},
-    {GST_H265_PROFILE_MAIN_444_16_INTRA,
-        0, 0, 0, 0, 0, 0, 0, 1, 0, FALSE, 18},
-    {GST_H265_PROFILE_MAIN_444_STILL_PICTURE,
-        0, 1, 1, 1, 0, 0, 0, 1, 1, FALSE, 19},
-    {GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE,
-        0, 0, 0, 0, 0, 0, 0, 1, 1, FALSE, 20},
-  };
-
-typedef struct
-{
-  GstH265Profile profile;
-
-  guint8 max_14bit_constraint_flag;
-  guint8 max_12bit_constraint_flag;
-  guint8 max_10bit_constraint_flag;
-  guint8 max_8bit_constraint_flag;
-  guint8 max_422chroma_constraint_flag;
-  guint8 max_420chroma_constraint_flag;
-  guint8 max_monochrome_constraint_flag;
-  guint8 intra_constraint_flag;
-  guint8 one_picture_only_constraint_flag;
-  gboolean lower_bit_rate_constraint_flag_set;
-
-  /* Tie breaker if more than one profiles are matching */
-  guint priority;
-} H265ExtensionProfile;
-
-typedef enum {
-  GST_H265_PROFILE_INVALID              = -1,
-  GST_H265_PROFILE_MAIN                 = 1,
-  GST_H265_PROFILE_MAIN_10              = 2,
-  GST_H265_PROFILE_MAIN_STILL_PICTURE   = 3,
-  GST_H265_PROFILE_MONOCHROME,
-  GST_H265_PROFILE_MONOCHROME_12,
-  GST_H265_PROFILE_MONOCHROME_16,
-  GST_H265_PROFILE_MAIN_12,
-  GST_H265_PROFILE_MAIN_422_10,
-  GST_H265_PROFILE_MAIN_422_12,
-  GST_H265_PROFILE_MAIN_444,
-  GST_H265_PROFILE_MAIN_444_10,
-  GST_H265_PROFILE_MAIN_444_12,
-  GST_H265_PROFILE_MAIN_INTRA,
-  GST_H265_PROFILE_MAIN_10_INTRA,
-  GST_H265_PROFILE_MAIN_12_INTRA,
-  GST_H265_PROFILE_MAIN_422_10_INTRA,
-  GST_H265_PROFILE_MAIN_422_12_INTRA,
-  GST_H265_PROFILE_MAIN_444_INTRA,
-  GST_H265_PROFILE_MAIN_444_10_INTRA,
-  GST_H265_PROFILE_MAIN_444_12_INTRA,
-  GST_H265_PROFILE_MAIN_444_16_INTRA,
-  GST_H265_PROFILE_MAIN_444_STILL_PICTURE,
-  GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE,
-  GST_H265_PROFILE_MONOCHROME_10,
-  GST_H265_PROFILE_HIGH_THROUGHPUT_444,
-  GST_H265_PROFILE_HIGH_THROUGHPUT_444_10,
-  GST_H265_PROFILE_HIGH_THROUGHPUT_444_14,
-  GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA,
-  GST_H265_PROFILE_SCREEN_EXTENDED_MAIN,
-  GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10,
-  GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444,
-  GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10,
-  GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444,
-  GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10,
-  GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14,
-  GST_H265_PROFILE_MULTIVIEW_MAIN,
-  GST_H265_PROFILE_SCALABLE_MAIN,
-  GST_H265_PROFILE_SCALABLE_MAIN_10,
-  GST_H265_PROFILE_SCALABLE_MONOCHROME,
-  GST_H265_PROFILE_SCALABLE_MONOCHROME_12,
-  GST_H265_PROFILE_SCALABLE_MONOCHROME_16,
-  GST_H265_PROFILE_SCALABLE_MAIN_444,
-  GST_H265_PROFILE_3D_MAIN,
-
-  /* end of the profiles */
-  GST_H265_PROFILE_MAX
-} GstH265Profile;
-
-// https://github.com/GStreamer/gst-plugins-bad/blob/ca8068c6d793d7aaa6f2e2cc6324fdedfe2f33fa/gst-libs/gst/codecparsers/gsth265parser.c#L3378
-
-  #endif
-
 void print_buf(const unsigned char *data, uint32_t data_size, uint32_t n) {
     if (n < 20) {
         n = 20;
@@ -274,16 +128,11 @@ uint32_t HEVCEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t 
         return ESSENCE_PARSER_NULL_OFFSET;
     }
 
-    //log_info("YO: %d\n", offset);
-
     return offset - 1;
 }
 
 uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
-{
-    //log_info("\nParseFrameSize: %lu\n", data_size);
-    //log_info("mOffset: %d\n", mOffset);
-    
+{    
     // End of stream
     if (data_size == 0) {
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
@@ -295,9 +144,6 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     if (data_size == ESSENCE_PARSER_NULL_OFFSET) {
         end_pos = mOffset + 5; // add the 5 deducted from loop below to get to EOS
 
-        //log_info("!!! EOS\n");
-        //log_info("---> GOT FULL ACCESS UNIT @ pos %d\n", end_pos);
-        //print_buf(data, end_pos, 50);
         have_frame_end = true;
     }
 
@@ -317,12 +163,6 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
             mLastNalUnitType = mNalUnitType;
             mNalUnitType = nal_unit_type;
 
-            //log_info("got unit type: %d\n", nal_unit_type);
-            /*
-            if ((mNalUnitType == NAL_TYPE::AUD_NUT && mFrameNum > 0) 
-                || mLastNalUnitType == NAL_TYPE::IDR_W_RADL
-                || mLastNalUnitType == NAL_TYPE::IDR_N_LP)
-            */
             if (mLastNalUnitType == NAL_TYPE::IDR_W_RADL
                 || mLastNalUnitType == NAL_TYPE::IDR_N_LP)
             {
@@ -331,11 +171,6 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
                 assert(data[end_pos] == 0x00 && data[end_pos+1] == 0x00 && data[end_pos+2] == 0x01);
 
                 // check if we have 00.00.00.01 or 00.00.01
-                //if (data[end_pos -1 ] == 0x00)
-                //    end_pos--;
-
-                //log_info("---> GOT FULL ACCESS UNIT @ pos %d\n", end_pos);
-                //print_buf(data, end_pos, 50);
 
                 have_frame_end = true;
                 break;
@@ -344,14 +179,11 @@ uint32_t HEVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
             mOffset++;
         }
     }
-    //log_info("data_size: %ld, mOffset: %ld\n", data_size, mOffset);
 
     uint32_t frame_size = ESSENCE_PARSER_NULL_OFFSET; // need more data
     if (have_frame_end) {
         frame_size = end_pos;
-        //log_info("FRAME SIZE: %d\n", frame_size);
         mFrameNum++;
-        //log_info("Got frame: %d\n", mFrameNum);
         // done. start again!
         mOffset = 0;
     }
@@ -379,15 +211,12 @@ void HEVCEssenceParser::ParseSeqParameterSet(AVCGetBitBuffer *bs)
     bs->GetUE(&chroma_format_idc, 3);
     mSeqParameterSet.chroma_format_idc = chroma_format_idc;
 
-    //log_info(" sps_seq_parameter_set_id %llu\n", sps_seq_parameter_set_id);
-    //log_info(" chroma_format_idc %llu\n", chroma_format_idc);
 
     // mChromaFormat
     uint8_t separate_colour_plane_flag = 0;
     // chroma sampling, 0 to 3 incl.
     if (chroma_format_idc == 3) {
         bs->GetU(1, &separate_colour_plane_flag);
-        //log_info(" separate_colour_plane_flag %u\n", separate_colour_plane_flag);
     }
 
     uint64_t pic_width_in_luma_samples = 0;
@@ -517,13 +346,6 @@ void HEVCEssenceParser::ParseSeqParameterSet(AVCGetBitBuffer *bs)
 
     uint8_t sps_extension_flag = 0;
     bs->GetU(1, &sps_extension_flag);
-    /*if (sps_extension_flag) {
-        while (MoreRBSPData(bs)) {
-            // ParseSPSExtension(bs);
-        }
-    }*/
-
-    // RBSPTrailingBits(bs); 
 }
 
 void HEVCEssenceParser::ParseScalingListData(AVCGetBitBuffer *bs)
@@ -646,17 +468,14 @@ void HEVCEssenceParser::ParseVUIParameters(AVCGetBitBuffer *bs, uint8_t max_sub_
             mSeqParameterSet.have_color_description = true;
             uint8_t colour_primaries = 0;
             bs->GetU(8, &colour_primaries);
-            // log_info("colour_primaries: %d\n", colour_primaries);
             mSeqParameterSet.color_primaries = colour_primaries;
             
             uint8_t transfer_characteristics = 0;
             bs->GetU(8, &transfer_characteristics);
-            // log_info("Transfer characteristics: %d\n", transfer_characteristics);
             mSeqParameterSet.transfer_characteristics = transfer_characteristics;
 
             uint8_t matrix_coeffs = 0;
             bs->GetU(8, &matrix_coeffs);
-            // log_info("Matrix Coeffs: %d\n", matrix_coeffs);
             mSeqParameterSet.matrix_coeffs = matrix_coeffs;
         }
     }
@@ -803,16 +622,16 @@ void HEVCEssenceParser::ParseHRDParameters(AVCGetBitBuffer *bs, uint8_t common_i
         }
 
         if (nal_hrd_parameters_present_flag) {
-            ParseSubLayerHRDParameters(bs, i, sub_pic_hrd_params_present_flag, max_sub_layers_minus1);
+            ParseSubLayerHRDParameters(bs, sub_pic_hrd_params_present_flag, max_sub_layers_minus1);
         }
         
         if (vcl_hrd_parameters_present_flag) {
-            ParseSubLayerHRDParameters(bs, i, sub_pic_hrd_params_present_flag, max_sub_layers_minus1);
+            ParseSubLayerHRDParameters(bs, sub_pic_hrd_params_present_flag, max_sub_layers_minus1);
         }
     }
 }
 
-void HEVCEssenceParser::ParseSubLayerHRDParameters(AVCGetBitBuffer *bs, uint8_t i, uint8_t sub_pic_hrd_params_present_flag, uint8_t cpb_cnt) {
+void HEVCEssenceParser::ParseSubLayerHRDParameters(AVCGetBitBuffer *bs, uint8_t sub_pic_hrd_params_present_flag, uint8_t cpb_cnt) {
     uint64_t bit_rate_value_minus1;
     uint64_t cpb_size_value_minus1;
     uint64_t cpb_size_du_value_minus1;
@@ -998,16 +817,10 @@ void HEVCEssenceParser::ParseProfileTierLevel(AVCGetBitBuffer *bs, uint8_t max_s
         }
     }
 
-    /*log_info("  general_profile_compatibility_flag:");
-    for (auto flag : general_profile_compatibility_flag) {
-        printf(" %u", flag);
-    }
-    printf("\n end profile tier level\n");*/
 }
 
 void HEVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
-    //log_info("ParseFrameInfo: %lu\n", data_size);
     
     ResetFrameInfo();
 
@@ -1045,12 +858,6 @@ void HEVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
 
                 enough = true;
             }
-            /*
-            else if (nal_unit_type == NAL_TYPE::VPS_NUT) {
-            }
-            else if (nal_unit_type == NAL_TYPE::PPS_NUT) {
-            }
-            */
         } else {
             mOffset++;
         }
@@ -1070,16 +877,6 @@ void HEVCEssenceParser::CheckConformance()
         log_error("Only 4:2:2 chroma format is supported as of now.\n");
         err = true;
     }
-    /*
-    if (mSeqParameterSet.general_max_420chroma_constraint_flag) {
-        log_error("4:2:0 essence unsupported but general_max_420chroma_constraint_flag == 1\n");
-        err = true;
-    }
-    if (!mSeqParameterSet.general_max_422chroma_constraint_flag) {
-        log_error("4:4:4 essence unsupported but general_max_422chroma_constraint_flag == 0\n");
-        err = true;
-    }
-    */
     if (!mSeqParameterSet.general_max_10bit_constraint_flag || mSeqParameterSet.general_max_8bit_constraint_flag) {
         log_error("Only 10-bit essence supported but general_max_10bit_constraint_flag != 0 or mSeqParameterSet.general_max_8bit_constraint_flag == 1\n");
         err = true;
@@ -1125,12 +922,6 @@ void HEVCEssenceParser::ResetFrameInfo()
 EssenceType HEVCEssenceParser::GetEssenceType() const
 {
     switch (mSeqParameterSet.general_profile_idc) {
-        /*
-        case 1:
-        return HEVC_MAIN;
-        case 2:
-        return HEVC_MAIN_10;
-        */
         case 4:
         return CalculateEssenceTypeFromConstraints();
     }

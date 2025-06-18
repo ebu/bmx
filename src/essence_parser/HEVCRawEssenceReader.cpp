@@ -85,11 +85,9 @@ uint32_t HEVCRawEssenceReader::ReadSamples(uint32_t num_samples)
 
 bool HEVCRawEssenceReader::ReadAndParseHEVC()
 {
-    //log_info("----------->\n");
     BMX_CHECK(mEssenceParser);
 
     uint32_t sample_start_offset = mSampleDataSize;
-    //log_info("sample_start_offset: %d\n", sample_start_offset);
     uint32_t sample_num_read = mSampleBuffer.GetSize() - sample_start_offset;
     uint32_t num_read;
 
@@ -115,7 +113,6 @@ bool HEVCRawEssenceReader::ReadAndParseHEVC()
         sample_num_read += ReadBytes(READ_BLOCK_SIZE);
     }
 
-    //log_info("sample_num_read: %d\n", sample_num_read);
     uint32_t sample_size = 0;
     while (true) {
         sample_size = mEssenceParser->ParseFrameSize(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);
@@ -144,7 +141,6 @@ bool HEVCRawEssenceReader::ReadAndParseHEVC()
         return false;
     } else if (sample_size == ESSENCE_PARSER_NULL_OFFSET) {
         // assume remaining data is valid sample data
-        //log_info("last sample read\n");
         mLastSampleRead = true;
         if (sample_num_read > 0) {
             mSampleDataSize = mSampleBuffer.GetSize();
@@ -155,6 +151,5 @@ bool HEVCRawEssenceReader::ReadAndParseHEVC()
 
     mSampleDataSize += sample_size;
     mNumSamples++;
-    // log_info("\n\n");
     return true;
 }
