@@ -319,7 +319,7 @@ string URI::ToFilename() const
     else
         result = uriUriStringToUnixFilenameA(uri_str.c_str(), filename.GetStr());
     if (result)
-        return 0;
+        return "";
 
     return filename.GetCStr();
 }
