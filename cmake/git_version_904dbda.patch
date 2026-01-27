@@ -16,8 +16,9 @@ index 55e6d07..e1ce4a0 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -1,7 +1,11 @@
- cmake_minimum_required(VERSION 3.2)
+-cmake_minimum_required(VERSION 3.2)
 -project(cmake_git_version_tracking
++cmake_minimum_required(VERSION 3.12)
 +
 +project(${GIT_VERSION_PROJECT_PREFIX}git_version
      LANGUAGES C)
