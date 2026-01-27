@@ -18,7 +18,7 @@ if(MSVC OR BMX_BUILD_URIPARSER_SOURCE)
     else()
         FetchContent_Declare(liburiparser
             GIT_REPOSITORY https://github.com/uriparser/uriparser
-            GIT_TAG uriparser-0.9.7
+            GIT_TAG uriparser-1.0.0
         )
         message("-- Build using uriparser from git repo")
     endif()
