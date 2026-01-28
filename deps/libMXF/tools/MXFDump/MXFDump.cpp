@@ -63,6 +63,7 @@
 #define MXF_OS_UNIX
 #elif defined(__GNUC__) && defined(__riscv_xlen) && __riscv_xlen==64 && defined(__linux__)
 #define MXF_COMPILER_GCC_RISCV64_LINUX
+#define MXF_OS_UNIX
 #elif defined(__GNUC__) && defined(__aarch64__) && defined(__linux__)
 #define MXF_COMPILER_GCC_ARM64_LINUX
 #define MXF_OS_UNIX
