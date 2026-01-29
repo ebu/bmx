@@ -1,5 +1,22 @@
 # bmx Changelog
 
+## Version next
+
+### Breaking changes
+
+* None
+
+### Features
+
+* Add support for Linux arm64 and Linux riscv64 builds (https://github.com/ebu/bmx/pull/5) (https://github.com/ebu/bmx/pull/9)
+
+### Bug fixes
+
+* Fix for growing AVC/H.264 file descriptor (https://github.com/ebu/bmx/pull/7)
+* Updated Cmake version requirements (https://github.com/ebu/bmx/pull/10)
+* Updated dependency on URIParser to version 1.0.0
+* Build fix for compilers supporting C++23 (https://github.com/ebu/bmx/pull/8)
+
 ## v1.6
 
 ### Breaking changes
