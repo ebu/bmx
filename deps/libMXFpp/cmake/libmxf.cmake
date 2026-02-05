@@ -27,11 +27,7 @@ else()
         SOURCE_DIR ${PROJECT_SOURCE_DIR}/../libMXF
     )
 
-    FetchContent_GetProperties(libMXF)
-    if(NOT libMXF_POPULATED)
-        FetchContent_Populate(libMXF)
-        add_subdirectory(${libmxf_SOURCE_DIR} ${libmxf_BINARY_DIR})
-    endif()
+    FetchContent_MakeAvailable(libMXF)
 
     set(MXF_link_lib MXF)
 endif()
