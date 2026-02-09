@@ -159,11 +159,7 @@ FetchContent_Declare(bmx
     GIT_REPOSITORY "https://github.com/bbc/bmx"
     GIT_TAG "origin/main"
 )
-FetchContent_GetProperties(bmx)
-if(NOT bmx_POPULATED)
-    FetchContent_Populate(bmx)
-    add_subdirectory(${bmx_SOURCE_DIR} ${bmx_BINARY_DIR})
-endif()
+FetchContent_MakeAvailable(bmx)
 
 add_executable(example example.cpp)
 target_link_libraries(example bmx)

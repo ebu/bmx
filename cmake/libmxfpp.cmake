@@ -28,11 +28,7 @@ else()
         SOURCE_DIR ${PROJECT_SOURCE_DIR}/deps/libMXFpp
     )
 
-    FetchContent_GetProperties(libMXFpp)
-    if(NOT libMXFpp_POPULATED)
-        FetchContent_Populate(libMXFpp)
-        add_subdirectory(${libmxfpp_SOURCE_DIR} ${libmxfpp_BINARY_DIR})
-    endif()
+    FetchContent_MakeAvailable(libMXFpp)
 
     set(MXFpp_link_lib MXFpp)
  endif()
