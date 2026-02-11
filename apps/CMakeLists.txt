@@ -1,5 +1,21 @@
-add_subdirectory(writers)
+if(MSVC)
+    # embeds the manifest for long_path support in Windows 10 (1607 and later)
+    set(MANIFEST_NAME "BMX Tool")
 
+    configure_file(
+        "${PROJECT_SOURCE_DIR}/cmake/bmx_windows.manifest.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/bmx_windows.generated.manifest"
+        @ONLY
+    )
+
+    add_link_options("/MANIFEST:EMBED" "/MANIFESTINPUT:${CMAKE_CURRENT_BINARY_DIR}/bmx_windows.generated.manifest")
+
+    # /manifest file is not found when incremental is enabled (default Debug build config), so we disable it.
+    add_link_options("$<$<CONFIG:Debug>:/INCREMENTAL:NO>")
+
+endif()
+
+add_subdirectory(writers)
 add_subdirectory(bmxparse)
 add_subdirectory(bmxtranswrap)
 add_subdirectory(mxf2raw)
