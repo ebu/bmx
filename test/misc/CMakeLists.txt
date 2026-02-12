@@ -5,6 +5,7 @@ setup_test_dir("misc")
 set(tests
     desc_props_bmxtranswrap
     desc_props_raw2bmx
+    long_path
 )
 
 foreach(test ${tests})

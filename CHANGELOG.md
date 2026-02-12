@@ -9,6 +9,7 @@
 ### Features
 
 * Add support for Linux arm64 and Linux riscv64 builds (https://github.com/ebu/bmx/pull/5) (https://github.com/ebu/bmx/pull/9)
+* Add support for >260 Characters for Windows input/output paths (all executables) (https://github.com/ebu/bmx/pull/18)
 
 ### Bug fixes
 
