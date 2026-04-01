@@ -61,6 +61,8 @@ public:
 public:
     // configure and create new descriptor
     virtual void SetEssenceType(EssenceType essence_type);
+    virtual void SetFrameWidth(uint32_t frame_width);
+    virtual void SetFrameHeight(uint32_t frame_height);
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
@@ -73,6 +75,8 @@ protected:
 
 private:
     size_t mEssenceIndex;
+    BMX_OPT_PROP_DECL(uint32_t, mFrameWidth);
+    BMX_OPT_PROP_DECL(uint32_t, mFrameHeight);
 };
 
 
