@@ -19,6 +19,7 @@ if(BMX_BUILD_EXPAT_SOURCE)
     if(EXISTS "${PROJECT_SOURCE_DIR}/deps/libexpat")
         FetchContent_Declare(FT_libexpat
             SOURCE_DIR "${PROJECT_SOURCE_DIR}/deps/libexpat"
+			SOURCE_SUBDIR expat
         )
     else()
         FetchContent_Declare(FT_libexpat
