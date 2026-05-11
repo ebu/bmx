@@ -64,9 +64,9 @@ git push origin v${BMX_VERSION}
     * `BMX_VERSION` should be set as before; note also the additional `.0` for the patch version.
 
 ```bash
-DOCKER_BUILDKIT=1 docker build -t bmxtools .
-docker tag bmxtools ghcr.io/bbc/bmxtools:${BMX_VERSION}.0
-docker tag bmxtools ghcr.io/bbc/bmxtools:latest
+DOCKER_BUILDKIT=1 docker build --platform linux/amd64 -t bmxtools .
+docker tag bmxtools ghcr.io/ebu/bmxtools:${BMX_VERSION}.0
+docker tag bmxtools ghcr.io/ebu/bmxtools:latest
 ```
 
 * In your [GitHub settings](https://github.com/settings/tokens) to create tokens
@@ -82,7 +82,7 @@ docker tag bmxtools ghcr.io/bbc/bmxtools:latest
 
 ```bash
 docker login ghcr.io --username <username>
-docker push ghcr.io/bbc/bmxtools:${BMX_VERSION}.0
-docker push ghcr.io/bbc/bmxtools:latest
+docker push ghcr.io/ebu/bmxtools:${BMX_VERSION}.0
+docker push ghcr.io/ebu/bmxtools:latest
 docker logout ghcr.io
 ```
