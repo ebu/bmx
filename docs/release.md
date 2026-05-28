@@ -9,7 +9,7 @@ This describes the steps for making a release.
     * Go through the PRs since the last release and add each PR and descriptive text to the `Breaking changes`, `Features`, `Bug fixes` or `Build changes` sections
 * Update the versions in the 3 main CMakeLists.txt files in the `project` blocks, where `VERSION` has the form `<major version>.<minor version>`
     * The files are [bmx CMakeLists.txt](../CMakeLists.txt), [libMXF CmakeLists.txt](../deps/libMXF/CMakeLists.txt) and [libMXFpp CmakeLists.txt](../deps/libMXFpp/CMakeLists.txt)
-* Update the version in the [Build and Publish Image](../.github/workflows/publish-image.yml) file, where `VERSION` has the form `<major version>.<minor version>`,`<patch version>`
+* Update the version in the [Build and Publish Image](../.github/workflows/publish-image.yml) file, where `VERSION` has the form `<major version>.<minor version>.<patch version>`
 * Run the [Build & Test](../.github/workflows/build_and_test.yml) workflow in GitHub Actions using the release branch and fix any build errors and warnings
 * Check the [runner versions](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners) (e.g. `windows-2019` and `macos-13`) in the [release.yml](../.github/workflows/release.yml) workflow file are still available
     * Select the oldest macOS version available to help with compatibility
