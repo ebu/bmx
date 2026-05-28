@@ -59,30 +59,4 @@ git push origin v${BMX_VERSION}
 
 ## Create a Docker Image for the GitHub Container Registry
 
-* Acquire a Linux machine with Docker installed
-* Build the `bmxtools` image and tag using the commands below
-    * `BMX_VERSION` should be set as before; note also the additional `.0` for the patch version.
-
-```bash
-DOCKER_BUILDKIT=1 docker build --platform linux/amd64 -t bmxtools .
-docker tag bmxtools ghcr.io/ebu/bmxtools:${BMX_VERSION}.0
-docker tag bmxtools ghcr.io/ebu/bmxtools:latest
-```
-
-* In your [GitHub settings](https://github.com/settings/tokens) to create tokens
-    * Select "Generate New Token" and "Generate new token (classic)"
-        * Change "Expiration" to 7 days
-        * Select "write:packages" (which will select "read:packages" and all of "repo")
-    * Select "Generate Token"
-    * Copy the token which you'll need to pass in when logging into the GitHub Docker registry
-* Login into GHCR and push the image using the commands below
-    * Replace `<username>` with your GitHub username
-    * Pass in the token when docker login requests it
-    * `BMX_VERSION` should be set as before; note also the additional `.0` for the patch version
-
-```bash
-docker login ghcr.io --username <username>
-docker push ghcr.io/ebu/bmxtools:${BMX_VERSION}.0
-docker push ghcr.io/ebu/bmxtools:latest
-docker logout ghcr.io
-```
+* Run the [Build and Publish Image](https://github.com/scenarnick/bmx/actions/workflows/publish-image.yml) workflow in GitHub actions on the release tag.

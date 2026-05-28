@@ -12,3 +12,4 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 out/
+.DS_Store

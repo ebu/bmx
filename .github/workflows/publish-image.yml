@@ -1,4 +1,4 @@
-name: Build and publish image
+name: Build and Publish Image
 
 on:
   workflow_dispatch: # allows manual runs from the Actions tab
@@ -26,8 +26,8 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and push
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7.2.0
       with:
         context: .
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:'1.7.0'
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
