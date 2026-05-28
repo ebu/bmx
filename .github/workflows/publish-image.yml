@@ -30,4 +30,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:1.7.0
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:'1.7.0'
