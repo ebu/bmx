@@ -5,7 +5,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: 'bmxtools'
+  TOOL_NAME: 'bmxtools'
+  VERSION: '1.7.0'
 
 jobs:
   build-and-push:
@@ -30,4 +31,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.TOOL_NAME }}:latest, ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.TOOL_NAME }}:"${{ env.VERSION }}"
