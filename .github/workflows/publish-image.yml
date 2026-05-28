@@ -1,0 +1,34 @@
+name: Build and Publish Image
+
+on:
+  workflow_dispatch: # allows manual runs from the Actions tab
+
+env:
+  REGISTRY: ghcr.io
+  TOOL_NAME: 'bmxtools'
+  VERSION: '1.7.0'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6.0.2
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v4.2.0
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push
+      uses: docker/build-push-action@v7.2.0
+      with:
+        context: .
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.TOOL_NAME }}:latest, ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.TOOL_NAME }}:${{ env.VERSION }}
