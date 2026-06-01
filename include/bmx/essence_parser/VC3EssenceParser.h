@@ -36,9 +36,6 @@
 #include <bmx/essence_parser/EssenceParser.h>
 
 
-#define VC3_PARSER_MIN_DATA_SIZE        44
-
-
 
 namespace bmx
 {
