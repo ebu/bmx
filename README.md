@@ -173,10 +173,10 @@ set(BMX_BUILD_LIB_ONLY ON CACHE BOOL "Build bmx, MXF and MXF++ libraries only")
 
 ## Docker
 
-The [bmxtools](https://github.com/orgs/bbc/packages?repo_name=bmx) Docker images are made available in the GitHub Container Registry. Pull the latest version using,
+The [bmxtools](https://github.com/orgs/ebu/packages?repo_name=bmx) Docker images are made available in the GitHub Container Registry. Pull the latest version using,
 
 ```bash
-docker pull ghcr.io/bbc/bmxtools:latest
+docker pull ghcr.io/ebu/bmxtools:latest
 ```
 
 The [docker/bmx_docker.sh](./docker/bmx_docker.sh) shell script is provided to make it easier to run the Docker container. Run
@@ -240,7 +240,7 @@ This example runs `bmxtranswrap` from input `./sources/in.mxf` to output `./dest
 
 ## Source and Binary Distributions
 
-Source distributions, including dependencies, and binaries are made available in the [Releases](https://github.com/ebu/bmx/releases) on GitHub. Older distributions can be found on [SourceForge](https://sourceforge.net/projects/bmxlib/files/).
+Source distributions, including dependencies, and binaries are made available in the [Releases](https://github.com/ebu/bmx/releases) on GitHub. Older distributions can be found on [the BBC GitHub repo](https://github.com/bbc/bmx/releases) and on [SourceForge](https://sourceforge.net/projects/bmxlib/files/).
 
 Source and binary distributions are generally only created when a new feature is required for creating standard compliant sample files for example, or when a release hasn't been made for a long time.
 
