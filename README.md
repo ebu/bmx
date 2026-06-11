@@ -36,7 +36,7 @@ The following input and output wrapper formats and flavours are supported:
 * [SMPTE RDD 9](https://doi.org/10.5594/SMPTE.RDD9.2013) MXF MPEG Long GOP (Sony XDCAM)
 * [SMPTE ST 386](https://doi.org/10.5594/SMPTE.ST386.2004) MXF D-10 (Sony MPEG IMX)
 * [SMPTE ST 2067-5](https://doi.org/10.5594/SMPTE.ST2067-5) Interoperable Master Format (IMF) - Essence Component
-* [Avid native MXF OPAtom](https://www.avid.com/static/resources/common/documents/mxf.pdf)
+* Avid native MXF OPAtom
 * [WAV](https://en.wikipedia.org/wiki/WAV)
 
 The following essence formats are supported:

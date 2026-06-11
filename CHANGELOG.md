@@ -1,5 +1,18 @@
 # bmx Changelog
 
+## vNext
+
+### Breaking changes
+
+### Features
+
+* Updated documentation for working with ADM (https://github.com/ebu/bmx/pull/33)
+
+### Bug fixes
+
+* Fixed links to SMPTE standards (https://github.com/ebu/bmx/pull/33)
+* Removed broken link to AVID OPAtom documentation
+ 
 ## v1.7
 
 ### Breaking changes
