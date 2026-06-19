@@ -7,6 +7,7 @@
 ### Features
 
 * Updated documentation for working with ADM (https://github.com/ebu/bmx/pull/33)
+* Added docs/bmx_history covering the early history and development of BMX and libMXF
 
 ### Bug fixes
 
