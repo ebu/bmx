@@ -250,6 +250,11 @@ The [release.md](./docs/release.md) document describes the release process.
 
 Additionally bmx (including MXF and MXF++) is available via the Conan package manager for C/C++: [bmx Conan recipe](https://conan.io/center/recipes/bmx). Conan Center Index offers precompiled packages for many target systems and otherwise allows to build locally according to a local conan build profile. Follow the code snippets and documentation on the linked page for integrating it.
 
+### BMX and libMXF History
+
+- **[BMX Origins](./docs/bmx_history/bmx_origins.md)**: A brief document explaining the origins and early history of the project.
+- **[BBC WHP155](./docs/bmx_history/WHP155.pdf)**: BBC R&D Whitepaper about File-based Production, September 2007
+
 ## License
 
 The bmx library is provided under the BSD 3-clause license. See the [COPYING](./COPYING) file provided with this library for more details.
