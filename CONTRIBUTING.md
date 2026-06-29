@@ -14,12 +14,10 @@ review and the main repository stays uncluttered.
    Actions on your fork lets you run the workflows against your own changes.
 2. **Clone** your fork and create a topic branch for your work:
    ```bash
-   git clone --recursive https://github.com/<your-username>/bmx.git
+   git clone https://github.com/<your-username>/bmx.git
    cd bmx
    git checkout -b my-change
    ```
-   Note the `--recursive` flag — bmx includes the `libMXF` and `libMXF++`
-   dependencies as submodules in `deps/`.
 3. **Add the upstream repository** as a remote (once) so you can pull in the
    latest changes:
    ```bash
