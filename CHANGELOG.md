@@ -8,12 +8,13 @@
 
 * Updated documentation for working with ADM (https://github.com/ebu/bmx/pull/33)
 * Added docs/bmx_history covering the early history and development of BMX and libMXF
+* MXFDump new flag "--dict smpte" for more complete Label interpretion and more SMPTE near naming
 
 ### Bug fixes
 
 * Fixed links to SMPTE standards (https://github.com/ebu/bmx/pull/33)
 * Removed broken link to AVID OPAtom documentation
- 
+
 ## v1.7
 
 ### Breaking changes

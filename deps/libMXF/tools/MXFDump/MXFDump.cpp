@@ -558,6 +558,19 @@ bool isPrivateLabel(mxfKey& key);
 void printPrivateLabelName(mxfKey& k, FILE* outfile);
 void printPrivateLabel(mxfKey& k, FILE* outfile);
 
+// SMPTE dictionary row type, runtime mode, and label lookup. SmpteKey and
+// enum DictMode are defined here (rather than next to the SMPTE tables far
+// below) because printEssenceContainerLabelName uses them earlier in the file
+// under --dict smpte. The table/size definitions still live with the other
+// SMPTE tables below. SmpteKey is shared by mxfSmpteKeyTable and the label
+// table (both are just {name, 16-byte UL} rows).
+enum DictMode { DictStatic = 0, DictSmpte = 1 };
+extern DictMode g_dictMode;
+struct SmpteKey { const char* _name; mxfKey _key; };
+extern SmpteKey mxfSmpteLabelTable[];
+extern size_t mxfSmpteLabelTableSize;
+bool lookupSMPTELabel(const mxfKey& k, size_t& index);
+
 const char* keyName(const mxfKey& key);
 
 void checkFill(const mxfKey& key,
@@ -2238,6 +2251,18 @@ bool isEssenceContainerLabel(mxfKey& label)
 
 void printEssenceContainerLabelName(mxfKey& label, FILE* outfile)
 {
+  if (g_dictMode == DictSmpte) {
+    // SMPTE mode: resolve purely from the generated SMPTE Labels table; the
+    // hand-maintained MXFLabels.h decoder is NOT used here. 
+    size_t idx;
+    if (lookupSMPTELabel(label, idx)) {
+      fprintf(outfile, "%s", mxfSmpteLabelTable[idx]._name);
+    } else {
+      fprintf(outfile, "Not recognized");
+    }
+    return;
+  }
+  //legacy mode: use the hand-maintained MXFLabels.h to resolve the label
   if (isEssenceContainerLabel(label)) {
     decode(label, outfile);
   } else if (isPrivateLabel(label)) {
@@ -2284,7 +2309,9 @@ mxfUInt08 hostByteOrder(void)
   return result;
 }
 
-// Define values of MXF keys
+//=========================================================================
+// Legacy dictionary, Define values of MXF keys
+//=========================================================================
 
 #define MXF_LABEL(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) \
                  {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p}
@@ -2377,30 +2404,239 @@ struct MXFLocalKey {
 size_t mxfLocalKeyTableSize =
                     (sizeof(mxfLocalKeyTable)/sizeof(mxfLocalKeyTable[0])) - 1;
 
+//=========================================================================
+// SMPTE dictionary: auto-generated classes + hand-maintained complement .
+//
+// MXFMetaDictionary_smpte.h contains structural/pack keys and other ULs
+// absent from the SMPTE Metadata Register XML files (partition packs,
+// KLV structural keys, vendor-private definitions, etc.).
+// MXFMetaDictionary_smpte.gen.h is produced by gen_mxfdump_smpte_dict.py
+// from the SMPTE Metadata Register xmls.
+// At runtime the user selects which table(s) to use via "--dict smpte".
+//=========================================================================
+// (struct SmpteKey is defined near the top with the forward declarations,
+// since printEssenceContainerLabelName uses it earlier in the file.)
+
+// MXFMetaDictionary.h #undefines MXF_LABEL at its end, so redefine it here.
+#define MXF_LABEL(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) \
+                 {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p}
+#define MXF_DEFINE_PACK_KEY(n, k)                {#n, k},
+#define MXF_DEFINE_KEY(n, k)                     {#n, k},
+#define MXF_DEFINE_EXTRA_KEY(v, d, k)            {d, k},
+#define MXF_CLASS(name, id, parent, concrete)    {#name, id},
+#define MXF_PROPERTY(name, id, tag, type, mandatory, isuid, container)
+#define MXF_CLASS_END(name, id, parent, concrete)
+#define MXF_CLASS_SEPARATOR()
+#define MXF_LABEL_ENTRY(sym, name, key)  // labels go in mxfSmpteLabelTable only
+
+SmpteKey mxfSmpteKeyTable[] = {
+#include "MXFMetaDictionary_smpte.h"
+#include "MXFMetaDictionary_smpte.gen.h"
+  {"bogus", NULLMXFKEY}
+};
+
+#undef MXF_DEFINE_PACK_KEY
+#undef MXF_DEFINE_KEY
+#undef MXF_DEFINE_EXTRA_KEY
+#undef MXF_CLASS
+#undef MXF_PROPERTY
+#undef MXF_LABEL_ENTRY
+// MXF_LABEL is still defined from line ~2350 and is still needed below
+
+size_t mxfSmpteKeyTableSize =
+       (sizeof(mxfSmpteKeyTable)/sizeof(mxfSmpteKeyTable[0])) - 1;
+
+struct SmpteLocalKey {
+  const char* _name;
+  mxfLocalKey _localKey;
+  mxfKey      _key;
+  const char* _type;   // dictionary type symbol (e.g. "UInt32"); drives typed dump
+};
+
+#define MXF_CLASS(name, id, parent, concrete)
+#define MXF_PROPERTY(name, id, tag, type, mandatory, isuid, container) \
+                     {#name, tag, id, #type},
+#define MXF_LABEL_ENTRY(sym, name, key)  // labels go in mxfSmpteLabelTable only
+
+SmpteLocalKey mxfSmpteLocalKeyTable[] = {
+#include "MXFMetaDictionary_smpte.gen.h"
+  {"bogus", 0x0000, NULLMXFKEY, nullptr}
+};
+
+#undef MXF_LABEL
+#undef MXF_CLASS
+#undef MXF_PROPERTY
+#undef MXF_CLASS_END
+#undef MXF_CLASS_SEPARATOR
+#undef MXF_LABEL_ENTRY
+
+size_t mxfSmpteLocalKeyTableSize =
+       (sizeof(mxfSmpteLocalKeyTable)/sizeof(mxfSmpteLocalKeyTable[0])) - 1;
+
+// SMPTE Labels table: UL VALUES (essence-container/coding/colour labels, etc.)
+// resolved to names, generated from Labels.xml into MXFMetaDictionary_smpte.gen.h
+// via MXF_LABEL_ENTRY. Only MXF_LABEL_ENTRY rows are kept here; MXF_CLASS /
+// MXF_PROPERTY rows (groups/elements) expand to nothing, mirroring how the two
+// tables above filter the same shared generated file.
+//
+// The full label set is loaded, but today only printEssenceContainerLabelName()
+// consumes it (under --dict smpte).
+#define MXF_LABEL(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) \
+                 {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p}
+#define MXF_DEFINE_PACK_KEY(n, k)
+#define MXF_DEFINE_KEY(n, k)
+#define MXF_DEFINE_EXTRA_KEY(v, d, k)
+#define MXF_CLASS(name, id, parent, concrete)
+#define MXF_PROPERTY(name, id, tag, type, mandatory, isuid, container)
+#define MXF_CLASS_END(name, id, parent, concrete)
+#define MXF_CLASS_SEPARATOR()
+#define MXF_LABEL_ENTRY(sym, name, key)  {name, key},
+
+SmpteKey mxfSmpteLabelTable[] = {
+#include "MXFMetaDictionary_smpte.gen.h"
+  {"bogus", NULLMXFKEY}
+};
+
+#undef MXF_LABEL
+#undef MXF_DEFINE_PACK_KEY
+#undef MXF_DEFINE_KEY
+#undef MXF_DEFINE_EXTRA_KEY
+#undef MXF_CLASS
+#undef MXF_PROPERTY
+#undef MXF_CLASS_END
+#undef MXF_CLASS_SEPARATOR
+#undef MXF_LABEL_ENTRY
+
+size_t mxfSmpteLabelTableSize =
+       (sizeof(mxfSmpteLabelTable)/sizeof(mxfSmpteLabelTable[0])) - 1;
+
+// Runtime dictionary mode (selected by --dict).  Default = legacy mode.
+DictMode g_dictMode = DictStatic;
+
+const char* mxfKeyTableName(size_t i)
+{
+  if (g_dictMode == DictSmpte) {
+    return mxfSmpteKeyTable[i]._name;
+  }
+  return mxfKeyTable[i]._name;
+}
+
+const char* mxfLocalKeyTableName(size_t i)
+{
+  if (g_dictMode == DictSmpte) {
+    return mxfSmpteLocalKeyTable[i]._name;
+  }
+  return mxfLocalKeyTable[i]._name;
+}
+
 bool lookupMXFLocalKey(mxfLocalKey& k, size_t& index)
 {
-  bool result = false;
-  for (size_t i = 0; i < mxfLocalKeyTableSize; i++) {
-    if (mxfLocalKeyTable[i]._localKey == k) {
-      index = i;
-      result = true;
-      break;
+  if (g_dictMode == DictSmpte) {
+    for (size_t i = 0; i < mxfSmpteLocalKeyTableSize; i++) {
+      if (mxfSmpteLocalKeyTable[i]._localKey == k) {
+        index = i;
+        return true;
+      }
+    }
+  } else {
+    for (size_t i = 0; i < mxfLocalKeyTableSize; i++) {
+      if (mxfLocalKeyTable[i]._localKey == k) {
+        index = i;
+        return true;
+      }
     }
   }
-  return result;
+  return false;
+}
+
+// Compare MXF keys ignoring the version byte (octet7)
+bool matchMXFKeyIgnoreVersion(const mxfKey& a, const mxfKey& b)
+{
+  return memcmp(&a, &b, 7) == 0 &&
+         memcmp((mxfByte*)&a + 8, (mxfByte*)&b + 8, 8) == 0;
+}
+
+// Prefix of a privately/organisationally-registered group key:
+// 06.0e.2b.34.02.??.01.01.0e (octet5 = 7f in the smpte xmls, e.g. 0x13 — Local Set)
+// octet8 = 0x0e = org-registered).
+// Org-registered private keys share an org prefix but have unknown trailing bytes, so an
+// exact match on the NODE's UL would never fire.  matchMXFKeyMasked wildcards the suffix,
+// resolving any private key from that org to the org's name.
+static const mxfByte pvtGroupPrefix[] =
+  {0x06, 0x0e, 0x2b, 0x34, 0x02, 0x7f, 0x01, 0x01, 0x0e};
+
+// Match a file key against a table key where 0xff or 0x7f in the table means wildcard.
+// 0xff is used for SMPTE keys whose last byte encodes a variable block count.
+// 0x7f is used in SMPTE dictionary for version indicators that can vary between keys.
+// Additionally, if the table key is an org-registered group prefix (pvtGroupPrefix),
+// its 0x00 suffix bytes are treated as wildcards so a single dictionary entry
+// (e.g. Sony Corp 06.0e.2b.34.02.7f.01.01.0e.06.00...) matches any private key of
+// that organisation, whose unregistered suffix is not listed in the dictionary.
+static bool matchMXFKeyMasked(const mxfKey& tableKey, const mxfKey& fileKey)
+{
+  const mxfByte* t = reinterpret_cast<const mxfByte*>(&tableKey);
+  const mxfByte* f = reinterpret_cast<const mxfByte*>(&fileKey);
+  
+  // Check if this is a private group by matching prefix (skip octet5 which is 0x7f wildcard)
+  bool pvtGroup = (memcmp(t, pvtGroupPrefix, 5) == 0 &&      // octets 0-4
+                   memcmp(t+6, pvtGroupPrefix+6, 3) == 0);   // octets 6-8
+  
+  for (int i = 0; i < 16; i++) {
+    // Skip special marker values
+    if (t[i] == 0xff || t[i] == 0x7f)
+      continue;
+    
+    // Skip 0x00 if this is a private group
+    if (pvtGroup && t[i] == 0x00)
+      continue;
+    
+    // Check if values match
+    if (t[i] != f[i])
+      return false;
+  }
+  return true;
 }
 
 bool lookupMXFPropertyKey(const mxfKey& k, size_t& index)
 {
-  bool result = false;
-  for (size_t i = 0; i < mxfLocalKeyTableSize; i++) {
-    if (memcmp(&mxfLocalKeyTable[i]._key, &k, sizeof(mxfKey)) == 0) {
-      index = i;
-      result = true;
-      break;
+  if (g_dictMode == DictSmpte) {
+    for (size_t i = 0; i < mxfSmpteLocalKeyTableSize; i++) {
+      if (matchMXFKeyIgnoreVersion(mxfSmpteLocalKeyTable[i]._key, k)) {
+        index = i;
+        return true;
+      }
+    }
+  } else {
+    for (size_t i = 0; i < mxfLocalKeyTableSize; i++) {
+      if (matchMXFKeyIgnoreVersion(mxfLocalKeyTable[i]._key, k)) {
+        index = i;
+        return true;
+      }
     }
   }
-  return result;
+  return false;
+}
+
+// Resolve a label VALUE (e.g. an essence-container label) to an entry in
+// mxfSmpteLabelTable. Two passes so a 0x7f-wildcard row cannot shadow a more
+// specific entry: pass 1 matches exactly (ignoring the registry-version octet);
+// pass 2 honours 0x7f/0xff in the table key as match-any wildcards. SMPTE-only;
+bool lookupSMPTELabel(const mxfKey& k, size_t& index)
+{
+  // only for g_dictMode == DictSmpte
+  for (size_t i = 0; i < mxfSmpteLabelTableSize; i++) {
+    if (matchMXFKeyIgnoreVersion(mxfSmpteLabelTable[i]._key, k)) {
+      index = i;
+      return true;
+    }
+  }
+  for (size_t i = 0; i < mxfSmpteLabelTableSize; i++) {
+    if (matchMXFKeyMasked(mxfSmpteLabelTable[i]._key, k)) {
+      index = i;
+      return true;
+    }
+  }
+  return false;
 }
 
 void updateMXFLocalKey(const mxfKey& key, const mxfLocalKey localKey)
@@ -2408,16 +2644,19 @@ void updateMXFLocalKey(const mxfKey& key, const mxfLocalKey localKey)
   size_t index;
   bool found = lookupMXFPropertyKey(key, index);
   if (found) {
-    if (mxfLocalKeyTable[index]._localKey != localKey) {
-      if (mxfLocalKeyTable[index]._localKey == 0x0000) {
+    mxfLocalKey* slot = (g_dictMode == DictSmpte) 
+                          ? &mxfSmpteLocalKeyTable[index]._localKey
+                          : &mxfLocalKeyTable[index]._localKey;
+    if (*slot != localKey) {
+      if (*slot == 0x0000) {
         // Set dynamically allocated local key
-        mxfLocalKeyTable[index]._localKey = localKey;
+        *slot = localKey;
       } else {
         mxfWarning("Cannot remap static local key as specified by Primer Pack "
                    "(property \"%s\" has local key %04" MXFPRIx16 " in the MXF "
                    "dictionary and %04" MXFPRIx16 " in the Primer)\n",
-                   mxfLocalKeyTable[index]._name,
-                   mxfLocalKeyTable[index]._localKey,
+                   mxfLocalKeyTableName(index),
+                   *slot,
                    localKey );
       }
     }
@@ -2968,6 +3207,19 @@ void printFormatOptions(void)
   fprintf(stderr, "do not use Primer Pack for mapping from local keys\n");
   fprintf(stderr, "                        ");
   fprintf(stderr, "to their respective UIDs\n");
+
+  fprintf(stderr, "  --dict smpte        = ");
+  fprintf(stderr, "select dictionary: smpte (only)\n");
+  fprintf(stderr, "                        ");
+  fprintf(stderr, "uses published SMPTE metadata registry data\n");
+  fprintf(stderr, "                        ");
+  fprintf(stderr, "printed values differ from legacy mode but match\n");
+  fprintf(stderr, "                        ");
+  fprintf(stderr, "SMPTE registry exactly (except items not listed)\n");
+  fprintf(stderr, "                        ");
+  fprintf(stderr, "legacy mode is default for backward compatibility\n");
+  fprintf(stderr, "                        ");
+  fprintf(stderr, "but may be removed in future\n");
 }
 
 void printRawOptions(void);
@@ -3445,15 +3697,24 @@ void printMxfLocalKeySymbol(mxfLocalKey& k, mxfKey& enclosing, FILE* f)
 
 bool lookupMXFKey(mxfKey& k, size_t& index)
 {
-  bool result = false;
-  for (size_t i = 0; i < mxfKeyTableSize; i++) {
-    if (memcmp(&k, mxfKeyTable[i]._key, sizeof(mxfKey)) == 0) {
-      index = i;
-      result = true;
-      break;
+  if (g_dictMode == DictSmpte) {
+    //smpte mode uses MXFMetaDictionary_smpte.gen.h
+    for (size_t i = 0; i < mxfSmpteKeyTableSize; i++) {
+      if (matchMXFKeyMasked(mxfSmpteKeyTable[i]._key, k)) {
+        index = i;
+        return true;
+      }
+    }
+  } else {
+    // Legacy mode uses (default) MXFMetaDictionary.h
+    for (size_t i = 0; i < mxfKeyTableSize; i++) {
+      if (memcmp(&k, mxfKeyTable[i]._key, sizeof(mxfKey)) == 0) {
+        index = i;
+        return true;
+      }
     }
   }
-  return result;
+  return false;
 }
 
 bool keyAddresses = true;  // Print addresses of keys
@@ -3480,7 +3741,7 @@ void printMxfKeySymbol(mxfKey& k)
   size_t i;
   bool found = lookupMXFKey(k, i);
   if (found) {
-    fprintf(stdout, "%s", mxfKeyTable[i]._name);
+    fprintf(stdout, "%s", mxfKeyTableName(i));
   } else if (isEssenceElement(k)) {
     fprintf(stdout, "Essence Element");
   } else {
@@ -3505,7 +3766,7 @@ void printAAFKeySymbol(mxfKey& k)
   } else {
     found = lookupMXFKey(k, i);
     if (found) {
-      fprintf(stdout, "%s", mxfKeyTable[i]._name);
+      fprintf(stdout, "%s", mxfKeyTableName(i));
     } else if (isEssenceElement(k)) {
       fprintf(stdout, "Essence Element");
     } else {
@@ -3547,7 +3808,7 @@ const char* mxfKeyName(const mxfKey& k)
   size_t i;
   bool found = lookupMXFKey(const_cast<mxfKey&>(k), i);
   if (found) {
-    result = mxfKeyTable[i]._name;
+    result = mxfKeyTableName(i);
   }
   return result;
 }
@@ -3569,7 +3830,7 @@ const char* mxfLocalKeyName(mxfLocalKey& k)
   size_t index;
   bool found = lookupMXFLocalKey(k, index);
   if (found) {
-    result = mxfLocalKeyTable[index]._name;
+    result = mxfLocalKeyTableName(index);
   }
   return result;
 }
@@ -5461,7 +5722,7 @@ const char* keyName(const mxfKey& key)
   case mxfValidateMode:
     found = lookupMXFKey(const_cast<mxfKey&>(key), x);
     if (found) {
-      result = mxfKeyTable[x]._name;
+      result = mxfKeyTableName(x);
     } else if (isEssenceElement(const_cast<mxfKey&>(key))) {
       result = "Essence Element";
     } else if (isNullKey(key)) {
@@ -5474,7 +5735,7 @@ const char* keyName(const mxfKey& key)
   case aafValidateMode:
     found = lookupMXFKey(const_cast<mxfKey&>(key), x);
     if (found) {
-      result = mxfKeyTable[x]._name;
+      result = mxfKeyTableName(x);
     } else {
       found = lookupAAFKey(const_cast<mxfKey&>(key), x);
       if (found) {
@@ -6214,7 +6475,7 @@ void dumpIndexEntryArray(mxfUInt32 entryCount,
       fprintf(stdout, " ");
       dumpFlags(flags);
       printDecField(stdout, streamOffset);
-      fprintf(stdout, "\n");
+      fprintf(stdout, "\n"); //todo: breaks the row before sliceoffset value
 
       // Slice offsets
       if (sliceCount > 0) {
@@ -7364,6 +7625,23 @@ int main(int argumentCount, char* argumentVector[])
     } else if (strcmp(p, "--ignore-primer") == 0) {
       checkDumpMode(p);
       usePrimer = false;
+    } else if (strcmp(p, "--dict") == 0) {
+      i = i + 1;
+      if (i >= argumentCount) {
+        error("missing argument for --dict (expected static|smpte).\n");
+        printUsage();
+        exit(EXIT_FAILURE);
+      }
+      if (strcmp(argumentVector[i], "static") == 0) {
+        g_dictMode = DictStatic;
+      } else if (strcmp(argumentVector[i], "smpte") == 0) {
+        g_dictMode = DictSmpte;
+      } else {
+        error("invalid argument \"%s\" for --dict (expected static|smpte).\n",
+              argumentVector[i]);
+        printUsage();
+        exit(EXIT_FAILURE);
+      }
     } else if (strcmp(p, "--search-run-in") == 0) {
       runInLimit = getIntegerOption(i,
                                     argumentCount,
