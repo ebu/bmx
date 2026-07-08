@@ -2037,7 +2037,7 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
 
     WaveAudioDescriptor *wave_descriptor = dynamic_cast<WaveAudioDescriptor*>(file_descriptor);
     IABDescriptor *iab_descriptor = dynamic_cast<IABDescriptor*>(file_descriptor);
-    SADMDescriptor *sadm_descriptor = dynamic_cast<SADMDescriptor*>(file_descriptor);
+    MGASoundEssenceDescriptor *sadm_descriptor = dynamic_cast<MGASoundEssenceDescriptor*>(file_descriptor);
     if (wave_descriptor) {
         sound_track_info->block_align = wave_descriptor->getBlockAlign();
         if (wave_descriptor->haveSequenceOffset())

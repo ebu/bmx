@@ -64,7 +64,6 @@ list(APPEND MXFpp_sources
     metadata/base/WaveAudioDescriptorBase.cpp
     metadata/base/IABDescriptorBase.cpp
     metadata/base/ISXDDescriptorBase.cpp
-    metadata/base/SADMDescriptorBase.cpp
     metadata/base/HEVCSubDescriptorBase.cpp
 )
 
@@ -134,7 +133,6 @@ list(APPEND MXFpp_headers
     metadata/base/WaveAudioDescriptorBase.h
     metadata/base/IABDescriptorBase.h
     metadata/base/ISXDDescriptorBase.h
-    metadata/base/SADMDescriptorBase.h
     metadata/base/HEVCSubDescriptorBase.h
 )
 

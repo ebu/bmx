@@ -99,7 +99,6 @@
 #include <libMXF++/metadata/ContainerConstraintsSubDescriptor.h>
 #include <libMXF++/metadata/IABDescriptor.h>
 #include <libMXF++/metadata/ISXDDescriptor.h>
-#include <libMXF++/metadata/SADMDescriptor.h>
 #include <libMXF++/metadata/HEVCSubDescriptor.h>
 
 

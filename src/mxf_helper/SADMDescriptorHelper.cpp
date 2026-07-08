@@ -160,7 +160,7 @@ void SADMDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 
 FileDescriptor* SADMDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
-    mFileDescriptor = new SADMDescriptor(header_metadata);
+    mFileDescriptor = new MGASoundEssenceDescriptor(header_metadata);
 
     UpdateFileDescriptor();
     return mFileDescriptor;
@@ -170,7 +170,7 @@ void SADMDescriptorHelper::UpdateFileDescriptor()
 {
     SoundMXFDescriptorHelper::UpdateFileDescriptor();
 
-    SADMDescriptor *descriptor = dynamic_cast<SADMDescriptor*>(mFileDescriptor);
+    MGASoundEssenceDescriptor *descriptor = dynamic_cast<MGASoundEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
     descriptor->setSoundEssenceCompression(mEssenceCompressionLabel);
@@ -182,16 +182,16 @@ void SADMDescriptorHelper::UpdateFileDescriptor()
 
 void SADMDescriptorHelper::UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in)
 {
-    SADMDescriptor *descriptor = dynamic_cast<SADMDescriptor*>(mFileDescriptor);
+    MGASoundEssenceDescriptor *descriptor = dynamic_cast<MGASoundEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
-    SADMDescriptor *desc_in = dynamic_cast<SADMDescriptor*>(file_desc_in);
+    MGASoundEssenceDescriptor *desc_in = dynamic_cast<MGASoundEssenceDescriptor*>(file_desc_in);
     BMX_CHECK(desc_in);
 }
 
 void SADMDescriptorHelper::UpdateAverageBytesPerSecond(uint32_t avgBytes)
 {
-    SADMDescriptor *descriptor = dynamic_cast<SADMDescriptor*>(mFileDescriptor);
+    MGASoundEssenceDescriptor *descriptor = dynamic_cast<MGASoundEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
     descriptor->setMGASoundEssenceAverageBytesPerSecond(avgBytes);
@@ -199,7 +199,7 @@ void SADMDescriptorHelper::UpdateAverageBytesPerSecond(uint32_t avgBytes)
 
 void SADMDescriptorHelper::UpdateFileDescriptor(SADMEssenceParser *essence_parser)
 {
-    SADMDescriptor *descriptor = dynamic_cast<SADMDescriptor*>(mFileDescriptor);
+    MGASoundEssenceDescriptor *descriptor = dynamic_cast<MGASoundEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(descriptor);
 
     // add stuff from first parse

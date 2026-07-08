@@ -99,7 +99,7 @@ static const ContentPackageRate CONTENT_PACKAGE_RATES[] =
 };
 
 
-static const string BMX_NAMESPACE = "http://www.dolby.com/rd/bmx";
+static const string BMX_NAMESPACE = "http://bbc.co.uk/rd/bmx";
 
 
 namespace bmx

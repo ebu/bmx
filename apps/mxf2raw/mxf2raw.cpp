@@ -136,7 +136,7 @@ typedef struct
 static LogData LOG_DATA;
 
 static const char *APP_NAME                     = "mxf2raw";
-static const char *XML_INFO_WRITER_NAMESPACE    = "http://www.dolby.com/rd/bmx/202310";
+static const char *XML_INFO_WRITER_NAMESPACE    = "http://bbc.co.uk/rd/bmx/201312";
 static const char *XML_INFO_WRITER_VERSION      = "0.1"; // format <major>.<minor>
 
 static const char* STDIN_FILENAME = "stdin:";
@@ -942,21 +942,12 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
        
         if (sound_info->isIabDescriptor) {
             info_writer->StartSection("IAB_descriptor");
-        }
-        else if (sound_info->isSADMDescriptor) {
+        } else if (sound_info->isSADMDescriptor) {
             info_writer->StartSection("MGA_sound_descriptor");
-        }
-        else {
+        } else {
             info_writer->StartSection("sound_descriptor");
         }
-        info_writer->WriteAUIDItem("label", sound_info->descriptor_ul);
-        if (BMX_OPT_PROP_IS_SET(sound_info->sound_essence_compression))
-            info_writer->WriteAUIDItem("sound_essence_coding", sound_info->sound_essence_compression);
-
-        info_writer->WriteRationalItem("sample_rate", sound_info->edit_rate);
-        info_writer->WriteRationalItem("audio_sample_rate", sound_info->sampling_rate);
-        if (BMX_OPT_PROP_IS_SET(sound_info->reference_image_edit_rate))
-            info_writer->WriteRationalItem("ref_image_edit_rate", sound_info->reference_image_edit_rate);
+        info_writer->WriteRationalItem("sampling_rate", sound_info->sampling_rate);
         info_writer->WriteIntegerItem("bits_per_sample", sound_info->bits_per_sample);
         if (!sound_info->isIabDescriptor && !sound_info->isSADMDescriptor) {
             info_writer->WriteIntegerItem("block_align", sound_info->block_align);
