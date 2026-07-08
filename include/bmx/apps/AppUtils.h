@@ -199,6 +199,7 @@ uint64_t delta_tick_count(uint64_t from, uint64_t to);
 void rt_sleep(float rt_factor, uint64_t start_tick, Rational sample_rate, int64_t num_samples);
 
 
+bool parse_extract_tracks(const char *tracks_str, std::vector<std::string> *track_names);
 
 };
 

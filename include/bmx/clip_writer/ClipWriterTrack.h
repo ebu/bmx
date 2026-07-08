@@ -93,6 +93,7 @@ public:
     void SetSamplingRate(Rational sampling_rate);   // default 48000/1
     void SetQuantizationBits(uint32_t bits);        // default 16
     void SetChannelCount(uint32_t count);           // default 1
+    void SetReferenceImageEditRate(Rational edit_rate);
     void SetLocked(bool locked);                    // default not set
     void SetAudioRefLevel(int8_t level);            // default not set
     void SetDialNorm(int8_t dial_norm);             // default not set

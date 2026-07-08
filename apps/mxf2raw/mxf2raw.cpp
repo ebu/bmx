@@ -136,7 +136,7 @@ typedef struct
 static LogData LOG_DATA;
 
 static const char *APP_NAME                     = "mxf2raw";
-static const char *XML_INFO_WRITER_NAMESPACE    = "http://bbc.co.uk/rd/bmx/201312";
+static const char *XML_INFO_WRITER_NAMESPACE    = "http://www.dolby.com/rd/bmx/202310";
 static const char *XML_INFO_WRITER_VERSION      = "0.1"; // format <major>.<minor>
 
 static const char* STDIN_FILENAME = "stdin:";
@@ -401,6 +401,7 @@ static void disable_tracks(MXFReader *reader, const set<size_t> &track_indexes,
             (disable_video && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF) ||
             (disable_data  && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_DATA_DDEF))
         {
+            printf("disable for reader: %lu\n", i);
             reader->GetTrackReader(i)->SetEnable(false);
         }
     }
@@ -859,6 +860,7 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
     }
 
     info_writer->WriteEnumStringItem("essence_kind", ESSENCE_KIND_EINFO, track_info->data_def);
+    
     info_writer->WriteStringItem("essence_type", essence_type_to_enum_string(track_info->essence_type));
     info_writer->WriteAUIDItem("ec_label", track_info->essence_container_label);
     info_writer->WriteRationalItem("edit_rate", track_info->edit_rate);
@@ -937,10 +939,28 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         if (text_writer)
             text_writer->PushItemValueIndent(strlen("d10_aes3_valid_flags "));
 
-        info_writer->StartSection("sound_descriptor");
-        info_writer->WriteRationalItem("sampling_rate", sound_info->sampling_rate);
+       
+        if (sound_info->isIabDescriptor) {
+            info_writer->StartSection("IAB_descriptor");
+        }
+        else if (sound_info->isSADMDescriptor) {
+            info_writer->StartSection("MGA_sound_descriptor");
+        }
+        else {
+            info_writer->StartSection("sound_descriptor");
+        }
+        info_writer->WriteAUIDItem("label", sound_info->descriptor_ul);
+        if (BMX_OPT_PROP_IS_SET(sound_info->sound_essence_compression))
+            info_writer->WriteAUIDItem("sound_essence_coding", sound_info->sound_essence_compression);
+
+        info_writer->WriteRationalItem("sample_rate", sound_info->edit_rate);
+        info_writer->WriteRationalItem("audio_sample_rate", sound_info->sampling_rate);
+        if (BMX_OPT_PROP_IS_SET(sound_info->reference_image_edit_rate))
+            info_writer->WriteRationalItem("ref_image_edit_rate", sound_info->reference_image_edit_rate);
         info_writer->WriteIntegerItem("bits_per_sample", sound_info->bits_per_sample);
-        info_writer->WriteIntegerItem("block_align", sound_info->block_align);
+        if (!sound_info->isIabDescriptor && !sound_info->isSADMDescriptor) {
+            info_writer->WriteIntegerItem("block_align", sound_info->block_align);
+        }
         info_writer->WriteIntegerItem("channel_count", sound_info->channel_count);
         if (track_info->essence_type == D10_AES3_PCM) {
             info_writer->WriteStringItem("d10_aes3_valid_flags",
@@ -956,6 +976,15 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             info_writer->WriteIntegerItem("dial_norm", sound_info->dial_norm);
         if (sound_info->channel_assignment != g_Null_UL)
             info_writer->WriteAUIDItem("channel_assignment", sound_info->channel_assignment);
+
+        if (sound_info->isSADMDescriptor) {
+            info_writer->WriteIntegerItem("mga_block_align", sound_info->mgaSoundEssenceBlockAlign);
+            info_writer->WriteIntegerItem("mga_average_bps", sound_info->mgaSoundEssenceAverageBytesPerSecond);
+            if (BMX_OPT_PROP_IS_SET(sound_info->mgaSoundEssenceSequenceOffset)) {
+                info_writer->WriteIntegerItem("mga_sequence_offset", sound_info->mgaSoundEssenceSequenceOffset);
+            }
+        }
+
         if (!sound_info->mca_labels.empty()) {
             info_writer->StartSection("mca_labels");
             write_track_mca_label_info(info_writer, reader, sound_info, mca_detail);
@@ -966,7 +995,19 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         if (text_writer)
             text_writer->PopItemValueIndent();
     } else if (data_info) {
-        info_writer->StartSection("data_descriptor");
+
+        if (data_info->is_isxd_descriptor) {
+            info_writer->StartSection("ISXD_descriptor");
+            info_writer->WriteAUIDItem("label              ", data_info->descriptor_ul);
+            if (BMX_OPT_PROP_IS_SET(data_info->data_essence_coding))
+                info_writer->WriteAUIDItem("data_essence_coding", data_info->data_essence_coding);
+            info_writer->WriteStringItem("namespace_uri      ", data_info->namespace_uri);
+            if (data_info->root_element_key != "")
+                info_writer->WriteStringItem("root_element_key   ", data_info->root_element_key);
+        }
+        else
+            info_writer->StartSection("data_descriptor");
+
         if (!data_info->vbi_manifest.empty()) {
             info_writer->StartSection("vbi_descriptor");
             info_writer->StartArrayItem("manifest", data_info->vbi_manifest.size());
@@ -1846,6 +1887,9 @@ int main(int argc, const char** argv)
     const char *ess_output_prefix = 0;
     set<MXFDataDefEnum> wrap_klv_mask;
     map<size_t, set<size_t> > disable_track_indexes;
+    map<size_t, set<size_t>> selected_tracks;
+    map<size_t, vector<string> > selected_tracks_types;
+    map<size_t, vector<string> > extract_track_names;
     map<size_t, bool> disable_audio;
     map<size_t, bool> disable_video;
     map<size_t, bool> disable_data;
@@ -1853,8 +1897,10 @@ int main(int argc, const char** argv)
     int64_t start = 0;
     bool start_set = false;
     int64_t duration = -1;
+    int64_t end = -1;
     bool no_precharge = false;
     bool no_rollout = false;
+    bool no_data_def = true;
 #if defined(_WIN32)
     int file_flags = MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
 #else
@@ -1880,7 +1926,6 @@ int main(int argc, const char** argv)
     bool mca_detail = false;
     unsigned int uvalue;
     int cmdln_index;
-
 
     if (argc == 1) {
         usage(argv[0]);
@@ -2191,6 +2236,7 @@ int main(int argc, const char** argv)
             have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "-p") == 0 ||
+                 strcmp(argv[cmdln_index], "--ess-out-prefix") == 0 ||
                  strcmp(argv[cmdln_index], "--ess-out") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2257,6 +2303,22 @@ int main(int argc, const char** argv)
             if (!parse_int(argv[cmdln_index + 1], &duration) || duration < 0)
             {
                 usage_ref(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--end") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &end) != 1 || end < 0)
+            {
+                usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2474,6 +2536,79 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--ess-out-suffices") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_extract_tracks(argv[cmdln_index + 1], &extract_track_names[input_filenames.size()]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+
+            for (size_t i = 0; i < extract_track_names[input_filenames.size()].size(); ++i) {
+                log_info("Extract track %d to suffix: %s\n", i, extract_track_names[input_filenames.size()][i].c_str());
+            }
+
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--keep-datadef-count") == 0)
+        {
+            no_data_def = false;
+        }
+        else if (strcmp(argv[cmdln_index], "--tracks") == 0)
+        {
+            if (cmdln_index + 1 >= argc) {
+                log_error("--tracks option requires a comma-separated list of track indices\n");
+                return 1;
+            }
+            
+            if (!parse_track_indexes(argv[cmdln_index + 1], &selected_tracks[input_filenames.size()]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+
+            printf("selected tracks: ");
+            for (auto it = selected_tracks.begin(); it != selected_tracks.end(); ++it) {
+                for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+                    printf("%lu ", *it2);
+                }
+            }
+            printf("\n");
+
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--select-essence-types") == 0)
+        {
+            if (cmdln_index + 1 >= argc) {
+                log_error("--select-essence-types option requires a comma-separated list of essence types\n");
+                return 1;
+            }
+            
+            if (!parse_extract_tracks(argv[cmdln_index + 1], &selected_tracks_types[input_filenames.size()]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+
+            printf("selected essence types: ");
+            for (auto it = selected_tracks_types.begin(); it != selected_tracks_types.end(); ++it) {
+                for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+                    printf("%s ", it2->c_str());
+                }
+            }
+            printf("\n");
+
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--disable-audio") == 0)
         {
             disable_audio[input_filenames.size()] = true;
@@ -2563,6 +2698,14 @@ int main(int argc, const char** argv)
         return cmd_result;
     }
 
+    if (end != -1) {
+        duration = end - start;
+        //duration = (end + 1) - start;
+        if (duration <= 0) {
+            log_error("invalid duration specified: %d\n", duration);
+            return 1;
+        }
+    }
 
     try
     {
@@ -2614,6 +2757,7 @@ int main(int argc, const char** argv)
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
+
                 disable_tracks(grp_file_reader, disable_track_indexes[i],
                                disable_audio[i], disable_video[i], disable_data[i]);
                 group_reader->AddReader(grp_file_reader);
@@ -2666,6 +2810,40 @@ int main(int argc, const char** argv)
                           MXFFileReader::ResultToString(result).c_str());
                 throw false;
             }
+
+            if (selected_tracks_types[0].size() > 0 && selected_tracks[0].size() > 0) {
+                log_error("--tracks and --select-essence-types can't be used together\n");
+                return 1;
+            }
+
+            if (selected_tracks_types[0].size() > 0) {
+                vector<string> extensions = selected_tracks_types[0];
+                for (size_t i = 0; i < file_reader->GetNumTrackReaders(); i++) {
+                    MXFTrackInfo *track_info = file_reader->GetTrackReader(i)->GetTrackInfo();
+                    const char* ext = essence_type_to_file_extension(track_info->essence_type);
+
+                    bool found = false;
+                    for (vector<string>::iterator it = extensions.begin(); it != extensions.end(); ++it) {
+                        if (strcmp(ext, it->c_str()) == 0) {
+                            found = true;
+                            break;
+                            
+                        }
+                    }
+                    if (!found) {
+                        disable_track_indexes[0].insert(i);    
+                    }
+                }
+            }
+            else if (selected_tracks[0].size() > 0) {
+                set<size_t> tracks = selected_tracks[0];
+                for (size_t i = 0; i < file_reader->GetNumTrackReaders(); i++) {
+                    if (!tracks.count(i)) {
+                        disable_track_indexes[0].insert(i);  // Add unselected tracks to disable list
+                    }
+                }
+            }
+
             disable_tracks(file_reader, disable_track_indexes[0],
                            disable_audio[0], disable_video[0], disable_data[0]);
 
@@ -2877,9 +3055,16 @@ int main(int argc, const char** argv)
                     if (!reader->GetTrackReader(i)->IsEnabled())
                         continue;
 
-                    const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
-                    output_file_manager.AddTrackFile(i, track_info,
-                                                     (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()));
+                    const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo(); 
+
+                    // if user provided extensions, use them. otherwise try to deduct.
+                    const char *file_ext = extract_track_names.size() > 0 ? extract_track_names[0][i].c_str() : essence_type_to_file_extension(track_info->essence_type);
+
+                    output_file_manager.AddTrackFile(i, 
+                                                     track_info,
+                                                     (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
+                                                     file_ext,
+                                                     no_data_def);
 
                     if (track_info->data_def == MXF_PICTURE_DDEF)
                         have_video = true;
@@ -2930,12 +3115,16 @@ int main(int argc, const char** argv)
                 bool have_app_tc = false;
                 bool written_timecodes = false;
                 size_t i;
-                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+
+                size_t num_readers = reader->GetNumTrackReaders();
+
+                for (i = 0; i < num_readers; i++) {
                     MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
                     while (true) {
                         Frame *frame = reader->GetTrackReader(i)->GetFrameBuffer()->GetLastFrame(true);
-                        if (!frame)
+                        if (!frame) {
                             break;
+                        }
                         if (frame->IsEmpty()) {
                             delete frame;
                             continue;
@@ -3051,8 +3240,14 @@ int main(int argc, const char** argv)
                                 }
                             } else if (track_info->essence_type != TIMED_TEXT) {  // timed text is written at the end
                                 output_file_manager.GetTrackFile(i, &file, &filename);
-                                write_data(file, filename,
-                                           frame->GetBytes(), frame->GetSize(),
+
+                                uint32_t frame_size = frame->GetSize();
+                                //printf("%d -> %d [%s]\n", i, frame_size, filename.c_str());
+
+                                write_data(file,
+                                           filename,
+                                           frame->GetBytes(),
+                                           frame_size,
                                            (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
                                            &frame->element_key);
                             }

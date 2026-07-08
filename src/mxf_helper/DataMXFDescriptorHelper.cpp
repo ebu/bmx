@@ -37,6 +37,7 @@
 #include <bmx/mxf_helper/ANCDataMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/VBIDataMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/TimedTextMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/ISXDDescriptorHelper.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -61,6 +62,9 @@ EssenceType DataMXFDescriptorHelper::IsSupported(mxfpp::FileDescriptor *file_des
     essence_type = TimedTextMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
+    essence_type = ISXDDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    if (essence_type)
+        return essence_type;
 
     return DATA_ESSENCE;
 }
@@ -75,6 +79,8 @@ DataMXFDescriptorHelper* DataMXFDescriptorHelper::Create(mxfpp::FileDescriptor *
         helper = new VBIDataMXFDescriptorHelper();
     else if (TimedTextMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new TimedTextMXFDescriptorHelper();
+    else if (ISXDDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+        helper = new ISXDDescriptorHelper();
     else
         helper = new DataMXFDescriptorHelper();
 
@@ -87,7 +93,8 @@ bool DataMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     return ANCDataMXFDescriptorHelper::IsSupported(essence_type) ||
            VBIDataMXFDescriptorHelper::IsSupported(essence_type) ||
-           TimedTextMXFDescriptorHelper::IsSupported(essence_type);
+           TimedTextMXFDescriptorHelper::IsSupported(essence_type) ||
+           ISXDDescriptorHelper::IsSupported(essence_type);
 }
 
 MXFDescriptorHelper* DataMXFDescriptorHelper::Create(EssenceType essence_type)
@@ -99,6 +106,8 @@ MXFDescriptorHelper* DataMXFDescriptorHelper::Create(EssenceType essence_type)
         helper = new ANCDataMXFDescriptorHelper();
     else if (VBIDataMXFDescriptorHelper::IsSupported(essence_type))
         helper = new VBIDataMXFDescriptorHelper();
+    else if (ISXDDescriptorHelper::IsSupported(essence_type))
+        helper = new ISXDDescriptorHelper();
     else
         helper = new TimedTextMXFDescriptorHelper();
 

@@ -105,11 +105,16 @@ static const Rational FRAME_RATE_24     = {24, 1};
 static const Rational FRAME_RATE_25     = {25, 1};
 static const Rational FRAME_RATE_2997   = {30000, 1001};
 static const Rational FRAME_RATE_30     = {30, 1};
+static const Rational FRAME_RATE_48     = {48, 1};
 static const Rational FRAME_RATE_50     = {50, 1};
 static const Rational FRAME_RATE_5994   = {60000, 1001};
 static const Rational FRAME_RATE_60     = {60, 1};
+static const Rational FRAME_RATE_96     = {96, 1};
+static const Rational FRAME_RATE_100     = {100, 1};
+static const Rational FRAME_RATE_120     = {120, 1};
 
 static const Rational SAMPLING_RATE_48K = {48000, 1};
+static const Rational SAMPLING_RATE_96K = {96000, 1};
 
 static const Rational ASPECT_RATIO_4_3  = {4, 3};
 static const Rational ASPECT_RATIO_16_9 = {16, 9};

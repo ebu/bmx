@@ -221,6 +221,15 @@ bool AVCGetBitBuffer::NextBits(uint8_t num_bits, uint64_t *next_value)
     return result;
 }
 
+void AVCGetBitBuffer::SkipBits(uint32_t count)
+{
+    if (count > 512) {
+        throw false;
+    }
+    uint64_t tmp = 0;
+    GetU(count, &tmp);
+}
+
 void AVCGetBitBuffer::SkipRBSPBytes(uint32_t count)
 {
     uint32_t rbsp_count = 0;

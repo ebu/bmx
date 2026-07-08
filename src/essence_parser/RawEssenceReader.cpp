@@ -59,8 +59,6 @@ using namespace bmx;
 #define READ_BLOCK_SIZE         8192
 #define PARSE_FRAME_START_SIZE  8192
 
-
-
 RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
 {
     mEssenceSource = essence_source;
@@ -76,7 +74,7 @@ RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
     mReadFirstSample = false;
     mLastSampleRead = false;
 
-    mSampleBuffer.SetAllocBlockSize(READ_BLOCK_SIZE);
+    mSampleBuffer.SetAllocBlockSize(READ_BLOCK_SIZE*10);
 }
 
 RawEssenceReader::~RawEssenceReader()
@@ -126,10 +124,10 @@ uint32_t RawEssenceReader::ReadSamples(uint32_t num_samples)
     // shift data from previous read to start of sample data
     // note that this is needed even if mFixedSampleSize > 0 because the previous read could have occurred
     // when mFixedSampleSize == 0
+
     ShiftSampleData(0, mSampleDataSize);
     mSampleDataSize = 0;
     mNumSamples = 0;
-
 
     if (mFixedSampleSize == 0) {
         uint32_t i;
@@ -171,9 +169,11 @@ void RawEssenceReader::Reset()
 
 bool RawEssenceReader::ReadAndParseSample()
 {
+    //log_info("----------->\n");
     BMX_CHECK(mEssenceParser);
 
     uint32_t sample_start_offset = mSampleDataSize;
+    //log_info("sample_start_offset: %d\n", sample_start_offset);
     uint32_t sample_num_read = mSampleBuffer.GetSize() - sample_start_offset;
     uint32_t num_read;
 
@@ -208,6 +208,7 @@ bool RawEssenceReader::ReadAndParseSample()
         // Break if size is known complete or null / invalid
         if (!sample_size.IsUnknown())
             break;
+        }
 
         BMX_CHECK_M(mMaxSampleSize == 0 || mSampleBuffer.GetSize() - sample_start_offset <= mMaxSampleSize,
                    ("Max raw sample size (%u) exceeded", mMaxSampleSize));
@@ -245,6 +246,7 @@ bool RawEssenceReader::ReadAndParseSample()
 
     mSampleDataSize += sample_size.GetSize();
     mNumSamples++;
+    // log_info("\n\n");
     return true;
 }
 
@@ -264,6 +266,7 @@ uint32_t RawEssenceReader::ReadBytes(uint32_t size)
         log_error("Failed to read from raw essence source: %s\n", mEssenceSource->GetStrError().c_str());
 
     mTotalReadLength += num_read;
+
     mSampleBuffer.IncrementSize(num_read);
 
     return num_read;
@@ -277,6 +280,7 @@ void RawEssenceReader::ShiftSampleData(uint32_t to_offset, uint32_t from_offset)
     uint32_t size = mSampleBuffer.GetSize() - from_offset;
     if (size > 0)
         memmove(mSampleBuffer.GetBytes() + to_offset, mSampleBuffer.GetBytes() + from_offset, size);
+
     mSampleBuffer.SetSize(to_offset + size);
 }
 

@@ -155,8 +155,20 @@ typedef enum
     VBI_DATA,
     // Timed Text data
     TIMED_TEXT,
+    // IAB Immersive Audio
+    IAB,
+    // Serial ADM
+    SADM,
+    // ISXD
+    ISXD,
+    // HEVC
+    HEVC_MAIN,
+    HEVC_MAIN_10,
+    HEVC_MAIN_10_INTRA,
+    HEVC_MAIN_422_10_INTRA,
 } EssenceType;
 
+const char *essence_type_to_file_extension(EssenceType essence_type);
 
 const char* essence_type_to_string(EssenceType essence_type);
 const char* essence_type_to_enum_string(EssenceType essence_type);

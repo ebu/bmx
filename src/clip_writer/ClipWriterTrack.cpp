@@ -50,6 +50,7 @@
 #include <bmx/mxf_op1a/OP1AVC2Track.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1AIABTrack.h>
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 #include <bmx/avid_mxf/AvidDVTrack.h>
 #include <bmx/avid_mxf/AvidD10Track.h>
@@ -702,6 +703,14 @@ void ClipWriterTrack::SetSamplingRate(Rational sampling_rate)
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
             if (pcm_track)
                 pcm_track->SetSamplingRate(sampling_rate);
+            else
+            {
+                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
+                if (iab_track)
+                {
+                    iab_track->SetSamplingRate(sampling_rate);
+                }
+            }
             break;
         }
         case CW_AVID_CLIP_TYPE:
@@ -750,6 +759,14 @@ void ClipWriterTrack::SetQuantizationBits(uint32_t bits)
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
             if (pcm_track)
                 pcm_track->SetQuantizationBits(bits);
+            else
+            {
+                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
+                if (iab_track)
+                {
+                    iab_track->SetQuantizationBits(bits);
+                }
+            }
             break;
         }
         case CW_AVID_CLIP_TYPE:
@@ -797,7 +814,17 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
         {
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
             if (pcm_track)
+            {
                 pcm_track->SetChannelCount(count);
+            }
+            else
+            {
+                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
+                if (iab_track)
+                {
+                    iab_track->SetChannelCount(count);
+                }
+            }
             break;
         }
         case CW_AVID_CLIP_TYPE:
@@ -819,6 +846,14 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
             RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
             if (pcm_track)
                 pcm_track->SetChannelCount(count);
+            else
+            {
+                OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
+                if (iab_track)
+                {
+                    iab_track->SetChannelCount(count);
+                }
+            }
             break;
         }
         case CW_WAVE_CLIP_TYPE:
@@ -827,6 +862,25 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
+    }
+}
+
+void ClipWriterTrack::SetReferenceImageEditRate(Rational edit_rate)
+{
+    switch (mClipType)
+    {
+
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1AIABTrack *iab_track = dynamic_cast<OP1AIABTrack*>(mOP1ATrack);
+            if (iab_track)
+            {
+                iab_track->SetReferenceImageEditRate(edit_rate);
+            }
+            break;
+        }
+        default:
+        BMX_ASSERT(false);
     }
 }
 

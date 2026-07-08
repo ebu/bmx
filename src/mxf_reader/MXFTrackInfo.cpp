@@ -175,6 +175,7 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     data_def = MXF_SOUND_DDEF;
 
     sampling_rate = ZERO_RATIONAL;
+    edit_rate = ZERO_RATIONAL;
     bits_per_sample = 0;
     block_align = 0;
     channel_count = 0;
@@ -182,8 +183,17 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     BMX_OPT_PROP_DEFAULT(locked, false);
     BMX_OPT_PROP_DEFAULT(audio_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(dial_norm, 0);
+    BMX_OPT_PROP_DEFAULT(reference_image_edit_rate, ZERO_RATIONAL);
     d10_aes3_valid_flags = 0;
     channel_assignment = g_Null_UL;
+    BMX_OPT_PROP_DEFAULT(sound_essence_compression, g_Null_UL);
+    isIabDescriptor = false;
+    isSADMDescriptor = false;
+    descriptor_ul = g_Null_UL;
+
+    mgaSoundEssenceAverageBytesPerSecond = 0;
+    mgaSoundEssenceBlockAlign = 0;
+    BMX_OPT_PROP_DEFAULT(mgaSoundEssenceSequenceOffset, 0);
 }
 
 bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
@@ -193,13 +203,16 @@ bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
         return false;
 
     return MXFTrackInfo::IsCompatible(right) &&
-           sampling_rate        == sound_right->sampling_rate &&
-           bits_per_sample      == sound_right->bits_per_sample &&
-           block_align          == sound_right->block_align &&
-           channel_count        == sound_right->channel_count &&
-           d10_aes3_valid_flags == sound_right->d10_aes3_valid_flags &&
-           sequence_offset      == sound_right->sequence_offset &&
-           channel_assignment   == sound_right->channel_assignment;
+        edit_rate            == sound_right->edit_rate &&
+        sampling_rate        == sound_right->sampling_rate &&
+        bits_per_sample      == sound_right->bits_per_sample &&
+        block_align          == sound_right->block_align &&
+        channel_count        == sound_right->channel_count &&
+        d10_aes3_valid_flags == sound_right->d10_aes3_valid_flags &&
+        sequence_offset      == sound_right->sequence_offset &&
+        channel_assignment   == sound_right->channel_assignment &&
+        isIabDescriptor      == sound_right->isIabDescriptor &&
+        isSADMDescriptor     == sound_right->isSADMDescriptor;
 }
 
 MXFTrackInfo* MXFSoundTrackInfo::Clone() const
@@ -208,6 +221,7 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
 
     MXFTrackInfo::Clone(clone);
 
+    clone->edit_rate            = edit_rate;
     clone->sampling_rate        = sampling_rate;
     clone->bits_per_sample      = bits_per_sample;
     clone->block_align          = block_align;
@@ -217,11 +231,20 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     BMX_OPT_PROP_COPY(clone->locked,          locked);
     BMX_OPT_PROP_COPY(clone->audio_ref_level, audio_ref_level);
     BMX_OPT_PROP_COPY(clone->dial_norm,       dial_norm);
+    BMX_OPT_PROP_COPY(clone->reference_image_edit_rate, reference_image_edit_rate);
     clone->channel_assignment   = channel_assignment;
+    BMX_OPT_PROP_COPY(clone->sound_essence_compression, sound_essence_compression);
+    clone->isIabDescriptor = isIabDescriptor;
+    clone->isSADMDescriptor = isSADMDescriptor;
+    clone->descriptor_ul = descriptor_ul;
 
     size_t i;
     for (i = 0; i < mca_labels.size(); i++)
       clone->mca_labels.push_back(mca_labels[i]);
+
+    clone->mgaSoundEssenceBlockAlign = mgaSoundEssenceBlockAlign;
+    clone->mgaSoundEssenceAverageBytesPerSecond = mgaSoundEssenceAverageBytesPerSecond;
+    BMX_OPT_PROP_COPY(clone->mgaSoundEssenceSequenceOffset, mgaSoundEssenceSequenceOffset);
 
     return clone;
 }
@@ -323,6 +346,9 @@ MXFDataTrackInfo::MXFDataTrackInfo()
 {
     data_def = MXF_DATA_DDEF;
     timed_text_manifest = 0;
+    is_isxd_descriptor = false;
+    descriptor_ul = g_Null_UL;
+    BMX_OPT_PROP_DEFAULT(data_essence_coding, g_Null_UL);
 }
 
 MXFDataTrackInfo::~MXFDataTrackInfo()
@@ -350,6 +376,12 @@ MXFTrackInfo* MXFDataTrackInfo::Clone() const
     if (timed_text_manifest) {
         clone->timed_text_manifest = new TimedTextManifest(*timed_text_manifest);
     }
+
+    clone->is_isxd_descriptor = is_isxd_descriptor;
+    clone->namespace_uri = namespace_uri;
+    clone->root_element_key = root_element_key;
+    clone->descriptor_ul = descriptor_ul;
+    BMX_OPT_PROP_COPY(clone->data_essence_coding, data_essence_coding);
 
     return clone;
 }
