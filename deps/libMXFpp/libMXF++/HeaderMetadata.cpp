@@ -300,9 +300,6 @@ void HeaderMetadata::initialiseObjectFactory()
     REGISTER_CLASS(IABDescriptor);
     REGISTER_CLASS(ISXDDescriptor);
     REGISTER_CLASS(SADMDescriptor);
-    REGISTER_CLASS(MGAAudioMetadataSubDescriptor);
-    REGISTER_CLASS(MGASoundfieldGroupLabelSubDescriptor);
-    REGISTER_CLASS(SADMAudioMetadataSubDescriptor);
     REGISTER_CLASS(AES3AudioDescriptor);
     REGISTER_CLASS(ANCDataDescriptor);
     REGISTER_CLASS(VBIDataDescriptor);

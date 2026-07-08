@@ -100,9 +100,6 @@
 #include <libMXF++/metadata/IABDescriptor.h>
 #include <libMXF++/metadata/ISXDDescriptor.h>
 #include <libMXF++/metadata/SADMDescriptor.h>
-#include <libMXF++/metadata/MGAAudioMetadataSubDescriptor.h>
-#include <libMXF++/metadata/SADMAudioMetadataSubDescriptor.h>
-#include <libMXF++/metadata/MGASoundfieldGroupLabelSubDescriptor.h>
 #include <libMXF++/metadata/HEVCSubDescriptor.h>
 
 

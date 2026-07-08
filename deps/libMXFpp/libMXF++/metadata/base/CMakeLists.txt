@@ -65,9 +65,6 @@ list(APPEND MXFpp_sources
     metadata/base/IABDescriptorBase.cpp
     metadata/base/ISXDDescriptorBase.cpp
     metadata/base/SADMDescriptorBase.cpp
-    metadata/base/MGAAudioMetadataSubDescriptorBase.cpp
-    metadata/base/SADMAudioMetadataSubDescriptorBase.cpp
-    metadata/base/MGASoundfieldGroupLabelSubDescriptorBase.cpp
     metadata/base/HEVCSubDescriptorBase.cpp
 )
 
@@ -138,9 +135,6 @@ list(APPEND MXFpp_headers
     metadata/base/IABDescriptorBase.h
     metadata/base/ISXDDescriptorBase.h
     metadata/base/SADMDescriptorBase.h
-    metadata/base/MGAAudioMetadataSubDescriptorBase.h
-    metadata/base/SADMAudioMetadataSubDescriptorBase.h
-    metadata/base/MGASoundfieldGroupLabelSubDescriptorBase.h
     metadata/base/HEVCSubDescriptorBase.h
 )
 
