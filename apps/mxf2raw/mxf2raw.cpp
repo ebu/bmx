@@ -3046,16 +3046,11 @@ int main(int argc, const char** argv)
                     if (!reader->GetTrackReader(i)->IsEnabled())
                         continue;
 
-                    const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo(); 
+                    const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
 
-                    // if user provided extensions, use them. otherwise try to deduct.
-                    const char *file_ext = extract_track_names.size() > 0 ? extract_track_names[0][i].c_str() : essence_type_to_file_extension(track_info->essence_type);
-
-                    output_file_manager.AddTrackFile(i, 
+                    output_file_manager.AddTrackFile(i,
                                                      track_info,
-                                                     (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
-                                                     file_ext,
-                                                     no_data_def);
+                                                     (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()));
 
                     if (track_info->data_def == MXF_PICTURE_DDEF)
                         have_video = true;

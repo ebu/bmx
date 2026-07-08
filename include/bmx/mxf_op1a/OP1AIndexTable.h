@@ -80,9 +80,9 @@ public:
   typedef enum
   {
     SYSTEM_ITEM_ELEMENT,
+    DATA_ELEMENT,
     PICTURE_ELEMENT,
     SOUND_ELEMENT,
-    DATA_ELEMENT,
   } ElementType;
 
 public:

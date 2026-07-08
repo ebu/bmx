@@ -2192,11 +2192,8 @@ MXFTrackReader* MXFFileReader::GetInternalTrackReader(size_t index) const
 MXFTrackReader* MXFFileReader::GetInternalTrackReaderByNumber(uint32_t track_number) const
 {
     map<uint32_t, MXFTrackReader*>::const_iterator result = mInternalTrackReaderNumberMap.find(track_number);
-    if (result == mInternalTrackReaderNumberMap.end()) {
-        log_info("no track reader for track: %d\n", track_number);
-        BMX_ASSERT(false);
+    if (result == mInternalTrackReaderNumberMap.end())
         return 0;
-    }
 
     return result->second;
 }
