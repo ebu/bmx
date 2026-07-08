@@ -113,6 +113,10 @@ HEVCEssenceParser::~HEVCEssenceParser()
 {
 }
 
+void HEVCEssenceParser::ResetParseFrameSize()
+{
+}
+
 uint32_t HEVCEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);

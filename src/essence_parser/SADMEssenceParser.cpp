@@ -115,6 +115,10 @@ bool SADMEssenceParser::SkipSection() const
 }
 
 
+void SADMEssenceParser::ResetParseFrameSize()
+{
+}
+
 uint32_t SADMEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);

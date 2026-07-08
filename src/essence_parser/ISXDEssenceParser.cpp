@@ -160,6 +160,10 @@ void ISXDEssenceParser::ResetParser()
     mPos = 0;
 }
 
+void ISXDEssenceParser::ResetParseFrameSize()
+{
+}
+
 uint32_t ISXDEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);

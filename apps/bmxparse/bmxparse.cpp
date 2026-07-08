@@ -326,14 +326,14 @@ typedef void (*print_frame_info_f)(AppInfoWriter *info_writer, EssenceParser *pa
                                    const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num);
 
 static void print_iab_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                 const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     (void)parser_data;
     IABEssenceParser *iab_parser = dynamic_cast<IABEssenceParser*>(parser);
-    iab_parser->ParseFrameInfo(buffer->data, frame_size);
+    iab_parser->ParseFrameInfo(frame_data, frame_size.GetSize());
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
     info_writer->WriteRationalItem("framerate", iab_parser->GetFrameRate());
     info_writer->WriteRationalItem("samplerate", iab_parser->GetSampleRate());
     info_writer->WriteIntegerItem("bitdepth", iab_parser->GetBitDepth());

@@ -208,7 +208,6 @@ bool RawEssenceReader::ReadAndParseSample()
         // Break if size is known complete or null / invalid
         if (!sample_size.IsUnknown())
             break;
-        }
 
         BMX_CHECK_M(mMaxSampleSize == 0 || mSampleBuffer.GetSize() - sample_start_offset <= mMaxSampleSize,
                    ("Max raw sample size (%u) exceeded", mMaxSampleSize));
