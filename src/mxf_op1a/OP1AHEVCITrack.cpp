@@ -83,8 +83,10 @@ void OP1AHEVCITrack::WriteSamplesInt(const unsigned char *data, uint32_t size, u
     }
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
-    
-    mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true, false);
+
+    // intra HEVC: every frame is a random-access I-frame, so use the default
+    // index entry (flags 0x80) rather than 0x00
+    mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0x80, true, false);
 
     mPosition++;
 }

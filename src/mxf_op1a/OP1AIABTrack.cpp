@@ -93,7 +93,9 @@ void OP1AIABTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uin
 {
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
     if (!mCbe) {
-        mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true, false);
+        // sound element produces the default index entry (flags 0x80) so it is
+        // compatible with the picture element that drives the VBE index
+        mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0x80, true, false);
     }
 
     mPosition++;
