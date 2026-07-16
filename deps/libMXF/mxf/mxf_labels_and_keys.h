@@ -247,8 +247,6 @@ static const mxfUL MXF_CMDEF_L(AVCI_200_1080_25_P) = MXF_AVC_INTRA_CMDEV_L(0x0d,
 static const mxfUL MXF_CMDEF_L(AVCI_200_720_60_P)  = MXF_AVC_INTRA_CMDEV_L(0x0d, 0x32, 0x08);
 static const mxfUL MXF_CMDEF_L(AVCI_200_720_50_P)  = MXF_AVC_INTRA_CMDEV_L(0x0d, 0x32, 0x09);
 
-
-
 /* MPEG-2 Long GOP */
 
 static const mxfUL MXF_CMDEF_L(MPEG2_MP_ML_LONGGOP) =
@@ -406,6 +404,107 @@ static const mxfUL MXF_EC_L(AES3ClipWrapped)   = MXF_AES3BWF_EC_L(0x01, 0x04);
 static const mxfUL MXF_EC_L(BWFCustomWrapped)  = MXF_AES3BWF_EC_L(0x05, 0x08);
 static const mxfUL MXF_EC_L(AES3CustomWrapped) = MXF_AES3BWF_EC_L(0x05, 0x09);
 
+/* ISXD mappings */
+
+// UL_DEFINITION ISXD ESSENCE CONTAINER
+#define MXF_ISXD_EC_L(regver) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, regver, 0x0e, 0x09, 0x06, 0x07, 0x01, 0x01, 0x01, 0x03}
+    // DOLBY PRIVATE UL
+
+static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x05);  // 0x05 dolby namespace
+//static const mxfUL MXF_EC_L(ISXDFrameWrapped) = MXF_ISXD_EC_L(0x07);  // 0x07 from standard
+
+//#define MXF_ISXD_ITEM_TYPE  0x17  // From ST2067-202, should be 0x01??????
+#define MXF_ISXD_ITEM_TYPE  0x01
+
+#define MXF_ISXD_GENERIC_CONTAINER_ELEMENT_KEY(regver, itemtype, elecount, eletype, elenum) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, regver, 0x0e, 0x09, 0x05, 0x02, itemtype, elecount, eletype, elenum}
+
+// UL_DEFINITION ISXD ELEMENT KEY
+#define MXF_ISXD_EE_K(elecount, eletype, elenum) \
+    MXF_ISXD_GENERIC_CONTAINER_ELEMENT_KEY(0x05 /*regver */, MXF_ISXD_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_ISXD_TRACK_NUM(elecount, eletype, elenum) \
+    MXF_TRACK_NUM(MXF_ISXD_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_ISXD_FRAME_WRAPPED_EE_TYPE   0x01
+
+    // ST 2027-1, Table 4 - MXF-GC Frame-Wrapped MGA
+#define MXF_SADM_EC_L(regver) \
+    MXF_GENERIC_CONTAINER_LABEL(regver, 0x25, 0x01, 0x00) 
+
+static const mxfUL MXF_EC_L(SADMFrameWrapped) = MXF_SADM_EC_L(0x0D);
+
+    // ST 2027-1, Table 3 Essence Element Type, 
+#define MXF_SADM_ITEM_TYPE 0x16  // GC Sound Item 
+
+#define MXF_SADM_EE_K(elecount, eletype, elenum) \
+    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x01 /*regver*/, MXF_SADM_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_SADM_TRACK_NUM(elecount, eletype, elenum) \
+    MXF_TRACK_NUM(MXF_SADM_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_SADM_FRAME_WRAPPED_EE_TYPE 0x0E //Frame-wrapped MGA Sound Element
+
+/* IAB */
+
+// ST-2067-201, Annex D. 0x02 from RDD
+#define MXF_IAB_EC_L(regver) \
+    MXF_GENERIC_CONTAINER_LABEL(regver, 0x1D, 0x01, 0x02)
+
+// Frame wrap only (Essence Container UL)
+static const mxfUL MXF_EC_L(IABFrameWrapped) = MXF_IAB_EC_L(0x0D);
+// from SMPTE submission: 060e2b34.0401010d.0d010301.021d0102
+
+#define MXF_IAB_ITEM_TYPE  0x16 // GC Sound Item. Like in IMF Plugin
+
+// {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, regver, 0x0d, 0x01, 0x03, 0x01, itemtype, elecount, eletype, elenum}
+
+// FrameWrappedIABSoundElement
+
+#define MXF_IAB_EE_K(elecount, eletype, elenum) \
+    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x01 /*regver */, MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
+// 060e2b34.01020101.0d010301.16nn10cc
+
+#define MXF_IAB_TRACK_NUM(elecount, eletype, elenum) \
+    MXF_TRACK_NUM(MXF_IAB_ITEM_TYPE, elecount, eletype, elenum)
+
+#define MXF_IAB_FRAME_WRAPPED_EE_TYPE   0x10 // IMF plugin clip-wrapped = 0D
+
+/* HEVC */
+
+
+#define MXF_HEVC_CMDEV_L(version, category, profile, variant) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, version, 0x04, 0x01, 0x02, 0x02, 0x01, category, profile, variant}
+
+// Essence Coding
+
+// H.265/HEVC Main Profile Unconstrained Coding
+// urn:smpte:ul:060e2b34.0401010d.04010202.01411001
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN)                 = MXF_HEVC_CMDEV_L(0x0d,    0x41,     0x10,    0x01);
+
+// urn:smpte:ul:060e2b34.0401010d.04010202.01412001
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN_10)              = MXF_HEVC_CMDEV_L(0x0d,    0x41,     0x20,    0x01);
+// Intra profiles
+// H.265/HEVC Main Intra Profile Unconstrained Coding
+// urn:smpte:ul:060e2b34.0401010d.04010202.01441001
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN_10_INTRA)        = MXF_HEVC_CMDEV_L(0x0d,    0x44,     0x10,    0x01);
+// H.265/HEVC Main 4:2:2 10 Intra Profile Unconstrained Coding
+// urn:smpte:ul:060e2b34.0401010d.04010202.01452001
+static const mxfUL MXF_CMDEF_L(HEVC_MAIN_422_10_INTRA)    = MXF_HEVC_CMDEV_L(0x0d,    0x45,     0x20,    0x01);
+
+// Essence Container
+
+// MXF-GC HEVC Byte Stream With VideoStream-0 SID
+// SMPTE registry: MXFGCHEVCByteStreamWithVideoStream0SIDFrameWrapped
+// urn:smpte:ul:060e2b34.0401010d.0d010301.02206001
+// bmx:              060e2b34,04010122,0d010301 02206001
+
+#define MXF_HEVC_BYTESTREAM_EC_L(wrapping) \
+    MXF_GENERIC_CONTAINER_LABEL(0x0d, 0x20, 0x60, wrapping) /* stream id 0 */
+
+// MXF-GC HEVC Byte Stream With VideoStream-0 SID Frame Wrapped
+static const mxfUL MXF_EC_L(HEVCFrameWrapped) = MXF_HEVC_BYTESTREAM_EC_L(0x01);
 
 /* IEC-DV and DV-based mappings */
 

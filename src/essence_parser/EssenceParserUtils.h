@@ -40,6 +40,26 @@
 namespace bmx
 {
 
+class BitstreamParser
+{
+public:
+    BitstreamParser()
+        : mDataPtr(nullptr), mDataSize(0), mBitOffset(0)
+        {
+        }
+
+    void start(const unsigned char *data, uint32_t data_size);
+    void reset();
+    uint64_t getOffset() const { return mBitOffset; };
+    uint32_t read(uint8_t num_bits);
+    void skip(uint32_t num_bits);
+
+private:
+    const unsigned char* mDataPtr;
+    uint32_t mDataSize;
+    uint64_t mBitOffset;
+};
+
 
 uint32_t get_bits(const unsigned char *data, uint32_t data_size, uint32_t bit_offset, uint8_t num_bits);
 

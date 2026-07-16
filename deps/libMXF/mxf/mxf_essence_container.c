@@ -75,6 +75,21 @@ int mxf_is_gc_essence_element(const mxfKey *key)
     {
         return 1;
     }
+    /* UL_DEFINITION DOLBY CUSTOM EL (ISXD ONLY)*/
+    else if (key->octet0 == 0x06 &&
+             key->octet1 == 0x0e &&
+             key->octet2 == 0x2b &&
+             key->octet3 == 0x34 &&
+             key->octet4 == 0x01 &&
+             key->octet6 == 0x01 &&
+             key->octet7 == 0x05 &&
+             key->octet8 == 0x0e &&
+             key->octet9 == 0x09 &&
+             key->octet10 == 0x05 &&
+             key->octet11 == 0x02)
+    {
+        return 1;
+    }
 
     return 0;
 }

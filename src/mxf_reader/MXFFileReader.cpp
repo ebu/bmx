@@ -1596,7 +1596,8 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
     }
     mInternalTrackReaders.push_back(track_reader);
     track_info.release();
-    mInternalTrackReaderNumberMap[mInternalTrackReaders.back()->GetTrackInfo()->file_track_number] = track_reader;
+    uint32_t track_number = mInternalTrackReaders.back()->GetTrackInfo()->file_track_number;
+    mInternalTrackReaderNumberMap[track_number] = track_reader;
 
     return mInternalTrackReaders.back();
 }
@@ -2008,8 +2009,12 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
         dynamic_cast<GenericSoundEssenceDescriptor*>(file_descriptor);
     BMX_CHECK(sound_descriptor);
 
+    sound_track_info->descriptor_ul = *sound_descriptor->getKey();
+
     if (sound_descriptor->haveAudioSamplingRate())
         sound_track_info->sampling_rate = normalize_rate(sound_descriptor->getAudioSamplingRate());
+
+    sound_track_info->edit_rate = sound_descriptor->getSampleRate();
 
     if (sound_descriptor->haveChannelCount())
         sound_track_info->channel_count = sound_descriptor->getChannelCount();
@@ -2024,13 +2029,32 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
     if (sound_descriptor->haveDialNorm())
         BMX_OPT_PROP_SET(sound_track_info->dial_norm, sound_descriptor->getDialNorm());
 
+    if (sound_descriptor->haveSoundEssenceCompression())
+        BMX_OPT_PROP_SET(sound_track_info->sound_essence_compression, sound_descriptor->getSoundEssenceCompression());
+
+    if (sound_descriptor->haveReferenceImageEditRate())
+        BMX_OPT_PROP_SET(sound_track_info->reference_image_edit_rate, sound_descriptor->getReferenceImageEditRate());
+
     WaveAudioDescriptor *wave_descriptor = dynamic_cast<WaveAudioDescriptor*>(file_descriptor);
+    IABDescriptor *iab_descriptor = dynamic_cast<IABDescriptor*>(file_descriptor);
+    MGASoundEssenceDescriptor *sadm_descriptor = dynamic_cast<MGASoundEssenceDescriptor*>(file_descriptor);
     if (wave_descriptor) {
         sound_track_info->block_align = wave_descriptor->getBlockAlign();
         if (wave_descriptor->haveSequenceOffset())
             sound_track_info->sequence_offset = wave_descriptor->getSequenceOffset();
         if (wave_descriptor->haveChannelAssignment())
             sound_track_info->channel_assignment = wave_descriptor->getChannelAssignment();
+    } else if (iab_descriptor) {
+        // nothing to do yet
+        sound_track_info->isIabDescriptor = true;
+    } else if (sadm_descriptor) {
+        sound_track_info->isSADMDescriptor = true;
+
+        sound_track_info->mgaSoundEssenceAverageBytesPerSecond = sadm_descriptor->getMGASoundEssenceAverageBytesPerSecond();
+        sound_track_info->mgaSoundEssenceBlockAlign = sadm_descriptor->getMGASoundEssenceBlockAlign();
+        if (sadm_descriptor->haveMGASoundEssenceSequenceOffset()) {
+            BMX_OPT_PROP_SET(sound_track_info->mgaSoundEssenceSequenceOffset, sadm_descriptor->getMGASoundEssenceSequenceOffset());
+        }
     } else {
         if (sound_track_info->channel_count > 0) {
             sound_track_info->block_align = sound_track_info->channel_count *
@@ -2048,9 +2072,26 @@ void MXFFileReader::ProcessDataDescriptor(FileDescriptor *file_descriptor, MXFDa
 {
     ProcessDescriptor(file_descriptor, data_track_info);
 
+
     DCTimedTextDescriptor *tt_desc = dynamic_cast<DCTimedTextDescriptor*>(file_descriptor);
     if (tt_desc) {
         data_track_info->timed_text_manifest = TimedTextMXFDescriptorHelper::CreateManifest(tt_desc);
+    }
+    ISXDDescriptor *isxd_descriptor = dynamic_cast<ISXDDescriptor*>(file_descriptor);
+    if (isxd_descriptor) {
+    
+        if (isxd_descriptor->haveDataEssenceCoding()) 
+            BMX_OPT_PROP_SET(data_track_info->data_essence_coding, isxd_descriptor->getDataEssenceCoding());
+
+        data_track_info->descriptor_ul = *isxd_descriptor->getKey();
+
+        data_track_info->is_isxd_descriptor = true;
+        if (isxd_descriptor->haveNamespaceURI()) {
+            data_track_info->namespace_uri = isxd_descriptor->getNamespaceURI();
+        }
+        if (isxd_descriptor->haveRootRelementKey()) {
+            data_track_info->root_element_key = isxd_descriptor->getRootElementKey();
+        }
     }
 }
 
@@ -2493,8 +2534,10 @@ void MXFFileReader::StartRead()
 {
     size_t i;
     for (i = 0; i < mTrackReaders.size(); i++) {
-        if (mTrackReaders[i]->IsEnabled())
+        bool enabled = mTrackReaders[i]->IsEnabled();
+        if (enabled) {
             mTrackReaders[i]->GetMXFFrameBuffer()->StartRead();
+        }
     }
 }
 

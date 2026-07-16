@@ -29,6 +29,10 @@ list(APPEND bmx_headers
     bmx/mxf_helper/VC2MXFDescriptorHelper.h
     bmx/mxf_helper/VC3MXFDescriptorHelper.h
     bmx/mxf_helper/WaveMXFDescriptorHelper.h
+    bmx/mxf_helper/IABDescriptorHelper.h
+    bmx/mxf_helper/ISXDDescriptorHelper.h
+    bmx/mxf_helper/SADMDescriptorHelper.h
+    bmx/mxf_helper/HEVCDescriptorHelper.h
 )
 
 set(bmx_headers ${bmx_headers} PARENT_SCOPE)

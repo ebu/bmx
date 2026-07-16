@@ -598,6 +598,7 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
 
             bool processed_metadata = mFrameMetadataReader->ProcessFrameMetadata(&key, len);
 
+            // Markus!
             if (!processed_metadata && (mxf_is_gc_essence_element(&key) || mxf_avid_is_essence_element(&key))) {
                 uint32_t track_number = mxf_get_track_number(&key);
                 MXFTrackReader *track_reader = 0;

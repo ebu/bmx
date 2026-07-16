@@ -125,17 +125,31 @@ public:
     virtual MXFTrackInfo* Clone() const;
 
 public:
+    mxfUL descriptor_ul;
+    // audio sampling rate
     mxfRational sampling_rate;
+    // edit rate
+    mxfRational edit_rate;
     uint32_t bits_per_sample;
     uint16_t block_align;
     uint32_t channel_count;
     uint8_t d10_aes3_valid_flags;
     uint8_t sequence_offset;
+    BMX_OPT_PROP_DECL(mxfRational, reference_image_edit_rate);
     BMX_OPT_PROP_DECL(bool, locked);
     BMX_OPT_PROP_DECL(int8_t, audio_ref_level);
     BMX_OPT_PROP_DECL(int8_t, dial_norm);
+    BMX_OPT_PROP_DECL(mxfUL, sound_essence_compression);
     UL channel_assignment;
     std::vector<mxfpp::MCALabelSubDescriptor*> mca_labels;
+
+    bool isIabDescriptor;
+    bool isSADMDescriptor;
+
+    // s-ADM/MGA
+    uint16_t mgaSoundEssenceBlockAlign;
+    uint32_t mgaSoundEssenceAverageBytesPerSecond;
+    BMX_OPT_PROP_DECL(uint8_t, mgaSoundEssenceSequenceOffset);
 };
 
 
@@ -187,9 +201,15 @@ public:
     void AppendUniqueANCElement(const ANCManifestElement &element);
 
 public:
+    mxfUL descriptor_ul;
+    BMX_OPT_PROP_DECL(mxfUL, data_essence_coding);
     std::vector<VBIManifestElement> vbi_manifest;
     std::vector<ANCManifestElement> anc_manifest;
     TimedTextManifest *timed_text_manifest;
+
+    bool is_isxd_descriptor;
+    std::string namespace_uri;
+    std::string root_element_key;
 };
 
 

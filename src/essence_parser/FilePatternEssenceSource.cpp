@@ -88,14 +88,16 @@ bool FilePatternEssenceSource::Open(const string &pattern, int64_t start_offset)
 
         int index;
         char last_char;
-        if (sscanf(name_with_newline.c_str(), format.c_str(), &index, &last_char) == 2 && last_char == '\n')
+        if (sscanf(name_with_newline.c_str(), format.c_str(), &index, &last_char) == 2 && last_char == '\n') {
             mFilenames[index] = entry->d_name;
+        }
     }
 
     closedir(dir);
 
-    if (mFilenames.empty())
-        log_warn("No files found for file pattern\n");
+    if (mFilenames.empty()) {
+        throw BMXException("No files found for patterns");
+    }
 
     return SeekStart();
 }
