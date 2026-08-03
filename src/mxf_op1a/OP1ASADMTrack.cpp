@@ -75,6 +75,10 @@ OP1ASADMTrack::OP1ASADMTrack(OP1AFile *file,
     mPosition = 0;
     mBytesTotal = 0;
 
+    mSamplingRate = SAMPLING_RATE_48K;
+    mBitsPerSample = 24;
+    mChannelCount = 0;
+
     // constant bitrate , yes or no? Does s-ADM even allow for non constant bitrate?
     mCbe = false;
 }
@@ -103,6 +107,10 @@ void OP1ASADMTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
         // frame.
         log_debug("OP1ASADMTrack: First frame. Parse metadata once\n");
         SADMEssenceParser parser;
+        // Supply the audio format from the container so the descriptor is
+        // correct even when the S-ADM payload is gzip-compressed (in which case
+        // the payload is not parsed as XML).
+        parser.SetAudioInfo(mChannelCount, mSamplingRate, mBitsPerSample);
         parser.ParseFrameInfo(data, size);
         mSADMDescriptorHelper->UpdateFileDescriptor(&parser);
         //mSADMDescriptorHelper->UpdateAverageBytesPerSecond(0);

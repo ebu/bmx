@@ -71,6 +71,7 @@
 #include <bmx/essence_parser/IABEssenceParser.h>
 #include <bmx/essence_parser/ISXDEssenceParser.h>
 #include <bmx/essence_parser/SADMEssenceParser.h>
+#include <bmx/essence_parser/BW64SADMEssenceSource.h>
 #include <bmx/essence_parser/HEVCEssenceParser.h>
 #include <bmx/essence_parser/HEVCRawEssenceReader.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
@@ -161,6 +162,7 @@ struct RawInput
     RawEssenceReader *raw_reader;
     WaveReader *wave_reader;
     KLVEssenceReader *klv_reader;
+    BW64SADMEssenceSource *sadm_source;
     uint32_t channel_count;
     uint32_t iab_channel_count;
     TimedTextManifestParser *timed_text_manifest;
@@ -294,7 +296,20 @@ static bool open_raw_reader(RawInput *input)
     EssenceSource *essence_source;
 
     BMX_ASSERT(input->filename || input->file_pattern);
-    if (input->filename) {
+    if (input->essence_type == SADM) {
+        // S-ADM / MGA input is a BW64 file (ITU-R BS.2088). The source parses
+        // the <sxml> and <data> chunks and presents an ST 2127-1 MGA frame
+        // bitstream to the RawEssenceReader / SADMEssenceParser pipeline.
+        BW64SADMEssenceSource *bw64_source = new BW64SADMEssenceSource();
+        if (!bw64_source->Open(input->filename)) {
+            log_error("Failed to open BW64 S-ADM input file '%s': %s\n",
+                    input->filename, bw64_source->GetStrError().c_str());
+            delete bw64_source;
+            return false;
+        }
+        input->sadm_source = bw64_source;
+        essence_source = bw64_source;
+    } else if (input->filename) {
         FileEssenceSource *file_source = new FileEssenceSource();
         if (!file_source->Open(input->filename, input->file_start_offset)) {
             log_error("Failed to open input file '%s' at start offset %" PRId64 ": %s\n",
@@ -872,7 +887,7 @@ static void usage(const char *cmd)
     printf("  --tt <manifest>         Manifest file containing Timed Text metadata\n");
     printf("  --hevc <name>           Raw HEVC video input file\n");
     printf("  --iab <name>            Raw Immersive Audio Bitstream (IAB) input file\n");
-    printf("  --sadm <name>           Raw Serial ADM (s-ADM) input file\n");
+    printf("  --sadm <name>           BW64 file (ITU-R BS.2088) carrying Serial ADM (S-ADM) in the sxml chunk\n");
     printf("  --isxd <name>           Raw ISXD (ST 2075) data input file\n");
     printf("\n\n");
     printf("Notes:\n");
@@ -4867,18 +4882,32 @@ int main(int argc, const char** argv)
             }
             else if (input->essence_type == SADM)
             {
-                log_info("got sADM\n");
-                /*
-                SADMEssenceParser *sadm_parser = new SADMEssenceParser();
-                input->raw_reader->SetEssenceParser(sadm_parser);
-                input->raw_reader->ReadSamples(1);
+                // Audio format comes from the BW64 <fmt > chunk (authoritative);
+                // the S-ADM frame rate is sampleRate / samplesPerFrame.
+                BMX_ASSERT(input->sadm_source);
+                uint32_t sample_rate    = input->sadm_source->GetSamplingRate();
+                uint32_t samples_frame  = input->sadm_source->GetSamplesPerFrame();
 
-                if (input->raw_reader->GetNumSamples() == 0)
-                {
-                    log_error("Failed to read and parse first s-ADM frame\n");
-                    throw false;
+                input->channel_count   = input->sadm_source->GetChannelCount();
+                input->sampling_rate.numerator   = (int32_t)sample_rate;
+                input->sampling_rate.denominator = 1;
+                input->bits_per_sample = input->sadm_source->GetBitsPerSample();
+
+                if (!frame_rate_set) {
+                    if (samples_frame > 0 && sample_rate % samples_frame == 0) {
+                        frame_rate.numerator   = (int32_t)(sample_rate / samples_frame);
+                        frame_rate.denominator = 1;
+                    } else if (samples_frame > 0) {
+                        frame_rate.numerator   = (int32_t)sample_rate;
+                        frame_rate.denominator = (int32_t)samples_frame;
+                    } else {
+                        log_warn("BW64 S-ADM has no samples-per-frame; using default frame rate %d/%d\n",
+                                 frame_rate.numerator, frame_rate.denominator);
+                    }
                 }
-                */
+
+                log_info("BW64 S-ADM: %u channels, %u Hz, %u-bit, %u samples/frame\n",
+                         input->channel_count, sample_rate, input->bits_per_sample, samples_frame);
             }
             else if (input->essence_type == IAB)
             {
@@ -5835,8 +5864,9 @@ int main(int argc, const char** argv)
                     clip_track->SetTimedTextSource(input->timed_text_manifest);
                     break;
                 case SADM:
-                    // TODO: Markus: Fill that in
-                    //log_info("TO-DO: init_clip track for SADM\n");
+                    clip_track->SetSamplingRate(output_sound_info->sampling_rate);
+                    clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
+                    clip_track->SetChannelCount(input->channel_count);
                     break;
                 case IAB:
                     clip_track->SetSamplingRate(output_sound_info->sampling_rate);
@@ -6129,12 +6159,22 @@ int main(int argc, const char** argv)
                 case TIMED_TEXT:
                     break;
                 case SADM:
-                    // MARKUS: Open raw readers and init inputs
+                {
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
-                    input->raw_reader->SetEssenceParser(new SADMEssenceParser());
+                    SADMEssenceParser *sadm_parser = new SADMEssenceParser();
+                    // Frame sizing does not need the S-ADM XML; supplying the
+                    // audio format lets compressed payloads be sized without
+                    // being decompressed.
+                    if (input->sadm_source) {
+                        sadm_parser->SetAudioInfo(input->sadm_source->GetChannelCount(),
+                                                  input->sampling_rate,
+                                                  input->sadm_source->GetBitsPerSample());
+                    }
+                    input->raw_reader->SetEssenceParser(sadm_parser);
                     input->raw_reader->SetCheckMaxSampleSize(100000000);
                     break;
+                }
                 case IAB:
                     // MARKUS: Open raw readers and init inputs
                     input->sample_sequence[0] = 1;

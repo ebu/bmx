@@ -48,6 +48,11 @@ public:
     virtual ~OP1ASADMTrack();
 
 public:
+    // Audio format from the container (e.g. the BW64 <fmt > chunk). Used to
+    // populate the descriptor without decompressing the S-ADM payload.
+    void SetSamplingRate(mxfRational sampling_rate) { mSamplingRate = sampling_rate; }
+    void SetQuantizationBits(uint32_t bits)         { mBitsPerSample = bits; }
+    void SetChannelCount(uint32_t count)            { mChannelCount = count; }
 
 protected:
     virtual void PrepareWrite(uint8_t track_count);
@@ -62,6 +67,10 @@ private:
     bool mCbe;
 
     uint64_t mBytesTotal;
+
+    mxfRational mSamplingRate;
+    uint32_t mBitsPerSample;
+    uint32_t mChannelCount;
 };
 
 

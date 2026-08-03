@@ -22,6 +22,7 @@ list(APPEND bmx_sources
     essence_parser/IABEssenceParser.cpp
     essence_parser/ISXDEssenceParser.cpp
     essence_parser/SADMEssenceParser.cpp
+    essence_parser/BW64SADMEssenceSource.cpp
     essence_parser/HEVCEssenceParser.cpp
     essence_parser/HEVCRawEssenceReader.cpp
 )

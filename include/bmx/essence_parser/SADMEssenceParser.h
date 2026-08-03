@@ -71,6 +71,12 @@ public:
         return mMetadataSectionInfo;
     }
 
+    // Inject the audio format (channel count, sample rate, bit depth) from an
+    // authoritative source (e.g. the BW64 <fmt > chunk). When set, the parser
+    // uses these values instead of extracting them from the S-ADM XML, which
+    // means gzip-compressed S-ADM payloads do not need to be decompressed.
+    void SetAudioInfo(uint32_t channels, mxfRational sample_rate, uint32_t bit_depth);
+
 private:
     enum SECTION_IDENTIFIER {
         AUDIO_ESSENCE = 0x00,
@@ -130,6 +136,10 @@ private:
     uint32_t mNumberFramesParsed;
 
     METADATA_FORMAT mMetadataFormat;
+
+    // true when the audio format has been injected via SetAudioInfo(), in which
+    // case the S-ADM XML content is not parsed (and need not be decompressed)
+    bool mAudioInfoSet;
 
     // METADATA
     uint32_t mNumberMetadataSections;

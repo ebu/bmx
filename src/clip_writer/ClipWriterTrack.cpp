@@ -51,6 +51,7 @@
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
 #include <bmx/mxf_op1a/OP1AIABTrack.h>
+#include <bmx/mxf_op1a/OP1ASADMTrack.h>
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 #include <bmx/avid_mxf/AvidDVTrack.h>
 #include <bmx/avid_mxf/AvidD10Track.h>
@@ -710,6 +711,12 @@ void ClipWriterTrack::SetSamplingRate(Rational sampling_rate)
                 {
                     iab_track->SetSamplingRate(sampling_rate);
                 }
+                else
+                {
+                    OP1ASADMTrack *sadm_track = dynamic_cast<OP1ASADMTrack*>(mOP1ATrack);
+                    if (sadm_track)
+                        sadm_track->SetSamplingRate(sampling_rate);
+                }
             }
             break;
         }
@@ -765,6 +772,12 @@ void ClipWriterTrack::SetQuantizationBits(uint32_t bits)
                 if (iab_track)
                 {
                     iab_track->SetQuantizationBits(bits);
+                }
+                else
+                {
+                    OP1ASADMTrack *sadm_track = dynamic_cast<OP1ASADMTrack*>(mOP1ATrack);
+                    if (sadm_track)
+                        sadm_track->SetQuantizationBits(bits);
                 }
             }
             break;
@@ -823,6 +836,12 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
                 if (iab_track)
                 {
                     iab_track->SetChannelCount(count);
+                }
+                else
+                {
+                    OP1ASADMTrack *sadm_track = dynamic_cast<OP1ASADMTrack*>(mOP1ATrack);
+                    if (sadm_track)
+                        sadm_track->SetChannelCount(count);
                 }
             }
             break;

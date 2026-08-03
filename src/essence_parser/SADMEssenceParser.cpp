@@ -90,6 +90,7 @@ SADMEssenceParser::SADMEssenceParser()
       mMetadataHeaderParsed(false),
       mNumberFramesParsed(0),
       mMetadataFormat(METADATA_FORMAT::XML),
+      mAudioInfoSet(false),
       mNumberMetadataSections(0),
       mSampleRate(ZERO_RATIONAL),
       mBitDepth(0),
@@ -100,6 +101,14 @@ SADMEssenceParser::SADMEssenceParser()
 
 SADMEssenceParser::~SADMEssenceParser()
 {
+}
+
+void SADMEssenceParser::SetAudioInfo(uint32_t channels, mxfRational sample_rate, uint32_t bit_depth)
+{
+    mChannels = channels;
+    mSampleRate = sample_rate;
+    mBitDepth = bit_depth;
+    mAudioInfoSet = true;
 }
 
 bool SADMEssenceParser::SkipSection() const
@@ -283,14 +292,10 @@ void SADMEssenceParser::ParseSection(const unsigned char *data,
             uint8_t version = ReadByte(data, data_size);
             BMX_ASSERT(version == 0x00);
 
-            // 1 byte
-            uint8_t mMetadataFormat = ReadByte(data, data_size);
+            // 1 byte (ST 2127-10 Table 2: 0x00 = uncompressed XML, 0x01 = gzip)
+            mMetadataFormat = (METADATA_FORMAT)ReadByte(data, data_size);
             BMX_ASSERT(mMetadataFormat == METADATA_FORMAT::XML ||
                        mMetadataFormat == METADATA_FORMAT::GZIP);
-            if (mMetadataFormat != METADATA_FORMAT::XML) {
-                log_error("Only XML supported in s-ADM\n");
-                BMX_ASSERT(false);
-            }
 
             mMetadataHeaderParsed = true;
         }
@@ -371,9 +376,21 @@ void SADMEssenceParser::XML_EndElement(void *user_data, const char *qname)
 
 void SADMEssenceParser::ParseMetadataPayload()
 {
+    // The audio format (channel count, sample rate, bit depth) can be supplied
+    // authoritatively via SetAudioInfo() (e.g. from the BW64 <fmt > chunk). When
+    // it is, there is nothing to extract from the S-ADM XML, so the payload is
+    // left as-is - this is what allows gzip-compressed payloads to be passed
+    // through into the MGA essence without decompressing them here.
+    if (mAudioInfoSet)
+        return;
+
     if (mMetadataFormat == METADATA_FORMAT::GZIP) {
-        // unzip first. for now. throw error
-        throw InvalidDataError("GZIP not supported yet");
+        // Compressed payload. We deliberately do not inflate it here (the MGA
+        // essence keeps the S-ADM in its original compression). The audio
+        // format is expected to be supplied via SetAudioInfo() from the
+        // container (BW64 <fmt > chunk); with nothing injected there is simply
+        // nothing to extract from a compressed payload.
+        return;
     }
     XML_Parser parser = XML_ParserCreate("utf-8");
     XML_SetStartElementHandler(parser, SADMEssenceParser::XML_StartElement);
