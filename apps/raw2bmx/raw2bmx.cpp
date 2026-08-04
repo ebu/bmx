@@ -887,7 +887,7 @@ static void usage(const char *cmd)
     printf("  --tt <manifest>         Manifest file containing Timed Text metadata\n");
     printf("  --hevc <name>           Raw HEVC video input file\n");
     printf("  --iab <name>            Raw Immersive Audio Bitstream (IAB) input file\n");
-    printf("  --sadm <name>           BW64 file (ITU-R BS.2088) carrying Serial ADM (S-ADM) in the sxml chunk\n");
+    printf("  --bw64 <name>           BW64 file (ITU-R BS.2088) carrying Serial ADM (S-ADM) in the sxml chunk\n");
     printf("  --isxd <name>           Raw ISXD (ST 2075) data input file\n");
     printf("\n\n");
     printf("Notes:\n");
@@ -4190,7 +4190,7 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--sadm") == 0)
+        else if (strcmp(argv[cmdln_index], "--bw64") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
