@@ -1,0 +1,10 @@
+# Reference files compared by the test: normalise to LF
+info_1.xml.bin text eol=lf
+test_1.md5 text eol=lf
+
+# Input test vectors: preserve exact bytes (their content determines the output
+# MXF checksum, so they must not be modified by line-ending normalisation)
+test_1_video.h265 binary
+test_1_sadm.wav binary
+test_1.iab binary
+test_1_isxd/*.xml binary
