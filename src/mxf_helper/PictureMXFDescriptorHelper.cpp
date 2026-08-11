@@ -49,6 +49,7 @@
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/JPEG2000MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/JPEGXSMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/HEVCMXFDescriptorHelper.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/BMXException.h>
@@ -142,6 +143,8 @@ PictureMXFDescriptorHelper* PictureMXFDescriptorHelper::Create(FileDescriptor *f
         helper = new VC3MXFDescriptorHelper();
     else if (MJPEGMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new MJPEGMXFDescriptorHelper();
+    else if (HEVCMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+        helper = new HEVCMXFDescriptorHelper();
     else
         helper = new PictureMXFDescriptorHelper();
 
@@ -164,7 +167,8 @@ bool PictureMXFDescriptorHelper::IsSupported(EssenceType essence_type)
            JPEGXSMXFDescriptorHelper::IsSupported(essence_type) ||
            VC2MXFDescriptorHelper::IsSupported(essence_type) ||
            VC3MXFDescriptorHelper::IsSupported(essence_type) ||
-           MJPEGMXFDescriptorHelper::IsSupported(essence_type);
+           MJPEGMXFDescriptorHelper::IsSupported(essence_type) ||
+           HEVCMXFDescriptorHelper::IsSupported(essence_type);
 }
 
 MXFDescriptorHelper* PictureMXFDescriptorHelper::Create(EssenceType essence_type)
@@ -198,6 +202,8 @@ MXFDescriptorHelper* PictureMXFDescriptorHelper::Create(EssenceType essence_type
         helper = new VC3MXFDescriptorHelper();
     else if (MJPEGMXFDescriptorHelper::IsSupported(essence_type))
         helper = new MJPEGMXFDescriptorHelper();
+    else if (HEVCMXFDescriptorHelper::IsSupported(essence_type))
+        helper = new HEVCMXFDescriptorHelper();
     else
         helper = new PictureMXFDescriptorHelper();
 

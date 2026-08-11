@@ -148,6 +148,10 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {ANC_DATA,                  DATA_ESSENCE,           "ANC data",                             "ANC_Data"},
     {VBI_DATA,                  DATA_ESSENCE,           "VBI data",                             "VBI_Data"},
     {TIMED_TEXT,                DATA_ESSENCE,           "Timed Text",                           "Timed_Text"},
+    {HEVC_MAIN,                 PICTURE_ESSENCE,        "HEVC Main",                            "HEVC_Main"},
+    {HEVC_MAIN_10,              PICTURE_ESSENCE,        "HEVC Main 10",                         "HEVC_Main_10"},
+    {HEVC_MAIN_10_INTRA,        PICTURE_ESSENCE,        "HEVC Main Intra 10-bit",               "HEVC_Main_10_Intra"},
+    {HEVC_MAIN_422_10_INTRA,    PICTURE_ESSENCE,        "HEVC Main 4:2:2 10 Intra",             "HEVC_Main_422_10_Intra"},
 };
 
 

@@ -155,6 +155,11 @@ typedef enum
     VBI_DATA,
     // Timed Text data
     TIMED_TEXT,
+    // HEVC
+    HEVC_MAIN,
+    HEVC_MAIN_10,
+    HEVC_MAIN_10_INTRA,
+    HEVC_MAIN_422_10_INTRA,
 } EssenceType;
 
 
