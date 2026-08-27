@@ -142,6 +142,11 @@ static const AvidSampleRateSupport AVID_SAMPLE_RATE_SUPPORT[] =
     {VC3_720P_1258,            {{-1, -1}, {0, 0}}},
     {VC3_1080P_1259,           {{-1, -1}, {0, 0}}},
     {VC3_1080I_1260,           {{-1, -1}, {0, 0}}},
+    {VC3_DNXHR_444,            {{-1, -1}, {0, 0}}},
+    {VC3_DNXHR_HQX,            {{-1, -1}, {0, 0}}},
+    {VC3_DNXHR_HQ,             {{-1, -1}, {0, 0}}},
+    {VC3_DNXHR_SQ,             {{-1, -1}, {0, 0}}},
+    {VC3_DNXHR_LB,             {{-1, -1}, {0, 0}}},
     {UNC_SD,                   {{25, 1}, {30000, 1001}, {0, 0}}},
     {UNC_HD_1080I,             {{25, 1}, {30000, 1001}, {0, 0}}},
     {UNC_HD_1080P,             {{25, 1}, {30000, 1001}, {30, 1}, {50, 1}, {60000, 1001}, {60, 1}, {0, 0}}},
@@ -253,6 +258,11 @@ AvidTrack* AvidTrack::OpenNew(AvidClip *clip, File *file, uint32_t track_index, 
         case VC3_720P_1258:
         case VC3_1080P_1259:
         case VC3_1080I_1260:
+        case VC3_DNXHR_444:
+        case VC3_DNXHR_HQX:
+        case VC3_DNXHR_HQ:
+        case VC3_DNXHR_SQ:
+        case VC3_DNXHR_LB:
             return new AvidVC3Track(clip, track_index, essence_type, file);
         case UNC_SD:
         case UNC_HD_1080I:

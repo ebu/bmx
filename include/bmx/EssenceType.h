@@ -136,6 +136,12 @@ typedef enum
     VC3_720P_1258,
     VC3_1080P_1259,
     VC3_1080I_1260,
+    // VC-3, DNxHR
+    VC3_DNXHR_444,      // 1270, RGB 4:4:4, 12-bit
+    VC3_DNXHR_HQX,      // 1271, YCbCr 4:2:2, 12-bit
+    VC3_DNXHR_HQ,       // 1272, YCbCr 4:2:2, 8-bit
+    VC3_DNXHR_SQ,       // 1273, YCbCr 4:2:2, 8-bit
+    VC3_DNXHR_LB,       // 1274, YCbCr 4:2:2, 8-bit
     // Avid MJPEG
     MJPEG_2_1,
     MJPEG_3_1,

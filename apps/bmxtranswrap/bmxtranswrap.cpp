@@ -57,6 +57,7 @@
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
+#include <bmx/mxf_helper/VC3MXFDescriptorHelper.h>
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
 #include <bmx/wave/WaveFileIO.h>
@@ -4325,6 +4326,15 @@ int main(int argc, const char** argv)
                     if (afd)
                         clip_track->SetAFD(afd);
                     break;
+                case VC3_DNXHR_444:
+                case VC3_DNXHR_HQX:
+                case VC3_DNXHR_HQ:
+                case VC3_DNXHR_SQ:
+                case VC3_DNXHR_LB:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    clip_track->SetComponentDepth(input_picture_info->component_depth);
+                    break;
                 case WAVE_PCM:
                     clip_track->SetSamplingRate(output_sound_info->sampling_rate);
                     clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
@@ -4459,6 +4469,14 @@ int main(int argc, const char** argv)
                 if (rdd36_helper) {
                     if (BMX_OPT_PROP_IS_SET(user_rdd36_opaque))
                         rdd36_helper->SetIsOpaque(user_rdd36_opaque);
+                }
+
+                VC3MXFDescriptorHelper *vc3_helper = dynamic_cast<VC3MXFDescriptorHelper*>(pict_helper);
+                if (vc3_helper) {
+                    if (input_picture_info->display_width > 0)
+                        vc3_helper->SetFrameWidth(input_picture_info->display_width);
+                    if (input_picture_info->display_height > 0)
+                        vc3_helper->SetFrameHeight(input_picture_info->display_height);
                 }
             } else if (sound_helper) {
                 if (BMX_OPT_PROP_IS_SET(user_ref_image_edit_rate))
