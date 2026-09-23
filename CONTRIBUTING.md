@@ -1,4 +1,4 @@
-## How to Contribute
+## Contributing
 
 We use the standard **fork and pull request** workflow. This applies to
 everyone, including maintainers — all changes go through a fork and a pull
@@ -92,6 +92,14 @@ the maintainers will happily do this for you.
 
 Please match the style of the surrounding code. Keep changes focused — avoid
 unrelated reformatting in the same pull request, as it makes review harder.
+
+## License
+
+bmx is licensed under [BSD-3](COPYING). Any contribution implies that the contributor agrees with the terms. Contributors must ensure that they are allowed to contribute to the repository and that their work will be available under the terms of the BSD-3 license.
+
+## Copyright Notices
+
+Contributions should have the contributor's comyright included. When appending to existing files, the original copyright notice must remain intact and contributor's copyright shall be added to it. New source files shall only carry the contributor's copyright attribution and the [BSD-3](COPYING) clause text.
 
 ## Using AI Tools
 
