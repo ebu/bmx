@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018, British Broadcasting Corporation
+ * Copyright (C) 2024, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,28 +27,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_OP1A_TIMED_TEXT_TRACK_H_
-#define BMX_OP1A_TIMED_TEXT_TRACK_H_
+#ifndef BMX_OP1A_TIMED_DATA_TRACK_H_
+#define BMX_OP1A_TIMED_DATA_TRACK_H_
 
 #include <bmx/mxf_op1a/OP1ATrack.h>
-#include <bmx/mxf_helper/TimedTextMXFDescriptorHelper.h>
-#include <bmx/mxf_helper/TimedTextManifest.h>
-#include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
+#include <bmx/mxf_helper/TimedDataMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/TimedDataManifest.h>
+#include <bmx/mxf_helper/TimedDataMXFResourceProvider.h>
 
 
 namespace bmx
 {
 
 
-class OP1ATimedTextTrack : public OP1ATrack
+class OP1ATimedDataTrack : public OP1ATrack
 {
 public:
-    OP1ATimedTextTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+    OP1ATimedDataTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
                        mxfRational frame_rate, EssenceType essence_type);
-    virtual ~OP1ATimedTextTrack();
+    virtual ~OP1ATimedDataTrack();
 
-    void SetSource(const TimedTextManifest *manifest);
-    void SetResourceProvider(TimedTextMXFResourceProvider *provider);
+    void SetManifest(const TimedDataManifest *manifest);
+    void SetResourceProvider(TimedDataMXFResourceProvider *provider);
 
     void SetBodySID(uint32_t id);
     void SetIndexSID(uint32_t id);
@@ -70,30 +70,31 @@ public:
     uint32_t GetIndexSID() const { return mIndexSID; }
     int64_t GetDuration() const  { return mDuration; }
 
-    int64_t GetStart() const { return mTTStart; }
+    int64_t GetStart() const { return mStart; }
 
 protected:
     virtual void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
                                    mxfpp::SourcePackage *file_source_package);
     virtual void PrepareWrite(uint8_t track_count) { (void)track_count; }
 
-private:
+protected:
     void WriteFileData(mxfpp::File *mxf_file, const mxfKey *key, const std::string &filename);
     void WriteResourceProviderData(mxfpp::File *mxf_file, const mxfKey *key, int64_t data_size);
 
-private:
-    TimedTextMXFDescriptorHelper *mTimedTextDescriptorHelper;
+protected:
+    mxfKey mAncEssenceElementKey;
+    TimedDataMXFDescriptorHelper *mTimedDataDescriptorHelper;
     uint32_t mBodySID;
     uint32_t mIndexSID;
     int64_t mDuration;
-    int64_t mTTStart;
+    int64_t mStart;
     mxfpp::SourcePackage *mFileSourcePackage;
     mxfpp::Track *mMPTrack;
     mxfpp::Track *mFPTrack;
-    std::string mTTFilename;
-    std::vector<TimedTextAncillaryResource> mAncillaryResources;
+    std::string mTimedDataFilename;
+    std::vector<TimedDataAncillaryResource*> mAncillaryResources;
     std::vector<uint32_t> mInputAncStreamIds;
-    TimedTextMXFResourceProvider *mResourceProvider;
+    TimedDataMXFResourceProvider *mResourceProvider;
 };
 
 

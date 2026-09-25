@@ -148,6 +148,7 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {ANC_DATA,                  DATA_ESSENCE,           "ANC data",                             "ANC_Data"},
     {VBI_DATA,                  DATA_ESSENCE,           "VBI data",                             "VBI_Data"},
     {TIMED_TEXT,                DATA_ESSENCE,           "Timed Text",                           "Timed_Text"},
+    {TIMED_EVENTS,              DATA_ESSENCE,           "Timed Events",                         "Timed_Events"},
 };
 
 

@@ -14,7 +14,7 @@ list(APPEND bmx_sources
     mxf_op1a/OP1APCMTrack.cpp
     mxf_op1a/OP1APictureTrack.cpp
     mxf_op1a/OP1ARDD36Track.cpp
-    mxf_op1a/OP1ATimedTextTrack.cpp
+    mxf_op1a/OP1ATimedDataTrack.cpp
     mxf_op1a/OP1ATrack.cpp
     mxf_op1a/OP1AUncTrack.cpp
     mxf_op1a/OP1AVBIDataTrack.cpp

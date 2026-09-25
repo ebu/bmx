@@ -1,6 +1,6 @@
 # Test creating an IMF Track File containing Timed Text.
-# First test create an IMF audio Track File.
-# Second test transwraps the IMF audio Track File.
+# First test create an IMF Track File.
+# Second test transwraps the IMF Track File.
 
 include("${TEST_SOURCE_DIR}/../testing.cmake")
 
@@ -22,7 +22,7 @@ set(create_command ${RAW2BMX}
     --clip test
     -f 25
     --dur 100
-    --tt "${TEST_SOURCE_DIR}/../timed_text/manifest_2.txt"
+    --timed-text "${TEST_SOURCE_DIR}/../timed_text/manifest_2.txt"
 )
 
 run_test_a(

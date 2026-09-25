@@ -69,6 +69,18 @@ XMLWriter* XMLWriter::Open(const string &filename)
 XMLWriter::XMLWriter(FILE *xml_file)
 {
     mXMLFile = xml_file;
+    mOwnXMLFile = true;
+    mPrevWriteType = NONE;
+    mLevel = 0;
+    mEscapeCR = false;
+    mEscapeAttrNewlineChars = false;
+    mSkipCR = false;
+}
+
+XMLWriter::XMLWriter(FILE *xml_file, bool own_xml_file)
+{
+    mXMLFile = xml_file;
+    mOwnXMLFile = own_xml_file;
     mPrevWriteType = NONE;
     mLevel = 0;
     mEscapeCR = false;
@@ -82,8 +94,7 @@ XMLWriter::~XMLWriter()
     for (i = 0; i < mElementStack.size(); i++)
         delete mElementStack[i];
 
-    if (mXMLFile && mXMLFile != stdout && mXMLFile != stderr)
-        fclose(mXMLFile);
+    Close();
 }
 
 void XMLWriter::EscapeCR(bool escape)
@@ -118,8 +129,7 @@ void XMLWriter::WriteDocumentEnd()
     mElementStack.clear();
 
     BMX_CHECK(mXMLFile);
-    fclose(mXMLFile);
-    mXMLFile = 0;
+    Close();
 
     mPrevWriteType = END;
 }
@@ -597,3 +607,9 @@ void XMLWriter::Write(const char *data, size_t len)
         log_error("XML fwrite failed: %s\n", bmx_strerror(errno).c_str());
 }
 
+void XMLWriter::Close()
+{
+    if (mXMLFile && mOwnXMLFile && mXMLFile != stdout && mXMLFile != stderr)
+        fclose(mXMLFile);
+    mXMLFile = 0;
+}

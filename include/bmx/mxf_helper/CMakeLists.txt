@@ -19,9 +19,13 @@ list(APPEND bmx_headers
     bmx/mxf_helper/PictureMXFDescriptorHelper.h
     bmx/mxf_helper/RDD36MXFDescriptorHelper.h
     bmx/mxf_helper/SoundMXFDescriptorHelper.h
-    bmx/mxf_helper/TimedTextMXFDescriptorHelper.h
-    bmx/mxf_helper/TimedTextMXFResourceProvider.h
+    bmx/mxf_helper/TimedDataManifest.h
+    bmx/mxf_helper/TimedDataMXFDescriptorHelper.h
+    bmx/mxf_helper/TimedDataMXFResourceProvider.h
+    bmx/mxf_helper/TimedEventsManifest.h
+    bmx/mxf_helper/TimedEventsMXFDescriptorHelper.h
     bmx/mxf_helper/TimedTextManifest.h
+    bmx/mxf_helper/TimedTextMXFDescriptorHelper.h
     bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h
     bmx/mxf_helper/UncRGBAMXFDescriptorHelper.h
     bmx/mxf_helper/UniqueIdHelper.h

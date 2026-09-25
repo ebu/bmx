@@ -155,6 +155,8 @@ typedef enum
     VBI_DATA,
     // Timed Text data
     TIMED_TEXT,
+    // Timed Events data
+    TIMED_EVENTS,
 } EssenceType;
 
 

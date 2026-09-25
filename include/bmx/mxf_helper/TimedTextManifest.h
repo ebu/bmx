@@ -30,10 +30,7 @@
 #ifndef BMX_TIMED_TEXT_MANIFEST_H_
 #define BMX_TIMED_TEXT_MANIFEST_H_
 
-#include <string>
-#include <vector>
-
-#include <bmx/BMXTypes.h>
+#include <bmx/mxf_helper/TimedDataManifest.h>
 
 
 namespace bmx
@@ -49,22 +46,25 @@ typedef enum
 } TimedTextProfile;
 
 
-class TimedTextAncillaryResource
+class TimedTextAncillaryResource : public TimedDataAncillaryResource
 {
 public:
     TimedTextAncillaryResource();
+    TimedTextAncillaryResource(const TimedTextAncillaryResource &from);
+    virtual ~TimedTextAncillaryResource();
 
-    std::string filename;
+    virtual TimedDataAncillaryResource* Clone() const;
+
+public:
     mxfUUID resource_id;
-    std::string mime_type;
-    uint32_t stream_id;
 };
 
 
-class TimedTextManifest
+class TimedTextManifest : public TimedDataManifest
 {
 public:
     TimedTextManifest();
+    TimedTextManifest(const TimedTextManifest &from);
     virtual ~TimedTextManifest();
 
     TimedTextProfile GetProfile() const { return mProfile; }
@@ -78,25 +78,20 @@ public:
     const std::vector<std::string>& GetLanguages() const { return mLanguages; }
     std::string GetLanguagesString() const;
 
-    std::vector<TimedTextAncillaryResource>& GetAncillaryResources() { return mAncillaryResources; }
-
-    std::string GetTTFilename() const { return mTTFilename; }
-
 public:
     void SetProfileDesignator(const std::string &designator);
     void SetLanguagesString(const std::string &languages_str);
 
 public:
-    void Reset();
+    virtual void Reset();
+
+    virtual TimedDataManifest* Clone() const;
 
 public:
-    std::string mTTFilename;
     TimedTextProfile mProfile;
     std::string mEncoding;
     UUID mResourceId;
     std::vector<std::string> mLanguages;
-    std::vector<TimedTextAncillaryResource> mAncillaryResources;
-    int64_t mStart;
 };
 
 

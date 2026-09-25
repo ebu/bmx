@@ -44,8 +44,8 @@
 #include <bmx/rdd9_mxf/RDD9XMLTrack.h>
 #include <bmx/writer_helper/AVCIWriterHelper.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
-#include <bmx/mxf_helper/TimedTextManifest.h>
-#include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
+#include <bmx/mxf_helper/TimedDataManifest.h>
+#include <bmx/mxf_helper/TimedDataMXFResourceProvider.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/wave/WaveCHNA.h>
 
@@ -119,9 +119,9 @@ public:
     void SetXMLSchemeId(UL id);
     void SetXMLLanguageCode(const std::string &code);
 
-    // Timed Text
-    void SetTimedTextSource(const TimedTextManifest *manifest);
-    void SetTimedTextResourceProvider(TimedTextMXFResourceProvider *provider);
+    // Timed Text & Events
+    void SetTimedDataManifest(const TimedDataManifest *manifest);
+    void SetTimedDataResourceProvider(TimedDataMXFResourceProvider *provider);
 
 public:
     void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);

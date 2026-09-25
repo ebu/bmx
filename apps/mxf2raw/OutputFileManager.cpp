@@ -36,12 +36,18 @@
 #include <errno.h>
 #include <string.h>
 
-#include <bmx/BMXException.h>
+#include <bmx/mxf_helper/TimedEventsManifest.h>
 #include <bmx/Utils.h>
 #include <bmx/Logging.h>
 
 using namespace std;
 using namespace bmx;
+
+
+OutputFileManager::FileInfo::FileInfo()
+{
+    file = 0;
+}
 
 
 OutputFileManager::OutputFileManager()
@@ -53,6 +59,14 @@ OutputFileManager::~OutputFileManager()
 {
     map<size_t, TrackFileInfo>::const_iterator iter1;
     for (iter1 = mTrackFiles.begin(); iter1 != mTrackFiles.end(); iter1++) {
+        if (iter1->second.manifest.file) {
+            fclose(iter1->second.manifest.file);
+        }
+
+        if (iter1->second.main.file) {
+            fclose(iter1->second.main.file);
+        }
+
         map<uint32_t, FileInfo>::const_iterator iter2;
         for (iter2 = iter1->second.children.begin(); iter2 != iter1->second.children.end(); iter2++) {
             if (iter2->second.file) {
@@ -97,46 +111,60 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
         for (c = 0; c < sound_info->channel_count; c++) {
             bmx_snprintf(buffer, sizeof(buffer), "_%s%u_%d%s", ddef_letter, ddef_count, c, suffix);
 
-            FileInfo file_info;
+            FileInfo &file_info = mTrackFiles[track_index].children[c];
             file_info.filename = mPrefix + buffer;
             file_info.file = fopen(file_info.filename.c_str(), "wb");
             if (!file_info.file) {
-                log_error("Failed to open raw file '%s': %s\n",
+                log_error("Failed to open raw channel file '%s': %s\n",
                           file_info.filename.c_str(), bmx_strerror(errno).c_str());
                 throw false;
             }
-            mTrackFiles[track_index].children[c] = file_info;
         }
-    } else if (track_info->essence_type == TIMED_TEXT) {
-        TimedTextManifest *manifest = dynamic_cast<const MXFDataTrackInfo*>(track_info)->timed_text_manifest;
+    } else if (track_info->essence_type == TIMED_TEXT || track_info->essence_type == TIMED_EVENTS) {
+        TimedDataManifest *manifest = dynamic_cast<const MXFDataTrackInfo*>(track_info)->timed_data_manifest;
 
-        bmx_snprintf(buffer, sizeof(buffer), "_%s%u.xml", ddef_letter, ddef_count);
+        if (track_info->essence_type == TIMED_EVENTS) {
+            bmx_snprintf(buffer, sizeof(buffer), "_%s%u_manifest.xml", ddef_letter, ddef_count);
 
-        FileInfo file_info;
+            FileInfo &file_info = mTrackFiles[track_index].manifest;
+            file_info.filename = mPrefix + buffer;
+            file_info.file = fopen(file_info.filename.c_str(), "wb");
+            if (!file_info.file) {
+                log_error("Failed to open timed events manifest file '%s': %s\n",
+                          file_info.filename.c_str(), bmx_strerror(errno).c_str());
+                throw false;
+            }
+        }
+
+        if (track_info->essence_type == TIMED_TEXT) {
+            bmx_snprintf(buffer, sizeof(buffer), "_%s%u.xml", ddef_letter, ddef_count);
+        } else {
+            bmx_snprintf(buffer, sizeof(buffer), "_%s%u.txt", ddef_letter, ddef_count);
+        }
+
+        FileInfo &file_info = mTrackFiles[track_index].main;
         file_info.filename = mPrefix + buffer;
         file_info.file = fopen(file_info.filename.c_str(), "wb");
         if (!file_info.file) {
-            log_error("Failed to open raw file '%s': %s\n",
+            log_error("Failed to open main timed data file '%s': %s\n",
                       file_info.filename.c_str(), bmx_strerror(errno).c_str());
             throw false;
         }
-        mTrackFiles[track_index].children[(uint32_t)(-1)] = file_info;
 
-        std::vector<TimedTextAncillaryResource> &anc_resources = manifest->GetAncillaryResources();
+        const vector<TimedDataAncillaryResource*> &anc_resources = manifest->GetAncillaryResources();
         size_t i;
         for (i = 0; i < anc_resources.size(); i++) {
             bmx_snprintf(buffer, sizeof(buffer), "_%s%u_%d.raw", ddef_letter, ddef_count,
-                         anc_resources[i].stream_id);
+                         anc_resources[i]->stream_id);
 
-            FileInfo file_info;
+            FileInfo &file_info = mTrackFiles[track_index].children[anc_resources[i]->stream_id];
             file_info.filename = mPrefix + buffer;
             file_info.file = fopen(file_info.filename.c_str(), "wb");
             if (!file_info.file) {
-                log_error("Failed to open raw file '%s': %s\n",
+                log_error("Failed to open timed data ancillary resource file '%s': %s\n",
                           file_info.filename.c_str(), bmx_strerror(errno).c_str());
                 throw false;
             }
-            mTrackFiles[track_index].children[anc_resources[i].stream_id] = file_info;
         }
     } else {
           const char *suffix = ".raw";
@@ -145,30 +173,39 @@ void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *tra
 
           bmx_snprintf(buffer, sizeof(buffer), "_%s%u%s", ddef_letter, ddef_count, suffix);
 
-          FileInfo file_info;
-          file_info.filename = mPrefix + buffer;
-          file_info.file = fopen(file_info.filename.c_str(), "wb");
-          if (!file_info.file) {
+          FileInfo &main_file_info = mTrackFiles[track_index].main;
+          main_file_info.filename = mPrefix + buffer;
+          main_file_info.file = fopen(main_file_info.filename.c_str(), "wb");
+          if (!main_file_info.file) {
               log_error("Failed to open raw file '%s': %s\n",
-                        file_info.filename.c_str(), bmx_strerror(errno).c_str());
+                        main_file_info.filename.c_str(), bmx_strerror(errno).c_str());
               throw false;
           }
-          mTrackFiles[track_index].children[(uint32_t)(-1)] = file_info;
     }
 
     mDDefCount[track_info->data_def]++;
 }
 
-void OutputFileManager::GetTrackFile(size_t track_index, uint32_t child_index,
-                                     FILE **file, string *filename)
+void OutputFileManager::GetTrackManifestFile(size_t track_index,
+                                             FILE **file, string *filename)
 {
-    FileInfo &file_info = mTrackFiles.at(track_index).children.at(child_index);
+    FileInfo &file_info = mTrackFiles.at(track_index).manifest;
     *file = file_info.file;
     *filename = file_info.filename;
 }
 
-void OutputFileManager::GetTrackFile(size_t track_index,
-                                     FILE **file, string *filename)
+void OutputFileManager::GetTrackMainFile(size_t track_index,
+                                         FILE **file, string *filename)
 {
-    return GetTrackFile(track_index, (uint32_t)(-1), file, filename);
+    FileInfo &file_info = mTrackFiles.at(track_index).main;
+    *file = file_info.file;
+    *filename = file_info.filename;
+}
+
+void OutputFileManager::GetTrackChildFile(size_t track_index, uint32_t child_index,
+                                          FILE **file, string *filename)
+{
+    FileInfo &file_info = mTrackFiles.at(track_index).children.at(child_index);
+    *file = file_info.file;
+    *filename = file_info.filename;
 }

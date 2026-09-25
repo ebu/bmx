@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018, British Broadcasting Corporation
+ * Copyright (C) 2024, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
 #include "config.h"
 #endif
 
-#include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1ATimedDataTrack.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -56,15 +56,22 @@ using namespace mxfpp;
 static const char TIMECODE_TRACK_NAME[]         = "TC1";
 
 
-OP1ATimedTextTrack::OP1ATimedTextTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+OP1ATimedDataTrack::OP1ATimedDataTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
                                        mxfRational frame_rate, EssenceType essence_type)
 : OP1ATrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
-    mTrackNumber = MXF_EE_TRACKNUM(TimedText);
-    mEssenceElementKey = MXF_EE_K(TimedText);
+    mTimedDataDescriptorHelper = dynamic_cast<TimedDataMXFDescriptorHelper*>(mDescriptorHelper);
+    BMX_ASSERT(mTimedDataDescriptorHelper);
 
-    mTimedTextDescriptorHelper = dynamic_cast<TimedTextMXFDescriptorHelper*>(mDescriptorHelper);
-    BMX_ASSERT(mTimedTextDescriptorHelper);
+    if (essence_type == TIMED_TEXT) {
+        mTrackNumber = MXF_EE_TRACKNUM(TimedText);
+        mEssenceElementKey = MXF_EE_K(TimedText);
+        mAncEssenceElementKey = MXF_EE_K(TimedTextAnc);
+    } else if (essence_type == TIMED_EVENTS) {
+        mTrackNumber = MXF_EE_TRACKNUM(TimedEvents);
+        mEssenceElementKey = MXF_EE_K(TimedEvents);
+        mAncEssenceElementKey = MXF_EE_K(TimedEventsAnc);
+    }
 
     mFileSourcePackage = 0;
     mMPTrack = 0;
@@ -72,43 +79,46 @@ OP1ATimedTextTrack::OP1ATimedTextTrack(OP1AFile *file, uint32_t track_index, uin
     mBodySID = mOP1AFile->CreateStreamId();
     mIndexSID = mOP1AFile->CreateStreamId();
     mDuration = -1;
-    mTTStart = 0;
+    mStart = 0;
     mResourceProvider = 0;
 }
 
-OP1ATimedTextTrack::~OP1ATimedTextTrack()
+OP1ATimedDataTrack::~OP1ATimedDataTrack()
 {
+    for (size_t i = 0; i < mAncillaryResources.size(); i++)
+        delete mAncillaryResources[i];
+
     delete mResourceProvider;
 }
 
-void OP1ATimedTextTrack::SetSource(const TimedTextManifest *manifest)
+void OP1ATimedDataTrack::SetManifest(const TimedDataManifest *manifest)
 {
-    mTTFilename = manifest->mTTFilename;
+    mTimedDataFilename = manifest->GetFilename();
 
-    TimedTextManifest modified_manifest = *manifest;
-    vector<TimedTextAncillaryResource> &resources = modified_manifest.GetAncillaryResources();
+    TimedDataManifest *modified_manifest = manifest->Clone();
+    const vector<TimedDataAncillaryResource*> &resources = modified_manifest->GetAncillaryResources();
     size_t i;
     for (i = 0; i < resources.size(); i++) {
-        TimedTextAncillaryResource &resource = resources[i];
-        mInputAncStreamIds.push_back(resource.stream_id);
-        resource.stream_id = mOP1AFile->CreateStreamId();
-        mAncillaryResources.push_back(resource);
+        TimedDataAncillaryResource *resource = resources[i];
+        mInputAncStreamIds.push_back(resource->stream_id);
+        resource->stream_id = mOP1AFile->CreateStreamId();
+        mAncillaryResources.push_back(resource->Clone());
     }
-    mTTStart = modified_manifest.mStart;
-    mTimedTextDescriptorHelper->SetManifest(&modified_manifest);
+    mStart = modified_manifest->GetStart();
+    mTimedDataDescriptorHelper->SetManifest(modified_manifest, true);
 }
 
-void OP1ATimedTextTrack::SetResourceProvider(TimedTextMXFResourceProvider *provider)
+void OP1ATimedDataTrack::SetResourceProvider(TimedDataMXFResourceProvider *provider)
 {
     mResourceProvider = provider;
 }
 
-void OP1ATimedTextTrack::SetDuration(int64_t duration)
+void OP1ATimedDataTrack::SetDuration(int64_t duration)
 {
     mDuration = duration;
 }
 
-void OP1ATimedTextTrack::WriteIndexTable(File *mxf_file, Partition *index_partition)
+void OP1ATimedDataTrack::WriteIndexTable(File *mxf_file, Partition *index_partition)
 {
     // this is a partial index table that "indexes" the first edit unit only in the clip wrapped container
     mxfUUID uuid;
@@ -126,50 +136,50 @@ void OP1ATimedTextTrack::WriteIndexTable(File *mxf_file, Partition *index_partit
     index_segment.write(mxf_file, index_partition, 0);
 }
 
-void OP1ATimedTextTrack::WriteEssenceContainer(File *mxf_file, Partition *ess_partition)
+void OP1ATimedDataTrack::WriteEssenceContainer(File *mxf_file, Partition *ess_partition)
 {
     if (mResourceProvider) {
-        int64_t data_size = mResourceProvider->GetTimedTextResourceSize();
-        mResourceProvider->OpenTimedTextResource();
+        int64_t data_size = mResourceProvider->GetResourceSize();
+        mResourceProvider->OpenResource();
         WriteResourceProviderData(mxf_file, &mEssenceElementKey, data_size);
     } else {
-        WriteFileData(mxf_file, &mEssenceElementKey, mTTFilename);
+        WriteFileData(mxf_file, &mEssenceElementKey, mTimedDataFilename);
     }
     ess_partition->fillToKag(mxf_file);
 }
 
-uint32_t OP1ATimedTextTrack::GetAncillaryResourceStreamId(size_t index) const
+uint32_t OP1ATimedDataTrack::GetAncillaryResourceStreamId(size_t index) const
 {
     BMX_ASSERT(index < mAncillaryResources.size());
 
-    return mAncillaryResources[index].stream_id;
+    return mAncillaryResources[index]->stream_id;
 }
 
-void OP1ATimedTextTrack::WriteAncillaryResource(File *mxf_file, Partition *stream_partition, size_t index)
+void OP1ATimedDataTrack::WriteAncillaryResource(File *mxf_file, Partition *stream_partition, size_t index)
 {
     BMX_ASSERT(index < mAncillaryResources.size());
 
     if (mResourceProvider) {
         if (mInputAncStreamIds[index] == 0) {
-            BMX_EXCEPTION(("Timed Text manifest ancillary resource has zero stream ID"));
+            BMX_EXCEPTION(("Timed data manifest ancillary resource has zero stream ID"));
         }
 
         int64_t data_size = mResourceProvider->GetAncillaryResourceSize(mInputAncStreamIds[index]);
         mResourceProvider->OpenAncillaryResource(mInputAncStreamIds[index]);
-        WriteResourceProviderData(mxf_file, &MXF_EE_K(TimedTextAnc), data_size);
+        WriteResourceProviderData(mxf_file, &mAncEssenceElementKey, data_size);
     } else {
-        WriteFileData(mxf_file, &MXF_EE_K(TimedTextAnc), mAncillaryResources[index].filename);
+        WriteFileData(mxf_file, &mAncEssenceElementKey, mAncillaryResources[index]->filename);
         stream_partition->fillToKag(mxf_file);
     }
 }
 
-void OP1ATimedTextTrack::UpdateTrackMetadata(int64_t duration)
+void OP1ATimedDataTrack::UpdateTrackMetadata(int64_t duration)
 {
-    if (duration < mTTStart) {
-        BMX_EXCEPTION(("Timed text start %" PRId64 " > MP track duration %" PRId64,
-                       mTTStart, duration));
+    if (duration < mStart) {
+        BMX_EXCEPTION(("Timed data start %" PRId64 " > MP track duration %" PRId64,
+                       mStart, duration));
     }
-    int64_t tt_duration = duration - mTTStart;
+    int64_t timed_data_duration = duration - mStart;
 
     // update Material Package Track metadata
 
@@ -186,7 +196,7 @@ void OP1ATimedTextTrack::UpdateTrackMetadata(int64_t duration)
         SourceClip *source_clip = dynamic_cast<SourceClip*>(components[1]);
         BMX_ASSERT(source_clip);
 
-        source_clip->setDuration(tt_duration);
+        source_clip->setDuration(timed_data_duration);
     }
 
 
@@ -198,28 +208,28 @@ void OP1ATimedTextTrack::UpdateTrackMetadata(int64_t duration)
         Track *track = dynamic_cast<Track*>(tracks[i]);
 
         Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
-        sequence->setDuration(tt_duration);
+        sequence->setDuration(timed_data_duration);
 
         vector<StructuralComponent*> components = sequence->getStructuralComponents();
-        components[0]->setDuration(tt_duration);
+        components[0]->setDuration(timed_data_duration);
     }
 
     FileDescriptor *file_descriptor = mDescriptorHelper->GetFileDescriptor();
-    file_descriptor->setContainerDuration(tt_duration);
+    file_descriptor->setContainerDuration(timed_data_duration);
 }
 
-void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
+void OP1ATimedDataTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
                                            SourcePackage *file_source_package)
 {
     mFileSourcePackage = file_source_package;
 
-    if (mDuration >= 0 && mDuration < mTTStart) {
-        BMX_EXCEPTION(("Timed text start %" PRId64 " > single pass MP track duration %" PRId64,
-                       mTTStart, mDuration));
+    if (mDuration >= 0 && mDuration < mStart) {
+        BMX_EXCEPTION(("Timed data start %" PRId64 " > single pass MP track duration %" PRId64,
+                       mStart, mDuration));
     }
-    int64_t tt_duration = -1;
+    int64_t timed_data_duration = -1;
     if (mDuration >= 0) {
-        tt_duration = mDuration - mTTStart;
+        timed_data_duration = mDuration - mStart;
     }
 
     mxfUL data_def_ul;
@@ -251,19 +261,19 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
     sequence->setDuration(mDuration);
 
     // Preface - ContentStorage - MaterialPackage - Timeline Track - Filler
-    if (mTTStart > 0) {
+    if (mStart > 0) {
         StructuralComponent *filler = dynamic_cast<StructuralComponent*>(
             header_metadata->createAndWrap(&MXF_SET_K(Filler)));
         sequence->appendStructuralComponents(filler);
         filler->setDataDefinition(data_def_ul);
-        filler->setDuration(mTTStart);
+        filler->setDuration(mStart);
     }
 
     // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence - SourceClip
     SourceClip *source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
     source_clip->setDataDefinition(data_def_ul);
-    source_clip->setDuration(tt_duration);
+    source_clip->setDuration(timed_data_duration);
     source_clip->setStartPosition(0);
     source_clip->setSourcePackageID(mFileSourcePackage->getPackageUID());
     source_clip->setSourceTrackID(mTrackId);
@@ -282,15 +292,15 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
         sequence = new Sequence(header_metadata);
         timecode_track->setSequence(sequence);
         sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-        sequence->setDuration(tt_duration);
+        sequence->setDuration(timed_data_duration);
 
         // Preface - ContentStorage - SourcePackage - Timecode Track - TimecodeComponent
         TimecodeComponent *timecode_component = new TimecodeComponent(header_metadata);
         sequence->appendStructuralComponents(timecode_component);
         timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
-        timecode_component->setDuration(tt_duration);
+        timecode_component->setDuration(timed_data_duration);
         Timecode sp_start_timecode = mOP1AFile->mStartTimecode;
-        sp_start_timecode.AddOffset(mTTStart, mFrameRate);
+        sp_start_timecode.AddOffset(mStart, mFrameRate);
         timecode_component->setRoundedTimecodeBase(sp_start_timecode.GetRoundedTCBase());
         timecode_component->setDropFrame(sp_start_timecode.IsDropFrame());
         timecode_component->setStartTimecode(sp_start_timecode.GetOffset());
@@ -309,13 +319,13 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
     sequence = new Sequence(header_metadata);
     mFPTrack->setSequence(sequence);
     sequence->setDataDefinition(data_def_ul);
-    sequence->setDuration(tt_duration);
+    sequence->setDuration(timed_data_duration);
 
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence - SourceClip
     source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
     source_clip->setDataDefinition(data_def_ul);
-    source_clip->setDuration(tt_duration);
+    source_clip->setDuration(timed_data_duration);
     source_clip->setStartPosition(0);
     source_clip->setSourceTrackID(0);
     source_clip->setSourcePackageID(g_Null_UMID);
@@ -324,11 +334,11 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
     FileDescriptor *descriptor = mDescriptorHelper->CreateFileDescriptor(header_metadata);
     mFileSourcePackage->setDescriptor(descriptor);
     descriptor->setLinkedTrackID(mTrackId);
-    if (tt_duration >= 0)
-        descriptor->setContainerDuration(tt_duration);
+    if (timed_data_duration >= 0)
+        descriptor->setContainerDuration(timed_data_duration);
 }
 
-void OP1ATimedTextTrack::WriteFileData(File *mxf_file, const mxfKey *key, const string &filename)
+void OP1ATimedDataTrack::WriteFileData(File *mxf_file, const mxfKey *key, const string &filename)
 {
     FILE *file = 0;
     try
@@ -378,7 +388,7 @@ void OP1ATimedTextTrack::WriteFileData(File *mxf_file, const mxfKey *key, const 
     }
 }
 
-void OP1ATimedTextTrack::WriteResourceProviderData(mxfpp::File *mxf_file, const mxfKey *key, int64_t data_size)
+void OP1ATimedDataTrack::WriteResourceProviderData(mxfpp::File *mxf_file, const mxfKey *key, int64_t data_size)
 {
     uint8_t llen = mxf_get_llen(mxf_file->getCFile(), data_size);
     if (llen < 4) {

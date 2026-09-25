@@ -56,16 +56,40 @@ static IMSCProfileMap IMSC_PROFILE_MAP[] =
 
 
 TimedTextAncillaryResource::TimedTextAncillaryResource()
+: TimedDataAncillaryResource()
 {
     resource_id = g_Null_UUID;
-    stream_id = 0;
+}
+
+TimedTextAncillaryResource::TimedTextAncillaryResource(const TimedTextAncillaryResource &from)
+: TimedDataAncillaryResource(from)
+{
+    resource_id = from.resource_id;
+}
+
+TimedTextAncillaryResource::~TimedTextAncillaryResource()
+{
+}
+
+TimedDataAncillaryResource* TimedTextAncillaryResource::Clone() const
+{
+    return new TimedTextAncillaryResource(*this);
 }
 
 
-
 TimedTextManifest::TimedTextManifest()
+: TimedDataManifest()
 {
     Reset();
+}
+
+TimedTextManifest::TimedTextManifest(const TimedTextManifest &from)
+: TimedDataManifest(from)
+{
+    mResourceId = from.mResourceId;
+    mProfile = from.mProfile;
+    mEncoding = from.mEncoding;
+    mLanguages = from.mLanguages;
 }
 
 TimedTextManifest::~TimedTextManifest()
@@ -121,11 +145,14 @@ void TimedTextManifest::SetLanguagesString(const string &languages_str)
 
 void TimedTextManifest::Reset()
 {
-    mTTFilename.clear();
+    TimedDataManifest::Reset();
     mProfile = IMSC_1_TEXT_PROFILE;
     mEncoding.clear();
     mResourceId = g_Null_UUID;
     mLanguages.clear();
-    mAncillaryResources.clear();
-    mStart = 0;
+}
+
+TimedDataManifest* TimedTextManifest::Clone() const
+{
+    return new TimedTextManifest(*this);
 }

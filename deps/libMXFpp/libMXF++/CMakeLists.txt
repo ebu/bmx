@@ -9,6 +9,7 @@ set(MXFpp_sources
     MXFVersion.cpp
     MetadataSet.cpp
     Partition.cpp
+    Utils.cpp
 )
 
 set(MXFpp_headers
@@ -23,6 +24,7 @@ set(MXFpp_headers
     MXFVersion.h
     MetadataSet.h
     Partition.h
+    Utils.h
 )
 
 add_subdirectory(extensions)

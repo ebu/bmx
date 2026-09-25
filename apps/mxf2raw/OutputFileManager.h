@@ -49,20 +49,28 @@ public:
 
     void AddTrackFile(size_t track_index, const bmx::MXFTrackInfo *track_info, bool wrap_klv);
 
-    void GetTrackFile(size_t track_index, uint32_t child_index, FILE **file, std::string *filename);
-    void GetTrackFile(size_t track_index, FILE **file, std::string *filename);
+    void GetTrackManifestFile(size_t track_index, FILE **file, std::string *filename);
+    void GetTrackChildFile(size_t track_index, uint32_t child_index, FILE **file, std::string *filename);
+    void GetTrackMainFile(size_t track_index, FILE **file, std::string *filename);
 
 private:
-    typedef struct
+    class FileInfo
     {
+    public:
+        FileInfo();
+        // ~OutputFileManager() will close "file"
+
         std::string filename;
         FILE *file;
-    } FileInfo;
+    };
 
-    typedef struct
+    class TrackFileInfo
     {
+    public:
+        FileInfo manifest;
+        FileInfo main;
         std::map<uint32_t, FileInfo> children;
-    } TrackFileInfo;
+    };
 
 private:
     std::string mPrefix;

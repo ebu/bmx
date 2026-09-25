@@ -10,7 +10,7 @@ set(create_command ${RAW2BMX}
     -f 25
     -y 10:00:00:00
     -o ${output_file}
-    --tt "${TEST_SOURCE_DIR}/manifest_2.txt"
+    --timed-text "${TEST_SOURCE_DIR}/manifest_2.txt"
     --avci100_1080i video_1_${test_num}
 )
 

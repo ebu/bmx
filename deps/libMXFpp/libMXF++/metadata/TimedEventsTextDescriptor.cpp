@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, British Broadcasting Corporation
+ * Copyright (C) 2024, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,49 +27,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_TIMED_TEXT_MXF_RESOURCE_PROVIDER_H_
-#define BMX_TIMED_TEXT_MXF_RESOURCE_PROVIDER_H_
-
-#include <vector>
-#include <map>
-#include <utility>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <libMXF++/MXF.h>
 
-
-namespace bmx
-{
-
-
-class TimedTextMXFResourceProvider
-{
-public:
-    TimedTextMXFResourceProvider(mxfpp::File *file);
-    ~TimedTextMXFResourceProvider();
-
-    void AddTimedTextResource(const std::vector<std::pair<int64_t, int64_t> > &ranges);
-    void AddAncillaryResource(uint32_t stream_id, const std::vector<std::pair<int64_t, int64_t> > &ranges);
-
-public:
-    int64_t GetTimedTextResourceSize();
-    int64_t GetAncillaryResourceSize(uint32_t stream_id);
-
-    void OpenTimedTextResource();
-    void OpenAncillaryResource(uint32_t stream_id);
-    size_t Read(unsigned char *buffer, size_t size);
-
-private:
-    mxfpp::File *mFile;
-    std::map<uint32_t, std::vector<std::pair<int64_t, int64_t> > > mAncillaryResources;
-    std::vector<std::pair<int64_t, int64_t> > mTimedTextResource;
-    int64_t mRemSize;
-    size_t mRangeIndex;
-    int64_t mRangeRemSize;
-    std::vector<std::pair<int64_t, int64_t> > mOpenRanges;
-};
+using namespace std;
+using namespace mxfpp;
 
 
-};
+TimedEventsTextDescriptor::TimedEventsTextDescriptor(HeaderMetadata *headerMetadata)
+: TimedEventsTextDescriptorBase(headerMetadata)
+{}
 
+TimedEventsTextDescriptor::TimedEventsTextDescriptor(HeaderMetadata *headerMetadata, ::MXFMetadataSet *cMetadataSet)
+: TimedEventsTextDescriptorBase(headerMetadata, cMetadataSet)
+{}
 
-#endif
+TimedEventsTextDescriptor::~TimedEventsTextDescriptor()
+{}

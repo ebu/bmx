@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  targetNamespace="http://bbc.co.uk/bmx/timed-events/202403"
+  xmlns="http://bbc.co.uk/bmx/timed-events/202403"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:element name="manifest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="file" type="file_type"/>
+        <xs:element name="ancillary_resources" type="ancillary_resources_type" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="file_type">
+    <xs:sequence>
+      <xs:element name="event_schemes" type="event_schemes_type"/>
+    </xs:sequence>
+    <xs:attribute name="path" type="xs:string" use="required"/>
+    <xs:attribute name="mime_type" type="xs:string" use="required"/>
+    <xs:attribute name="character_encoding" type="xs:string" use="required"/>
+    <xs:attribute name="start" type="start_type" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="event_schemes_type">
+    <xs:sequence>
+      <xs:element name="uri" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ancillary_resources_type">
+    <xs:sequence>
+      <xs:element name="resource" type="resource_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="resource_type">
+    <xs:attribute name="path" type="xs:string" use="required"/>
+    <xs:attribute name="id" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>The default value is the 'path' with directory components removed</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="mime_type" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:simpleType name="start_type">
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base="int64_type"/>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base="timecode_string_type"/>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="int64_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="-9223372036854775808"/>
+      <xs:maxInclusive value="9223372036854775807"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="timecode_string_type">
+    <xs:restriction base="xs:string">
+       <xs:pattern value="\d{1,2}:\d{1,2}:\d{1,2}[;:]\d{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

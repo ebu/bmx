@@ -53,7 +53,7 @@
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
 #include <bmx/mxf_reader/MXFFrameMetadata.h>
-#include <bmx/mxf_reader/MXFTimedTextTrackReader.h>
+#include <bmx/mxf_reader/MXFTimedDataTrackReader.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
@@ -3441,9 +3441,14 @@ int main(int argc, const char** argv)
             if (!track_reader->IsEnabled())
                 continue;
 
-            if (track_reader->GetTrackInfo()->essence_type == WAVE_PCM) {
+            if (track_reader->GetTrackInfo()->essence_type == WAVE_PCM)
+            {
                 have_sound = true;
-            } else if (track_reader->GetTrackInfo()->essence_type != TIMED_TEXT) {  // timed text is in a separate container
+            }
+            else if (track_reader->GetTrackInfo()->essence_type != TIMED_TEXT &&
+                     track_reader->GetTrackInfo()->essence_type != TIMED_EVENTS)
+            {
+                // timed data is in a separate container
                 sound_only_container = false;
                 break;
             }
@@ -3491,11 +3496,14 @@ int main(int argc, const char** argv)
         // check if the file only contains timed text tracks as in that case the input duration
         // needs to be copied to the output
 
-        bool timed_text_only = true;
+        bool timed_data_only = true;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *track_reader = reader->GetTrackReader(i);
-            if (track_reader->IsEnabled() && track_reader->GetTrackInfo()->essence_type != TIMED_TEXT) {
-                timed_text_only = false;
+            if (track_reader->IsEnabled() &&
+                track_reader->GetTrackInfo()->essence_type != TIMED_TEXT &&
+                track_reader->GetTrackInfo()->essence_type != TIMED_EVENTS)
+            {
+                timed_data_only = false;
                 break;
             }
         }
@@ -3776,7 +3784,7 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
             OP1AFile *op1a_clip = clip->GetOP1AClip();
 
-            if ((flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR) || timed_text_only)
+            if ((flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR) || timed_data_only)
                 op1a_clip->SetInputDuration(reader->GetReadDuration());
 
             if (BMX_OPT_PROP_IS_SET(head_fill))
@@ -4363,22 +4371,29 @@ int main(int argc, const char** argv)
                         clip_track->SetMaxDataSize(vbi_max_size);
                     break;
                 case TIMED_TEXT:
+                case TIMED_EVENTS:
                 {
                     const MXFDataTrackInfo *input_data_info = dynamic_cast<const MXFDataTrackInfo*>(input_track_info);
-                    MXFTimedTextTrackReader *tt_track_reader =
-                            dynamic_cast<MXFTimedTextTrackReader*>(input_track_reader);
-                    TimedTextManifest timed_text_manifest = *input_data_info->timed_text_manifest;
-                    if (read_start > 0) {
-                        // adjust the timed text offset with the sub-clip start offset
-                        if (read_start > timed_text_manifest.mStart) {
-                            log_error("Cannot start the sub-clip %" PRId64 " after the Timed Text zero point %" PRId64 "\n",
-                                      read_start, timed_text_manifest.mStart);
-                            throw false;
+                    MXFTimedDataTrackReader *td_track_reader =
+                            dynamic_cast<MXFTimedDataTrackReader*>(input_track_reader);
+                    TimedDataManifest* timed_data_manifest = input_data_info->timed_data_manifest->Clone();
+                    try {
+                        if (read_start > 0) {
+                            // adjust the timed data offset with the sub-clip start offset
+                            if (read_start > timed_data_manifest->mStart) {
+                                log_error("Cannot start the sub-clip %" PRId64 " after the %s zero point %" PRId64 "\n",
+                                        read_start, essence_type_to_string(input_track_info->essence_type), timed_data_manifest->mStart);
+                                throw false;
+                            }
+                            timed_data_manifest->mStart -= read_start;
                         }
-                        timed_text_manifest.mStart -= read_start;
+                        clip_track->SetTimedDataManifest(timed_data_manifest);
+                        clip_track->SetTimedDataResourceProvider(td_track_reader->CreateResourceProvider());
+                    } catch (...) {
+                        delete timed_data_manifest;
+                        throw;
                     }
-                    clip_track->SetTimedTextSource(&timed_text_manifest);
-                    clip_track->SetTimedTextResourceProvider(tt_track_reader->CreateResourceProvider());
+                    delete timed_data_manifest;
                     break;
                 }
                 case D10_AES3_PCM:
@@ -4725,8 +4740,10 @@ int main(int argc, const char** argv)
             bool add_pcm_padding = false;
             for (i = 0; i < input_tracks.size(); i++) {
                 MXFInputTrack *input_track = input_tracks[i];
-                if (input_track->GetTrackInfo()->essence_type == TIMED_TEXT) {
-                    // timed text is handled elsewhere
+                if (input_track->GetTrackInfo()->essence_type == TIMED_TEXT ||
+                    input_track->GetTrackInfo()->essence_type == TIMED_EVENTS)
+                {
+                    // timed data is handled elsewhere
                     continue;
                 }
 
@@ -4776,8 +4793,10 @@ int main(int argc, const char** argv)
             uint32_t first_sound_num_samples = 0;
             for (i = 0; i < input_tracks.size(); i++) {
                 MXFInputTrack *input_track = input_tracks[i];
-                if (input_track->GetTrackInfo()->essence_type == TIMED_TEXT) {
-                    // timed text is handled elsewhere
+                if (input_track->GetTrackInfo()->essence_type == TIMED_TEXT ||
+                    input_track->GetTrackInfo()->essence_type == TIMED_EVENTS)
+                {
+                    // timed data is handled elsewhere
                     continue;
                 }
 
@@ -4941,7 +4960,7 @@ int main(int argc, const char** argv)
                 cmd_result = 1;
         }
 
-        if (timed_text_only) {
+        if (timed_data_only) {
             total_read = read_duration;
         }
 

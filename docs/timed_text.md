@@ -27,7 +27,7 @@ Timed Text is supported in the OP1a writer classes. However, it will signal high
 
 The Timed Text XML document is written to an Essence Container and ancillary resources are written to Generic Stream Containers. The Timed Text Index Table, Essence and Generic Stream Containers are written in separate partitions after the Header Partition and after RP 2057 XML Generic Stream Container partitions. Placing the Timed Text data before the audio and video data allows applications to start playing the content, including subtitles or captions, before the file is available in its entirety.
 
-The `OP1ATimedTextTrack` class can be used to create a Timed Text track. It is configured using the `OP1ATimedTextTrack::SetSource()` method which is passed a `TimedTextManifest` object which specifies the source content and associated properties.
+The `OP1ATimedDataTrack` class can be used to create a Timed Text track. It is configured using the `OP1ATimedDataTrack::SetManifest()` method which is passed a `TimedTextManifest` object which specifies the source content and associated properties.
 
 ### Commandline Utilities: `raw2bmx`
 
@@ -36,13 +36,13 @@ The `raw2bmx` utility can be used to embed Timed Text XML and ancillary font or 
 *Example 1*: Creates an OP1a file including a timed text track alongside video and audio tracks. The manifest file, `manifest.txt`, references the Timed Text XML file and ancillary resource files.
 
 ```bash
-raw2bmx -t op1a -o output.mxf -y 10:00:00:00 --avci video.h264 --wave audio.wav --tt manifest.txt
+raw2bmx -t op1a -o output.mxf -y 10:00:00:00 --avci video.h264 --wave audio.wav --timed-text manifest.txt
 ```
 
 *Example 2*: Creates a (mono-essence) IMF Timed Text Track File. An edit rate (`-f`) and duration (`--dur`) are required in this case as they are not parsed from the Timed Text XML file (assuming they are specified in there).
 
 ```bash
-raw2bmx -t imf -o {Type}_{fp_uuid}.mxf -f 25 --dur 100 --tt manifest.txt
+raw2bmx -t imf -o {Type}_{fp_uuid}.mxf -f 25 --dur 100 --timed-text manifest.txt
 ```
 
 ### Manifest File Format
@@ -88,13 +88,13 @@ mime_type: image/png
 
 ## Reading Support
 
-The `MXFTimedTextTrackReader` class is provided in the `mxf_reader` to read the Timed Text metadata and essence. This class is not quite the same as the other `MXFFileTrackReader` classes because it can't be used to read frame-by-frame. This breaks the original design of `bmx` to some degree.
+The `MXFTimedDataTrackReader` class is provided in the `mxf_reader` to read the Timed Text metadata and essence. This class is not quite the same as the other `MXFFileTrackReader` classes because it can't be used to read frame-by-frame. This breaks the original design of `bmx` to some degree.
 
-The inherited `MXFFileTrackReader` methods should not be used and instead the `MXFTimedTextTrackReader` class provides a `MXFTimedTextTrackReader::GetManifest()` method to get a manifest of the Timed Text XML and related ancillary resources. The Timed Text XML can be read using the `MXFTimedTextTrackReader::ReadTimedText()` method and the ancillary resources using either `MXFTimedTextTrackReader::ReadAncillaryResourceById()` or `MXFTimedTextTrackReader::ReadAncillaryResourceByStreamId()`.
+The inherited `MXFFileTrackReader` methods should not be used and instead the `MXFTimedDataTrackReader` class provides a `MXFTimedDataTrackReader::GetManifest()` method to get a manifest of the Timed Text XML and related ancillary resources. The Timed Text XML can be read using the `MXFTimedDataTrackReader::Read()` method and the ancillary resources using either `MXFTimedDataTrackReader::ReadTimedTextAncillaryResourceById()` or `MXFTimedDataTrackReader::ReadAncillaryResourceByStreamId()`.
 
 ### Commandline Utilities: `mxf2raw`
 
-The `mxf2raw` utility can be used to show metadata about the Timed Text tracks and used for extracting the essence data to files. The Timed Text tracks will have metadata shown similar to the extract below. It shows the properties in the Timed Text data file descriptor and sub-descriptors. A non-zero Timed Text offset, which corresponds to the `start` field in the manifest, is shown in the `timed_text_offset` field in the Track information.
+The `mxf2raw` utility can be used to show metadata about the Timed Text tracks and for extracting the essence data to files. The Timed Text tracks will have metadata shown similar to the extract below. It shows the properties in the Timed Text data file descriptor and sub-descriptors. A non-zero Timed Text offset, which corresponds to the `start` field in the manifest, is shown in the `timed_text_offset` field in the Track information.
 
 ```text
     Track #1:

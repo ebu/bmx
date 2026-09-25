@@ -18,7 +18,7 @@ list(APPEND bmx_headers
     bmx/mxf_reader/MXFSequenceReader.h
     bmx/mxf_reader/MXFSequenceTrackReader.h
     bmx/mxf_reader/MXFTextObject.h
-    bmx/mxf_reader/MXFTimedTextTrackReader.h
+    bmx/mxf_reader/MXFTimedDataTrackReader.h
     bmx/mxf_reader/MXFTrackInfo.h
     bmx/mxf_reader/MXFTrackReader.h
     bmx/mxf_reader/MXFWaveChunk.h

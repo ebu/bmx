@@ -43,9 +43,10 @@
 #include <set>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
-#include <bmx/mxf_reader/MXFTimedTextTrackReader.h>
+#include <bmx/mxf_reader/MXFTimedDataTrackReader.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/TimedTextMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/TimedEventsMXFDescriptorHelper.h>
 #include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/MXFHTTPFile.h>
@@ -331,7 +332,9 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
         vector<mxfUL> essence_labels = header_partition.getEssenceContainers();
         size_t i;
         for (i = 0; i < essence_labels.size(); i++) {
-            if (!mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(TimedText))) {
+            if (!mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(TimedText)) &&
+                !mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(TimedEvents)))
+            {
                 mWrappingType = mxf_get_essence_wrapping_type(&essence_labels[i]);
                 if (mWrappingType != MXF_UNKNOWN_WRAPPING_TYPE)
                     break;
@@ -1071,7 +1074,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
                 } else {
                     if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(Filler))) {
                         // lead Filler segments
-                        // e.g. used for P2 clips spanning multiple cards or Timed Text start offset
+                        // e.g. used for P2 clips spanning multiple cards or Timed data start offset
                         lead_filler_offset += components[j]->getDuration();
                     } else if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(EssenceGroup))) {
                         // Essence Group used in Avid files, e.g. alpha component tracks
@@ -1207,28 +1210,29 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         THROW_RESULT(MXF_RESULT_NO_ESSENCE);
     }
 
-    // check and post-process lead filler offset in Timed Text tracks
-    bool all_timed_text = true;
+    // check and post-process lead filler offset in Timed data tracks
+    bool all_timed_data = true;
     for (i = 0; i < mTrackReaders.size(); i++) {
-        if (!dynamic_cast<MXFTimedTextTrackReader*>(mTrackReaders[i])) {
-            all_timed_text = false;
+        if (!dynamic_cast<MXFTimedDataTrackReader*>(mTrackReaders[i])) {
+            all_timed_data = false;
             break;
         }
     }
-    if (GetFixedLeadFillerOffset() == 0 || all_timed_text) {
+    if (GetFixedLeadFillerOffset() == 0 || all_timed_data) {
         for (i = 0; i < mTrackReaders.size(); i++) {
             MXFTrackReader *track_reader = dynamic_cast<MXFTrackReader*>(mTrackReaders[i]);
             MXFTrackInfo *track_info = track_reader->GetTrackInfo();
             if (track_info->lead_filler_offset > 0) {
-                MXFTimedTextTrackReader *tt_track_reader = dynamic_cast<MXFTimedTextTrackReader*>(track_reader);
-                if (!tt_track_reader) {
-                    log_error("A non-timed text track has lead Filler that differs from other tracks\n");
+                MXFTimedDataTrackReader *td_track_reader = dynamic_cast<MXFTimedDataTrackReader*>(track_reader);
+                if (!td_track_reader) {
+                    log_error("A non-%s track has lead Filler that differs from other tracks\n",
+                              essence_type_to_string(track_info->essence_type));
                     THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
                 }
 
                 // include the lead filler in the track duration and record it in the manifest instead
                 MXFDataTrackInfo *data_track_info = dynamic_cast<MXFDataTrackInfo*>(track_info);
-                data_track_info->timed_text_manifest->mStart = data_track_info->lead_filler_offset;
+                data_track_info->timed_data_manifest->mStart = data_track_info->lead_filler_offset;
                 track_info->duration += track_info->lead_filler_offset;
                 track_info->lead_filler_offset = 0;
             }
@@ -1243,7 +1247,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
     GetStartTimecodes(preface, infile_mp_track);
 
 
-    // get the body and index SIDs linked to single (non-timed text) internal essence file source package
+    // get the body and index SIDs linked to single (non-timed data) internal essence file source package
     if (!mInternalTrackReaders.empty()) {
         ContentStorage *content_storage = preface->getContentStorage();
         vector<EssenceContainerData*> ess_container_data;
@@ -1262,34 +1266,38 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
             EssenceContainerData *ess_data = ess_container_data[i];
 
             mxfUMID linked_package_uid = ess_data->getLinkedPackageUID();
-            bool is_tt_ec = false;
-            bool is_non_tt_ec = false;
+            bool is_td_ec = false;
+            bool is_non_td_ec = false;
             size_t k;
             for (k = 0; k < mInternalTrackReaders.size(); k++) {
                 if (mxf_equals_umid(&mInternalTrackReaders[k]->GetTrackInfo()->file_package_uid,
                                     &linked_package_uid))
                 {
-                    if (mInternalTrackReaders[k]->GetTrackInfo()->essence_type == TIMED_TEXT) {
-                        is_tt_ec = true;
-                        MXFTimedTextTrackReader *tt_track_reader =
-                                dynamic_cast<MXFTimedTextTrackReader*>(mInternalTrackReaders[k]);
-                        tt_track_reader->SetBodySID(ess_data->getBodySID());
+                    if (mInternalTrackReaders[k]->GetTrackInfo()->essence_type == TIMED_TEXT ||
+                        mInternalTrackReaders[k]->GetTrackInfo()->essence_type == TIMED_EVENTS)
+                    {
+                        is_td_ec = true;
+                        MXFTimedDataTrackReader *td_track_reader =
+                                dynamic_cast<MXFTimedDataTrackReader*>(mInternalTrackReaders[k]);
+                        td_track_reader->SetBodySID(ess_data->getBodySID());
                         break;
-                    } else {
-                        is_non_tt_ec = true;
+                    }
+                    else
+                    {
+                        is_non_td_ec = true;
                     }
                 }
             }
-            if (is_tt_ec) {
+            if (is_td_ec) {
                 continue;
             }
 
-            if (!is_non_tt_ec) {
+            if (!is_non_td_ec) {
                 log_error("Essence container data LinkedPackageUID does not link to internal file source package\n");
                 THROW_RESULT(MXF_RESULT_NO_ESSENCE);
             }
 
-            // check that there is only one (non-timed text) essence container
+            // check that there is only one (non-timed data) essence container
             if (mBodySID != 0) {
                 if (mxf_is_op_1b(&mOPLabel))
                     log_error("OP-1B with multiple essence containers is not supported\n");
@@ -1569,9 +1577,10 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
 
     // check the File Package origins
 
-    if (track_info.get()->essence_type == TIMED_TEXT) {
+    if (track_info.get()->essence_type == TIMED_TEXT || track_info.get()->essence_type == TIMED_EVENTS) {
         if (origin != 0) {
-            log_error("Non-zero origin %" PRId64 " in Timed Text File Package Track\n", origin);
+            log_error("Non-zero origin %" PRId64 " in %s File Package Track\n",
+                       origin, essence_type_to_string(track_info.get()->essence_type));
             THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
         }
     } else {
@@ -1587,8 +1596,8 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
     // create the track reader
 
     MXFFileTrackReader *track_reader;
-    if (track_info.get()->essence_type == TIMED_TEXT) {
-        track_reader = new MXFTimedTextTrackReader(this, mInternalTrackReaders.size(), track_info.get(),
+    if (track_info.get()->essence_type == TIMED_TEXT || track_info.get()->essence_type == TIMED_EVENTS) {
+        track_reader = new MXFTimedDataTrackReader(this, mInternalTrackReaders.size(), track_info.get(),
                                                    file_desc, file_source_package);
     } else {
         track_reader = new MXFFileTrackReader(this, mInternalTrackReaders.size(), track_info.get(),
@@ -2049,8 +2058,11 @@ void MXFFileReader::ProcessDataDescriptor(FileDescriptor *file_descriptor, MXFDa
     ProcessDescriptor(file_descriptor, data_track_info);
 
     DCTimedTextDescriptor *tt_desc = dynamic_cast<DCTimedTextDescriptor*>(file_descriptor);
+    TimedEventsTextDescriptor *te_desc = dynamic_cast<TimedEventsTextDescriptor*>(file_descriptor);
     if (tt_desc) {
-        data_track_info->timed_text_manifest = TimedTextMXFDescriptorHelper::CreateManifest(tt_desc);
+        data_track_info->timed_data_manifest = TimedTextMXFDescriptorHelper::CreateManifest(tt_desc);
+    } else if (te_desc) {
+        data_track_info->timed_data_manifest = TimedEventsMXFDescriptorHelper::CreateManifest(te_desc);
     }
 }
 

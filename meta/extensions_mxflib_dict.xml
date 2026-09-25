@@ -224,6 +224,18 @@
     <JPEGXSMaximumBitRate  type="UInt32"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 09 00 00 00"/>
   </JPEGXSSubDescriptor>
 
+  <TimedEventsTextDescriptor base="GenericDataEssenceDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 13">
+    <TextCharacterEncoding  type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 03 03 03 01 00 00 00"/>
+    <TextMIMEType           type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 03 03 03 02 00 00 00"/>
+    <EventSchemeURIs        type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 03 03 03 03 00 00 00"/>
+  </TimedEventsTextDescriptor>
+
+  <TimedEventsAncillaryResourceSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 14">
+    <TimedEventsAncillaryResourceID                type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 03 03 04 01 00 00 00"/>
+    <TimedEventsAncillaryResourceMIMEType          type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 03 03 04 02 00 00 00"/>
+    <TimedEventsAncillaryResourceStreamID          type="UInt32"       use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 03 03 04 03 00 00 00"/>
+  </TimedEventsAncillaryResourceSubDescriptor>
+
   <ContainerConstraintsSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 67 00"/>
 
   <Filler base="StructuralComponent" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 09 00"/>

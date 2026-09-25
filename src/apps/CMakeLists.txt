@@ -10,6 +10,7 @@ list(APPEND bmx_sources
     apps/AppXMLInfoWriter.cpp
     apps/FrameworkHelper.cpp
     apps/PropertyFileParser.cpp
+    apps/TimedEventsXMLManifestParser.cpp
     apps/TimedTextManifestParser.cpp
 )
 

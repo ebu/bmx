@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://bbc.co.uk/bmx/timed-events/202403">
+    <file path="events_example.xml.bin" mime_type="text/xml" character_encoding="UTF-8">
+        <event_schemes>
+            <uri>http://www.example.com/props</uri>
+            <uri>http://www.smpte-ra.org/ns/2067-206/2023/simple-scheme</uri>
+        </event_schemes>
+    </file>
+    <ancillary_resources>
+        <resource path="image.png" id="first.jpg" mime_type="image/png"/>
+    </ancillary_resources>
+</manifest>

@@ -57,6 +57,7 @@
 #include <algorithm>
 
 #include <bmx/Utils.h>
+#include <libMXF++/Utils.h>
 #include <bmx/URI.h>
 #include <bmx/MD5.h>
 #include <bmx/BMXException.h>
@@ -745,50 +746,12 @@ int64_t bmx::get_file_size(FILE *file)
 
 string bmx::trim_string(string value)
 {
-    size_t start;
-    size_t len;
-
-    // trim spaces from the start
-    start = 0;
-    while (start < value.size() && isspace(value[start]))
-        start++;
-    if (start >= value.size())
-        return "";
-
-    // trim spaces from the end by reducing the length
-    len = value.size() - start;
-    while (len > 0 && isspace(value[start + len - 1]))
-        len--;
-
-    return value.substr(start, len);
+    return mxfpp::trim_string(value);
 }
 
 vector<string> bmx::split_string(string value, char separator, bool allow_empty, bool trim)
 {
-    vector<string> result;
-    size_t start = 0;
-    size_t end = 0;
-    while (end < value.size()) {
-        if (value[end] == separator) {
-            string element = value.substr(start, end - start);
-            if (trim)
-                element = trim_string(element);
-            if (!element.empty() || allow_empty)
-                result.push_back(element);
-
-            start = end + 1;
-            end = start;
-        }
-        end++;
-    }
-
-    string element = value.substr(start, end - start);
-    if (trim)
-        element = trim_string(element);
-    if (!element.empty() || allow_empty)
-        result.push_back(element);
-
-    return result;
+    return mxfpp::split_string(value, separator, allow_empty, trim);
 }
 
 string bmx::lowercase(const string &value)
