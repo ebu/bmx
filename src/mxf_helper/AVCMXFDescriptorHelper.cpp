@@ -328,7 +328,7 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
     cdci_descriptor->setDisplayHeight(essence_parser->GetDisplayHeight());
     cdci_descriptor->setDisplayXOffset(essence_parser->GetDisplayXOffset());
     cdci_descriptor->setDisplayYOffset(essence_parser->GetDisplayYOffset());
-    if ((mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
+    if ((mFlavour & MXFDESC_RDD32_FLAVOUR)) {
         cdci_descriptor->setSampledWidth(essence_parser->GetDisplayWidth());
         cdci_descriptor->setSampledHeight(essence_parser->GetDisplayHeight());
     }
@@ -341,7 +341,7 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
     cdci_descriptor->setImageStartOffset(0);
     cdci_descriptor->setPaddingBits(0);
 
-    if ((mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
+    if ((mFlavour & MXFDESC_RDD32_FLAVOUR)) {
         cdci_descriptor->setImageEndOffset(0);
         cdci_descriptor->setImageAlignmentOffset(0);
         cdci_descriptor->setReversedByteOrder(false);
@@ -405,7 +405,7 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
         case 2: // 4:2:2
             cdci_descriptor->setHorizontalSubsampling(2);
             cdci_descriptor->setVerticalSubsampling(1);
-            if (!cdci_descriptor->haveColorSiting() || (mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR))
+            if (!cdci_descriptor->haveColorSiting() || (mFlavour & MXFDESC_RDD32_FLAVOUR))
                 SetColorSitingMod(MXF_COLOR_SITING_COSITING);
             break;
         case 3: // 4:4:4
@@ -454,10 +454,22 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
     mAVCSubDescriptor->setAVCProfileConstraint(essence_parser->GetProfileConstraint());
     mAVCSubDescriptor->setAVCLevel(essence_parser->GetLevel());
 
-    if ((mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
-        mAVCSubDescriptor->setAVCConstantBPictureFlag(0);
-        mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0x30);
-        mAVCSubDescriptor->setAVCPictureParameterSetFlag(0x30);
+    if ((mFlavour & MXFDESC_RDD32_FLAVOUR)) {
+        if (mEssenceType == AVC_HIGH_10_INTRA || mEssenceType == AVC_HIGH_422_INTRA ||
+            mEssenceType == AVC_HIGH_444_INTRA || mEssenceType == AVC_CAVLC_444_INTRA) {
+                mAVCSubDescriptor->setAVCConstantBPictureFlag(1);
+                if (essence_parser->GetDisplayWidth() > 1920) {
+                    mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0x20);
+                    mAVCSubDescriptor->setAVCPictureParameterSetFlag(0x20);
+                } else {
+                    mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0xa0);
+                    mAVCSubDescriptor->setAVCPictureParameterSetFlag(0xa0);
+                }
+        } else {
+            mAVCSubDescriptor->setAVCConstantBPictureFlag(0);
+            mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0x30);
+            mAVCSubDescriptor->setAVCPictureParameterSetFlag(0x30);
+        }
     }
 }
 

@@ -1284,6 +1284,29 @@ void ClipWriterTrack::SetMaxDataSize(uint32_t size)
     }
 }
 
+void ClipWriterTrack::SetCBGMode(bool enable)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1AAVCTrack *avc_track = dynamic_cast<OP1AAVCTrack*>(mOP1ATrack);
+            if (avc_track)
+                avc_track->SetCBGMode(enable);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 void ClipWriterTrack::SetXMLSource(const string &filename)
 {
     switch (mClipType)

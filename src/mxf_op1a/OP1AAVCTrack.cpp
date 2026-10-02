@@ -54,12 +54,18 @@ OP1AAVCTrack::OP1AAVCTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
     mWriterHelper.SetDescriptorHelper(dynamic_cast<AVCMXFDescriptorHelper*>(mDescriptorHelper));
+    mCBGMode = false;
 
     log_warn("AVC support is work-in-progress\n");
 }
 
 OP1AAVCTrack::~OP1AAVCTrack()
 {
+}
+
+void OP1AAVCTrack::SetCBGMode(bool enable)
+{
+    mCBGMode = enable;
 }
 
 void OP1AAVCTrack::SetHeader(const unsigned char *data, uint32_t size)
@@ -81,8 +87,9 @@ void OP1AAVCTrack::PrepareWrite(uint8_t track_count)
 {
     CompleteEssenceKeyAndTrackNum(track_count);
 
-    mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, false);
-    mIndexTable->RegisterPictureTrackElement(mTrackIndex, false, true);
+    mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, mCBGMode);
+    mIndexTable->RegisterPictureTrackElement(mTrackIndex, mCBGMode, !mCBGMode);
+    mWriterHelper.SetCBGMode(mCBGMode);
 }
 
 void OP1AAVCTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -92,6 +99,10 @@ void OP1AAVCTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uin
 
     mWriterHelper.ProcessFrame(data, size);
 
+    if (mCBGMode) {
+        mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
+        return;
+    }
 
     // update previous index entries and get the current index
 
@@ -122,6 +133,9 @@ void OP1AAVCTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uin
 void OP1AAVCTrack::CompleteWrite()
 {
     mWriterHelper.CompleteProcess();
+
+    if (mCBGMode)
+        return;
 
     int64_t position;
     int8_t temporal_offset;

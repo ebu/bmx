@@ -71,6 +71,8 @@ public:
     void SetHeader(const unsigned char *data, uint32_t size);
     void SetSPS(const unsigned char *data, uint32_t size);
     void SetPPS(const unsigned char *data, uint32_t size);
+    void SetCBGMode(bool enable);
+    uint32_t FindHeaderSize(const unsigned char *frame_data, uint32_t frame_size);
 
     void ProcessFrame(const unsigned char *data, uint32_t size);
     bool CheckTemporalOffsetsComplete(int64_t end_offset);
@@ -143,6 +145,7 @@ private:
     bool mFirstGOP;
     std::vector<int> mGOPStructure;
     uint32_t mMaxBitRate;
+    uint64_t mTotalEssenceSize;
     uint8_t mMaxNumRefFrames;
     bool mSPSConstant;
     bool mSPSFirstAUOnly;
@@ -152,6 +155,7 @@ private:
     bool mPPSFirstAUOnly;
     bool mPPSEveryAU;
     bool mPPSGOPStart;
+    bool mCBGMode;
 };
 
 

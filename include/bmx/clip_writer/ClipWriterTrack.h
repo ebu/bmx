@@ -113,6 +113,7 @@ public:
     // Data properties
     void SetConstantDataSize(uint32_t size);
     void SetMaxDataSize(uint32_t size);
+    void SetCBGMode(bool enable);
 
     // XML properties
     void SetXMLSource(const std::string &filename);

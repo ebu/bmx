@@ -70,6 +70,7 @@ public:
     void UpdateFileDescriptor(AVCEssenceParser *essence_parser);
 
     mxfpp::AVCSubDescriptor* GetAVCSubDescriptor() const { return mAVCSubDescriptor; }
+    int GetFlavour() const { return mFlavour; }
 
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
