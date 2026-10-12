@@ -27,6 +27,7 @@ list(APPEND MXFpp_sources
     metadata/base/GenericStreamTextBasedSetBase.cpp
     metadata/base/GenericTrackBase.cpp
     metadata/base/GroupOfSoundfieldGroupsLabelSubDescriptorBase.cpp
+    metadata/base/HEVCSubDescriptorBase.cpp
     metadata/base/IdentificationBase.cpp
     metadata/base/InterchangeObjectBase.cpp
     metadata/base/JPEG2000SubDescriptorBase.cpp
@@ -62,7 +63,6 @@ list(APPEND MXFpp_sources
     metadata/base/VBIDataDescriptorBase.cpp
     metadata/base/VC2SubDescriptorBase.cpp
     metadata/base/WaveAudioDescriptorBase.cpp
-    metadata/base/HEVCSubDescriptorBase.cpp
 )
 
 list(APPEND MXFpp_headers
@@ -94,6 +94,7 @@ list(APPEND MXFpp_headers
     metadata/base/GenericStreamTextBasedSetBase.h
     metadata/base/GenericTrackBase.h
     metadata/base/GroupOfSoundfieldGroupsLabelSubDescriptorBase.h
+    metadata/base/HEVCSubDescriptorBase.h
     metadata/base/IdentificationBase.h
     metadata/base/InterchangeObjectBase.h
     metadata/base/JPEG2000SubDescriptorBase.h
@@ -129,7 +130,6 @@ list(APPEND MXFpp_headers
     metadata/base/VBIDataDescriptorBase.h
     metadata/base/VC2SubDescriptorBase.h
     metadata/base/WaveAudioDescriptorBase.h
-    metadata/base/HEVCSubDescriptorBase.h
 )
 
 set(MXFpp_sources ${MXFpp_sources} PARENT_SCOPE)

@@ -12,7 +12,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the British Broadcasting Corporation nor the names
+ *     * Neither the name of Dolby Laboratories nor the names
  *       of its contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -32,9 +32,6 @@
 #ifndef BMX_HEVC_ESSENCE_PARSER_H_
 #define BMX_HEVC_ESSENCE_PARSER_H_
 
-#include <map>
-#include <vector>
-#include <optional>
 
 #include <bmx/essence_parser/EssenceParser.h>
 #include <bmx/EssenceType.h>
@@ -75,7 +72,6 @@ public:
         matrix_coeffs(2),
 
         general_profile_idc(0),
-        profile_constraint(0),
         general_profile_space(0),
         general_level_idc(0),
         general_tier_flag(0),
@@ -84,7 +80,7 @@ public:
         general_non_packed_constraint_flag(0),
         general_frame_only_constraint_flag(0),
 
-        have_extended_contraints(false),
+        have_extended_constraints(false),
         general_max_14bit_constraint_flag(0),
         general_max_12bit_constraint_flag(0),
         general_max_10bit_constraint_flag(0),
@@ -135,7 +131,7 @@ public:
     uint8_t general_non_packed_constraint_flag;
     uint8_t general_frame_only_constraint_flag;
 
-    bool have_extended_contraints;
+    bool have_extended_constraints;
     uint8_t general_max_14bit_constraint_flag;
     uint8_t general_max_12bit_constraint_flag;
     uint8_t general_max_10bit_constraint_flag;
@@ -168,8 +164,8 @@ public:
 
     EssenceType GetEssenceType() const;
 
-     bool HaveFrameRate() const            { return false; }
-     Rational GetFrameRate() const         { return {0, 0}; }
+    bool HaveFrameRate() const            { return false; }
+    Rational GetFrameRate() const         { return {0, 0}; }
     
     const HEVCSeqParameterSet& GetSeqParameterSet() const { return mSeqParameterSet; }
 

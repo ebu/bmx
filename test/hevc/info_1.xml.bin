@@ -52,7 +52,7 @@
     <tracks size="1">
       <track index="0">
         <essence_kind>Picture</essence_kind>
-        <essence_type>Picture</essence_type>
+        <essence_type>HEVC_Main_422_10_Intra</essence_type>
         <ec_label>urn:smpte:ul:060e2b34.0401010d.0d010301.02206001</ec_label>
         <edit_rate>25/1</edit_rate>
         <duration count="60">00:00:02:10</duration>
@@ -74,14 +74,14 @@
         <picture_descriptor>
           <coding_label>urn:smpte:ul:060e2b34.0401010d.04010202.01452001</coding_label>
           <signal_standard value="0">None</signal_standard>
-          <frame_layout value="255"></frame_layout>
+          <frame_layout value="0">Full_Frame</frame_layout>
           <stored_width>1920</stored_width>
           <stored_height>1080</stored_height>
           <display_width>1920</display_width>
           <display_height>1080</display_height>
           <display_x_offset>0</display_x_offset>
           <display_y_offset>0</display_y_offset>
-          <aspect_ratio>1/1</aspect_ratio>
+          <aspect_ratio>16/9</aspect_ratio>
           <cdci_descriptor>
             <component_depth>10</component_depth>
             <horiz_subsamp>2</horiz_subsamp>

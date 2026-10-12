@@ -223,7 +223,7 @@ bool AVCGetBitBuffer::NextBits(uint8_t num_bits, uint64_t *next_value)
 
 void AVCGetBitBuffer::SkipBits(uint32_t count)
 {
-    if (count > 512) {
+    if (count > 64) {
         throw false;
     }
     uint64_t tmp = 0;

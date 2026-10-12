@@ -12,7 +12,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the British Broadcasting Corporation nor the names
+ *     * Neither the name of Dolby Laboratories nor the names
  *       of its contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -48,9 +48,9 @@ public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
     static bool IsSupported(EssenceType essence_type);
 
-    static void MapColorPrimaries(uint8_t HEVC_value, PictureMXFDescriptorHelper *pict_helper);
-    static void MapTransferCharacteristic(uint8_t HEVC_value, PictureMXFDescriptorHelper *pict_helper);
-    static void MapMatrixCoefficients(uint8_t HEVC_value, PictureMXFDescriptorHelper *pict_helper);
+    static void MapColorPrimaries(uint8_t hevc_value, PictureMXFDescriptorHelper *pict_helper);
+    static void MapTransferCharacteristic(uint8_t hevc_value, PictureMXFDescriptorHelper *pict_helper);
+    static void MapMatrixCoefficients(uint8_t hevc_value, PictureMXFDescriptorHelper *pict_helper);
 
 public:
     HEVCMXFDescriptorHelper();

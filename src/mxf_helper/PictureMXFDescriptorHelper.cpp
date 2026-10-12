@@ -82,6 +82,9 @@ EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descrip
     essence_type = AVCMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
+    essence_type = HEVCMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    if (essence_type)
+        return essence_type;
     essence_type = UncCDCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;

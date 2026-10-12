@@ -12,7 +12,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the British Broadcasting Corporation nor the names
+ *     * Neither the name of Dolby Laboratories nor the names
  *       of its contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -64,10 +64,9 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
 EssenceType HEVCMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    if (!mxf_is_avc_ec(&ec_label, 0) &&
-        !mxf_is_avc_ec(&ec_label, 1) &&
-        !mxf_is_avc_ec(&alternative_ec_label, 0) &&
-        !mxf_is_avc_ec(&alternative_ec_label, 1) &&
+    mxfUL hevc_ec_label = MXF_EC_L(HEVCFrameWrapped);
+    if (!mxf_equals_ul_mod_regver(&ec_label, &hevc_ec_label) &&
+        !mxf_equals_ul_mod_regver(&alternative_ec_label, &hevc_ec_label) &&
         !IsNullAvidECUL(ec_label, alternative_ec_label))
     {
         return UNKNOWN_ESSENCE_TYPE;
@@ -346,6 +345,12 @@ void HEVCMXFDescriptorHelper::UpdateFileDescriptor(HEVCEssenceParser *essence_pa
     cdci_descriptor->setPaddingBits(0);
     cdci_descriptor->setComponentDepth(seq_param_set.bit_depth_luma_minus8 + 8);
 
+    const HEVCSeqParameterSet &sps = essence_parser->GetSeqParameterSet();
+    if (sps.general_interlaced_source_flag && !sps.general_progressive_source_flag)
+        cdci_descriptor->setFrameLayout(MXF_SEPARATE_FIELDS);
+    else
+        cdci_descriptor->setFrameLayout(MXF_FULL_FRAME);
+
     // 4:2:2 only
     if (seq_param_set.chroma_format_idc == 2) {
         cdci_descriptor->setHorizontalSubsampling(2);
@@ -354,17 +359,17 @@ void HEVCMXFDescriptorHelper::UpdateFileDescriptor(HEVCEssenceParser *essence_pa
     }
 
     switch (seq_param_set.video_format) {
-        case 0: // Component
+        case HEVC_VF_COMPONENT: // Component
             break;
-        case 1: // PAL
+        case HEVC_VF_PAL: // PAL
             break;
-        case 2: // NTSC
+        case HEVC_VF_NTSC: // NTSC
             break;
-        case 3: // SECAM
+        case HEVC_VF_SECAM: // SECAM
             break;
-        case 4: // MAC
+        case HEVC_VF_MAC: // MAC
             break;
-        case 5: // Unspecified
+        case HEVC_VF_UNSPECIFIED: // Unspecified
             //cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_ITU601);
             break;
         default:
@@ -375,38 +380,48 @@ void HEVCMXFDescriptorHelper::UpdateFileDescriptor(HEVCEssenceParser *essence_pa
     MapTransferCharacteristic(seq_param_set.transfer_characteristics, this);
     MapMatrixCoefficients(seq_param_set.matrix_coeffs, this);
 
-    Rational aspect_ratio = ZERO_RATIONAL;
+    // aspect_ratio_idc gives the Sample (pixel) Aspect Ratio; MXF AspectRatio is
+    // the Display Aspect Ratio = SAR * (stored_width / stored_height).
+    static const Rational sample_aspect_ratios[] =
+    {
+        {  0,  1},
+        {  1,  1},
+        { 12, 11},
+        { 10, 11},
+        { 16, 11},
+        { 40, 33},
+        { 24, 11},
+        { 20, 11},
+        { 32, 11},
+        { 80, 33},
+        { 18, 11},
+        { 15, 11},
+        { 64, 33},
+        {160, 99},
+        {  4,  3},
+        {  3,  2},
+        {  2,  1},
+    };
+
+    uint32_t sar_w = 0;
+    uint32_t sar_h = 0;
     if (seq_param_set.aspect_ratio_idc == HEVC_ASPECT_RATIO_IDC_EXTENDED_SAR) {
-        aspect_ratio.numerator   = (int32_t)(seq_param_set.sar_width  * seq_param_set.pic_width_in_luma_samples);
-        aspect_ratio.denominator = (int32_t)(seq_param_set.sar_height * seq_param_set.pic_height_in_luma_samples);
+        sar_w = seq_param_set.sar_width;
+        sar_h = seq_param_set.sar_height;
+    } else if (seq_param_set.aspect_ratio_idc < BMX_ARRAY_SIZE(sample_aspect_ratios)) {
+        sar_w = (uint32_t)sample_aspect_ratios[seq_param_set.aspect_ratio_idc].numerator;
+        sar_h = (uint32_t)sample_aspect_ratios[seq_param_set.aspect_ratio_idc].denominator;
     } else {
-        static const Rational aspect_ratios[] =
-        {
-            {  0,  1},
-            {  1,  1},
-            { 12, 11},
-            { 10, 11},
-            { 16, 11},
-            { 40, 33},
-            { 24, 11},
-            { 20, 11},
-            { 32, 11},
-            { 80, 33},
-            { 18, 11},
-            { 15, 11},
-            { 64, 33},
-            {160, 99},
-            {  4,  3},
-            {  3,  2},
-            {  2,  1},
-        };
-        if (seq_param_set.aspect_ratio_idc >= BMX_ARRAY_SIZE(aspect_ratios)) {
-            log_warn("Invalid aspect_ratio_idc %u\n", seq_param_set.aspect_ratio_idc);
-        } else {
-            aspect_ratio = aspect_ratios[seq_param_set.aspect_ratio_idc];
-        }
+        log_warn("Invalid aspect_ratio_idc %u\n", seq_param_set.aspect_ratio_idc);
+    }
+
+    Rational aspect_ratio = ZERO_RATIONAL;
+    if (sar_w > 0 && sar_h > 0) {
+        aspect_ratio.numerator   = (int32_t)(sar_w * seq_param_set.pic_width_in_luma_samples);
+        aspect_ratio.denominator = (int32_t)(sar_h * seq_param_set.pic_height_in_luma_samples);
     }
     cdci_descriptor->setAspectRatio(reduce_rational(aspect_ratio));
+
 
     BMX_ASSERT(mHEVCSubDescriptor);
 
@@ -420,7 +435,6 @@ void HEVCMXFDescriptorHelper::UpdateFileDescriptor(HEVCEssenceParser *essence_pa
     mHEVCSubDescriptor->setMaximumGOPSize(1);
     mHEVCSubDescriptor->setMaximumBPictureCount(0);
     mHEVCSubDescriptor->setProfile(seq_param_set.general_profile_idc);
-    mHEVCSubDescriptor->setProfileConstraint(seq_param_set.profile_constraint);
     mHEVCSubDescriptor->setLevel(seq_param_set.general_level_idc);
     mHEVCSubDescriptor->setTier(seq_param_set.general_tier_flag);
     mHEVCSubDescriptor->setMaximumRefFrames(0);

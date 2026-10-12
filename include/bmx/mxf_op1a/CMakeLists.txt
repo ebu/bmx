@@ -8,6 +8,7 @@ list(APPEND bmx_headers
     bmx/mxf_op1a/OP1ADataTrack.h
     bmx/mxf_op1a/OP1AFile.h
     bmx/mxf_op1a/OP1AIndexTable.h
+    bmx/mxf_op1a/OP1AHEVCITrack.h
     bmx/mxf_op1a/OP1AJPEG2000Track.h
     bmx/mxf_op1a/OP1AJPEGXSTrack.h
     bmx/mxf_op1a/OP1AMPEG2LGTrack.h
@@ -21,7 +22,6 @@ list(APPEND bmx_headers
     bmx/mxf_op1a/OP1AVC2Track.h
     bmx/mxf_op1a/OP1AVC3Track.h
     bmx/mxf_op1a/OP1AXMLTrack.h
-    bmx/mxf_op1a/OP1AHEVCITrack.h
 )
 
 set(bmx_headers ${bmx_headers} PARENT_SCOPE)

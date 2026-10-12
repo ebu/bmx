@@ -24,7 +24,7 @@ set(create_command ${RAW2BMX}
     --regtest-real
     -t op1a
     -o ${output_file}
-    --hevc "${TEST_SOURCE_DIR}/test_1_hevc/test_1.h265"
+    --hevci_main_422_10 "${TEST_SOURCE_DIR}/test_1_hevc/test_1.h265"
 )
 
 set(read_command ${MXF2RAW}

@@ -12,7 +12,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the British Broadcasting Corporation nor the names
+ *     * Neither the name of Dolby Laboratories nor the names
  *       of its contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -50,6 +50,8 @@
 #include <bmx/Logging.h>
 #include <sstream>
 #include <iomanip>
+#include <vector>
+
 
 using namespace std;
 using namespace bmx;
@@ -710,7 +712,7 @@ void HEVCEssenceParser::ParseProfileTierLevel(AVCGetBitBuffer *bs, uint8_t max_s
         general_profile_idc == 11 || general_profile_compatibility_flag[11])
     {
         // total bits 43
-        mSeqParameterSet.have_extended_contraints = true;
+        mSeqParameterSet.have_extended_constraints = true;
         uint8_t general_max_12bit_constraint_flag  = 0;
         bs->GetU(1, &general_max_12bit_constraint_flag );
         mSeqParameterSet.general_max_12bit_constraint_flag  = general_max_12bit_constraint_flag ;

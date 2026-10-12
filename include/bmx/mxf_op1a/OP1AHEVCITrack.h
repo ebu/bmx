@@ -12,7 +12,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the British Broadcasting Corporation nor the names
+ *     * Neither the name of Dolby Laboratories nor the names
  *       of its contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -45,12 +45,9 @@ public:
                   mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1AHEVCITrack();
 
-public:
-
 protected:
     virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
-    //virtual void CompleteWrite();
 
 private:
     HEVCMXFDescriptorHelper *mHEVCDescriptorHelper;

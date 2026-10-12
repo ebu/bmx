@@ -797,6 +797,7 @@ static void usage(const char *cmd)
     printf("  --avc_high_422_intra <name>  Raw AVC High 422 Intra profile video input file\n");
     printf("  --avc_high_444_intra <name>  Raw AVC High 444 Intra profile video input file\n");
     printf("  --avc_cavlc_444 <name>       Raw AVC CAVLC 444 profile video input file\n");
+    printf("  --hevci_main_422_10 <name>  Raw HEVC-Intra Main 422 10 video input file\n");
     printf("  --unc <name>            Raw uncompressed SD UYVY 422 video input file\n");
     printf("  --unc_1080i <name>      Raw uncompressed HD 1080i UYVY 422 video input file\n");
     printf("  --unc_1080p <name>      Raw uncompressed HD 1080p UYVY 422 video input file\n");
@@ -865,7 +866,6 @@ static void usage(const char *cmd)
     printf("  --anc <name>            Raw ST 436 Ancillary data. Requires the --anc-const option or frame wrapped in KLV and the --klv option\n");
     printf("  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Requires the --vbi-const option or frame wrapped in KLV and the --klv option\n");
     printf("  --tt <manifest>         Manifest file containing Timed Text metadata\n");
-    printf("  --hevc <name>           Raw HEVC video input file\n");
     printf("\n\n");
     printf("Notes:\n");
     printf(" - filename pattern: Clip types producing a single output file may use a filename pattern with variables that get substituted\n");
@@ -3313,7 +3313,7 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--hevc") == 0)
+        else if (strcmp(argv[cmdln_index], "--hevci_main_422_10") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
