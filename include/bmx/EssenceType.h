@@ -78,6 +78,11 @@ typedef enum
     AVC_HIGH_422_INTRA,
     AVC_HIGH_444_INTRA,
     AVC_CAVLC_444_INTRA,
+    // HEVC
+    HEVC_MAIN,
+    HEVC_MAIN_10,
+    HEVC_MAIN_10_INTRA,
+    HEVC_MAIN_422_10_INTRA,
     // Uncompressed video
     UNC_SD,
     UNC_HD_1080I,

@@ -97,6 +97,7 @@
 #include <libMXF++/metadata/SADMAudioMetadataSubDescriptor.h>
 #include <libMXF++/metadata/MGASoundfieldGroupLabelSubDescriptor.h>
 #include <libMXF++/metadata/ContainerConstraintsSubDescriptor.h>
+#include <libMXF++/metadata/HEVCSubDescriptor.h>
 
 
 #endif

@@ -54,6 +54,7 @@
 #include <bmx/mxf_op1a/OP1AJPEG2000Track.h>
 #include <bmx/mxf_op1a/OP1AJPEGXSTrack.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1AHEVCITrack.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -148,6 +149,10 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {ANC_DATA,                 {{-1, -1}, {0, 0}}},
     {VBI_DATA,                 {{-1, -1}, {0, 0}}},
     {TIMED_TEXT,               {{-1, -1}, {0, 0}}},
+    {HEVC_MAIN,                {{-1, -1}, {0, 0}}},
+    {HEVC_MAIN_10,             {{-1, -1}, {0, 0}}},
+    {HEVC_MAIN_10_INTRA,       {{-1, -1}, {0, 0}}},
+    {HEVC_MAIN_422_10_INTRA,   {{-1, -1}, {0, 0}}},
 };
 
 
@@ -267,6 +272,11 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
             return new OP1AVBIDataTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case TIMED_TEXT:
             return new OP1ATimedTextTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case HEVC_MAIN:
+        case HEVC_MAIN_10:
+        case HEVC_MAIN_10_INTRA:
+        case HEVC_MAIN_422_10_INTRA:
+            return new OP1AHEVCITrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         default:
             BMX_ASSERT(false);
     }

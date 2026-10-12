@@ -1,0 +1,6 @@
+# Reference files compared by the test: normalise to LF
+info_1.xml.bin text eol=lf
+test_1.md5 text eol=lf
+
+# Input test vectors: preserve exact bytes (they determine the output checksum)
+test_1_hevc/*.h265 binary

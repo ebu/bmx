@@ -7,6 +7,7 @@ list(APPEND bmx_headers
     bmx/mxf_helper/DVMXFDescriptorHelper.h
     bmx/mxf_helper/DataMXFDescriptorHelper.h
     bmx/mxf_helper/EssenceValidator.h
+    bmx/mxf_helper/HEVCMXFDescriptorHelper.h
     bmx/mxf_helper/JPEG2000MXFDescriptorHelper.h
     bmx/mxf_helper/JPEGXSMXFDescriptorHelper.h
     bmx/mxf_helper/MGAMXFDescriptorHelper.h
