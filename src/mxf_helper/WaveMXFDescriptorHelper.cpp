@@ -148,6 +148,7 @@ FileDescriptor* WaveMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetad
 {
     if ((mFlavour & MXFDESC_RDD9_FLAVOUR) ||
         (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
+        (mFlavour & MXFDESC_RDD32_FLAVOUR) ||
         mUseAES3AudioDescriptor)
     {
         mFileDescriptor = new AES3AudioDescriptor(header_metadata);
@@ -168,7 +169,7 @@ void WaveMXFDescriptorHelper::UpdateFileDescriptor()
     BMX_ASSERT(wav_descriptor);
 
     uint32_t sample_size = GetSampleSize();
-    if ((mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR))
+    if ((mFlavour & MXFDESC_RDD32_FLAVOUR))
         wav_descriptor->setSoundEssenceCompression(MXF_CMDEF_L(ST382_UNC_SOUND));
     else if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         wav_descriptor->setSoundEssenceCompression(MXF_CMDEF_L(UNDEFINED_SOUND));
@@ -178,8 +179,8 @@ void WaveMXFDescriptorHelper::UpdateFileDescriptor()
     wav_descriptor->setAvgBps(sample_size * mSamplingRate.numerator / mSamplingRate.denominator);
     if (mSequenceOffset > 0)
         wav_descriptor->setSequenceOffset(mSequenceOffset);
-    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) &&
-        !(mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR)) { // Note: this trumps RDD9 flavour
+    if (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) {
+        // Note: this trumps RDD9 flavour
         // Professional use, linear PCM, no emphasis, 48KHz sampling, CRCC value 60
         static const mxfAES3FixedData fixed_channel_status_data =
         {
@@ -195,8 +196,7 @@ void WaveMXFDescriptorHelper::UpdateFileDescriptor()
 
         aes3_descriptor->appendChannelStatusMode(2); // STANDARD mode
         aes3_descriptor->appendFixedChannelStatusData(fixed_channel_status_data);
-    } else if ((mFlavour & MXFDESC_RDD9_FLAVOUR) ||
-        (mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
+    } else if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || (mFlavour & MXFDESC_RDD32_FLAVOUR)) {
         // Professional use, linear PCM, no emphasis, 48KHz sampling
         static const mxfAES3FixedData fixed_channel_status_data =
         {
@@ -224,6 +224,7 @@ mxfUL WaveMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     if ((mFlavour & MXFDESC_RDD9_FLAVOUR) ||
         (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
+        (mFlavour & MXFDESC_RDD32_FLAVOUR) ||
         mUseAES3AudioDescriptor)
     {
         if (mFrameWrapped)

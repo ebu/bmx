@@ -43,6 +43,8 @@
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
 #include <bmx/mxf_op1a/OP1ARDD36Track.h>
+#include <bmx/mxf_op1a/OP1AAVCTrack.h>
+#include <bmx/mxf_op1a/OP1AAVCITrack.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MXFMCALabelHelper.h>
 #include <bmx/wave/WaveChunk.h>
@@ -85,7 +87,7 @@ mxfUMID OP1AFile::CreatePackageUID()
 
 OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
-    mFlavour = flavour;
+    mFlavour = (flavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR) ? flavour |= OP1A_RDD32_FLAVOUR : flavour;
     mMXFFile = mxf_file;
     mFrameRate = frame_rate;
     mEditRate = frame_rate;
@@ -119,7 +121,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mWaitForIndexComplete = false;
     mPartitionInterval = 0;
     mPartitionFrameCount = 0;
-    mKAGSize = ((flavour & OP1A_512_KAG_FLAVOUR) || (flavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR) ? 512 : 1);
+    mKAGSize = ((flavour & OP1A_512_KAG_FLAVOUR) || (flavour & OP1A_RDD32_FLAVOUR) ? 512 : 1);
     mEssencePartitionKAGSize = mKAGSize;
     mSupportCompleteSinglePass = false;
     mFooterPartitionOffset = 0;
@@ -143,7 +145,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mHeaderMetadata = new HeaderMetadata(mDataModel);
 
     mIndexTable = new OP1AIndexTable(mStreamIdHelper.GetId("IndexStream"), mStreamIdHelper.GetId("BodyStream"), frame_rate,
-                                     (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (flavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR));
+                                     (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (flavour & OP1A_RDD32_FLAVOUR));
     mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, frame_rate, mEssencePartitionKAGSize, MIN_LLEN);
 
     if (flavour & OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
@@ -151,16 +153,11 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
         mMXFFile->swapCFile(mxf_checksum_file_get_file(mMXFChecksumFile));
     }
 
-    if ((flavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
-        mFlavour |= OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
-        mFlavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
+    if ((flavour & OP1A_RDD32_FLAVOUR)) {
         SetAddSystemItem(true);
         SetFieldMark(true);
         SetSignalST3792(true);
-
-        // Some open GOP XAVC files are missing the two leading B-frames in the first GOP.
-        // We therefore subtract 2 frames to ensure that the index duration is not exceeded.
-        SetPartitionInterval(60 * (int64_t)(0.167 * frame_rate.numerator / frame_rate.denominator) - 2);
+        ForceWriteIndexEntryArray(true);
     } else if ((flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
         mFlavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
         ReserveHeaderMetadataSpace(2 * 1024 * 1024 + 8192);
@@ -294,6 +291,11 @@ void OP1AFile::ForceWriteCBEDuration0(bool enable)
     mIndexTable->ForceWriteCBEDuration0(enable);
 }
 
+void OP1AFile::ForceWriteIndexEntryArray(bool enable)
+{
+    mIndexTable->ForceWriteIndexEntryArray(enable);
+}
+
 void OP1AFile::SetPrimaryPackage(bool enable)
 {
     mSetPrimaryPackage = enable;
@@ -391,6 +393,34 @@ OP1AXMLTrack* OP1AFile::CreateXMLTrack()
     return mXMLTracks.back();
 }
 
+void OP1AFile::ResolveRDD32EssenceLocationStyle()
+{
+    bool use_single_location = false;
+    size_t i;
+    for (i = 0; i < mTracks.size(); i++) {
+        if (dynamic_cast<OP1AAVCITrack*>(mTracks[i])) {
+            use_single_location = true;
+            break;
+        }
+        OP1AAVCTrack *avc_track = dynamic_cast<OP1AAVCTrack*>(mTracks[i]);
+        if (avc_track && avc_track->IsCBGMode()) {
+            use_single_location = true;
+            break;
+        }
+    }
+
+    if (use_single_location) {
+        mFlavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
+    } else {
+        mFlavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
+
+        // Some open GOP XAVC files are missing the two leading B-frames in the first GOP.
+        // We therefore subtract 2 frames to ensure that the index duration is not exceeded.
+        // This applies to RDD 32 and to the ARD/ZDF XDF profile.
+        SetPartitionInterval(60 * (int64_t)(0.167 * mFrameRate.numerator / mFrameRate.denominator) - 2);
+    }
+}
+
 void OP1AFile::PrepareHeaderMetadata()
 {
     if (mHavePreparedHeaderMetadata)
@@ -419,13 +449,19 @@ void OP1AFile::PrepareHeaderMetadata()
         last_track_number[mTracks[i]->GetDataDef()] = mTracks[i]->GetOutputTrackNumber();
     }
 
-    if (HAVE_PRIMARY_EC &&
-        (mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
-    {
-        if (mIndexTable->IsCBE() && !(mFlavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR))
-            mIndexTable->SetExtensions(MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE);
-        else
-            mIndexTable->SetExtensions(MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE);
+    if (HAVE_PRIMARY_EC) {
+        if ((mFlavour & OP1A_RDD32_FLAVOUR)) {
+            ResolveRDD32EssenceLocationStyle();
+            if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR))
+                mIndexTable->SetExtensions(MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE);
+            else
+                mIndexTable->SetExtensions(MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE);
+        } else if ((mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+            if (mIndexTable->IsCBE())
+                mIndexTable->SetExtensions(MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE);
+            else
+                mIndexTable->SetExtensions(MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE);
+        }
     }
 
     for (i = 0; i < mTracks.size(); i++)
@@ -433,6 +469,9 @@ void OP1AFile::PrepareHeaderMetadata()
     if (HAVE_PRIMARY_EC) {
         Timecode start_timecode = mStartTimecode;
         start_timecode.AddOffset(- mOutputStartOffset, mFrameRate);
+        if ((mFlavour & OP1A_RDD32_FLAVOUR) && !(mFlavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
+            mCPManager->SetBodyUMID(mFileSourcePackageUID);
+        }
         mCPManager->SetStartTimecode(start_timecode);
         mCPManager->PrepareWrite();
         mIndexTable->PrepareWrite();
@@ -601,7 +640,7 @@ void OP1AFile::CompleteWrite()
 
     if (HAVE_PRIMARY_EC &&
         !(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
-        (!(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR) ||
+        (!(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_RDD32_FLAVOUR) ||
             (mIndexTable->RepeatIndexTable() && mIndexTable->HaveWritten())) &&
         ((mIndexTable->IsVBE() && mIndexTable->HaveSegments()) ||
             (mIndexTable->IsCBE() && !mIndexTable->HaveWritten() && mIndexTable->GetDuration() > 0)))
@@ -885,7 +924,7 @@ void OP1AFile::CreateHeaderMetadata()
         preface->setDMSchemes(vector<mxfUL>());
     else
         preface->appendDMSchemes(MXF_DM_L(RP2057));
-    if ((mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+    if ((mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & OP1A_RDD32_FLAVOUR))
         preface->setIsRIPPresent(true);
 
     // Preface - Identification

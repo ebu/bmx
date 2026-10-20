@@ -86,6 +86,7 @@ AVCWriterHelper::AVCWriterHelper()
     mIdenticalGOP = true;
     mFirstGOP = true;
     mMaxBitRate = 0;
+    mTotalEssenceSize = 0;
     mMaxNumRefFrames = 0;
     mSPSConstant = true;
     mSPSFirstAUOnly = false;
@@ -95,6 +96,7 @@ AVCWriterHelper::AVCWriterHelper()
     mPPSFirstAUOnly = false;
     mPPSEveryAU = false;
     mPPSGOPStart = false;
+    mCBGMode = false;
 }
 
 AVCWriterHelper::~AVCWriterHelper()
@@ -104,6 +106,35 @@ AVCWriterHelper::~AVCWriterHelper()
 void AVCWriterHelper::SetDescriptorHelper(AVCMXFDescriptorHelper *descriptor_helper)
 {
     mDescriptorHelper = descriptor_helper;
+}
+
+uint32_t AVCWriterHelper::FindHeaderSize(const unsigned char *frame_data, uint32_t frame_size)
+{
+    static const unsigned char start_code[3] = {0x00, 0x00, 0x01};
+    uint32_t pos = 0;
+    while (pos + 4 <= frame_size) {
+        if (memcmp(&frame_data[pos], start_code, 3) == 0) {
+            uint8_t nal_unit_type = frame_data[pos + 3] & 0x1f;
+            if (nal_unit_type == CODED_SLICE_NON_IDR_PICT || nal_unit_type == CODED_SLICE_IDR_PICT) {
+                // The "00 00 01" match found above is the 3-byte start code, but Annex B also allows
+                // a 4-byte "00 00 00 01" start code. Back up over the leading zero byte so the returned
+                // size excludes the slice NAL's complete start code, not just its final 3 bytes.
+                if (pos > 0 && frame_data[pos - 1] == 0x00)
+                    return pos - 1;
+
+                return pos;
+            }
+            pos += 3;
+        } else {
+            pos++;
+        }
+    }
+    return 0;
+}
+
+void AVCWriterHelper::SetCBGMode(bool enable)
+{
+    mCBGMode = enable;
 }
 
 void AVCWriterHelper::SetHeader(const unsigned char *data, uint32_t size)
@@ -132,6 +163,9 @@ void AVCWriterHelper::SetPPS(const unsigned char *data, uint32_t size)
 
 void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
 {
+    if ((mDescriptorHelper->GetFlavour() & MXFDESC_RDD32_FLAVOUR))
+        mTotalEssenceSize += size - FindHeaderSize(data, size);
+
     mEssenceParser.ParseFrameInfo2(data, ParsedFrameSize(size));
 
     int32_t pic_order_cnt;
@@ -442,9 +476,19 @@ void AVCWriterHelper::CompleteProcess()
     avc_sub_desc->setAVCIdenticalGOPIndicator(mIdenticalGOP);
     avc_sub_desc->setAVCMaximumGOPSize(mMaxGOP);
     avc_sub_desc->setAVCMaximumBPictureCount(mMaxBPictureCount);
-    if (mMaxBitRate > 0)
+    if (mMaxBitRate > 0) {
         avc_sub_desc->setAVCMaximumBitrate(mMaxBitRate);
-    //avc_sub_desc->setAVCAverageBitrate(); // TODO
+    } else if ((mDescriptorHelper->GetFlavour() & MXFDESC_RDD32_FLAVOUR) && (mPosition > 0)) {
+        mxfRational sample_rate = cdci_descriptor->getSampleRate();
+        if (sample_rate.numerator > 0 && sample_rate.denominator > 0) {
+            uint32_t bitrate = (int32_t)(mTotalEssenceSize * 8 / mPosition *
+                               sample_rate.numerator / sample_rate.denominator);
+            if (mCBGMode)
+                avc_sub_desc->setAVCMaximumBitrate(bitrate);
+            else
+                avc_sub_desc->setAVCAverageBitrate(bitrate);
+        }
+    }
     avc_sub_desc->setAVCMaximumRefFrames(mMaxNumRefFrames);
     if (!avc_sub_desc->haveAVCSequenceParameterSetFlag())
         avc_sub_desc->setAVCSequenceParameterSetFlag(GetSPSFlag());

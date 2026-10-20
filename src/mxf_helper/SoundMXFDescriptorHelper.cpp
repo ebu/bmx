@@ -290,13 +290,14 @@ void SoundMXFDescriptorHelper::UpdateFileDescriptor()
     sound_descriptor->setAudioSamplingRate(mSamplingRate);
     if (mLockedSet)
         sound_descriptor->setLocked(mLocked);
-    else if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+    else if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
+             (mFlavour & MXFDESC_RDD32_FLAVOUR))
         sound_descriptor->setLocked(true);
     sound_descriptor->setChannelCount(mChannelCount);
     sound_descriptor->setQuantizationBits(mQuantizationBits);
     if (mAudioRefLevelSet)
         sound_descriptor->setAudioRefLevel(mAudioRefLevel);
-    else if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR))
+    else if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || (mFlavour & MXFDESC_RDD32_FLAVOUR))
         sound_descriptor->setAudioRefLevel(0);
     if (mDialNormSet)
         sound_descriptor->setDialNorm(mDialNorm);

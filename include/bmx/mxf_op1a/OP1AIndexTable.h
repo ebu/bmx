@@ -123,7 +123,7 @@ class OP1AIndexTableSegment
 public:
     OP1AIndexTableSegment(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate, int64_t start_position,
                           uint32_t index_entry_size, uint32_t slice_count, bool force_write_slice_count, bool force_write_cbe_index_duration_0,
-                          mxfOptBool single_index_location, mxfOptBool single_essence_location,
+                          bool force_write_index_entry_array, mxfOptBool single_index_location, mxfOptBool single_essence_location,
                           mxfOptBool forward_index_direction);
     ~OP1AIndexTableSegment();
 
@@ -157,7 +157,7 @@ public:
                        mxfOptBool forward_index_direction);
     void SetRepeatIndexTable(bool enable);
     void ForceWriteCBEDuration0(bool enable);
-
+    void ForceWriteIndexEntryArray(bool enable);
     void RegisterSystemItem();
     void RegisterPictureTrackElement(uint32_t track_index, bool is_cbe, bool apply_temporal_reordering);
     void RegisterAVCITrackElement(uint32_t track_index);
@@ -223,6 +223,7 @@ private:
     mxfRational mEditRate;
     bool mForceWriteSliceCount;
     bool mForceWriteCBEDuration0;
+    bool mForceWriteIndexEntryArray;
     mxfOptBool mSingleIndexLocation;
     mxfOptBool mSingleEssenceLocation;
     mxfOptBool mForwardIndexDirection;
