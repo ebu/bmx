@@ -414,14 +414,14 @@ void HEVCEssenceParser::ParseShortTermRefPicSet(AVCGetBitBuffer* bs, uint8_t stR
         uint64_t num_positive_pics;
         bs->GetUE(&num_positive_pics);
 
-        for (uint8_t i = 0; i < num_negative_pics; i++) {
+        for (uint64_t i = 0; i < num_negative_pics; i++) {
             uint64_t delta_poc_s0_minus1;
             bs->GetUE(&delta_poc_s0_minus1);
             uint8_t used_by_curr_pic_s0_flag;
             bs->GetU(1, &used_by_curr_pic_s0_flag);
         }
 
-        for (uint8_t i = 0; i < num_positive_pics; i++) {
+        for (uint64_t i = 0; i < num_positive_pics; i++) {
             uint64_t delta_poc_s1_minus1;
             bs->GetUE(&delta_poc_s1_minus1);
             uint8_t used_by_curr_pic_s1_flag;
