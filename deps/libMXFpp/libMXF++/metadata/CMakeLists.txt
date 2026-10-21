@@ -27,6 +27,7 @@ list(APPEND MXFpp_sources
     metadata/GenericStreamTextBasedSet.cpp
     metadata/GenericTrack.cpp
     metadata/GroupOfSoundfieldGroupsLabelSubDescriptor.cpp
+    metadata/HEVCSubDescriptor.cpp
     metadata/Identification.cpp
     metadata/InterchangeObject.cpp
     metadata/JPEG2000SubDescriptor.cpp
@@ -93,6 +94,7 @@ list(APPEND MXFpp_headers
     metadata/GenericStreamTextBasedSet.h
     metadata/GenericTrack.h
     metadata/GroupOfSoundfieldGroupsLabelSubDescriptor.h
+    metadata/HEVCSubDescriptor.h
     metadata/Identification.h
     metadata/InterchangeObject.h
     metadata/JPEG2000SubDescriptor.h
