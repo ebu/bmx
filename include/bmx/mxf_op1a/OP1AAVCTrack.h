@@ -53,6 +53,9 @@ public:
     void SetSPS(const unsigned char *data, uint32_t size);
     void SetPPS(const unsigned char *data, uint32_t size);
 
+    void SetCBGMode(bool enable);
+    bool IsCBGMode() const { return mCBGMode; }
+
 protected:
     virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
@@ -60,6 +63,7 @@ protected:
 
 private:
     AVCWriterHelper mWriterHelper;
+    bool mCBGMode;
 };
 
 

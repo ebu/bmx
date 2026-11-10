@@ -65,6 +65,7 @@
 #define OP1A_SYSTEM_ITEM_FLAVOUR            0x0800      // add system item
 #define OP1A_IMF_FLAVOUR                    0x1000
 #define OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR    0x2000
+#define OP1A_RDD32_FLAVOUR                  0x4000
 
 
 
@@ -105,6 +106,7 @@ public:
     void SetFieldMark(bool enable);                                     // default false
     void SetRepeatIndexTable(bool enable);                              // default false. Repeat index table in Footer if true
     void ForceWriteCBEDuration0(bool enable);                           // force duration=0 for CBE index table
+    void ForceWriteIndexEntryArray(bool enable);                        // default false
     void SetPrimaryPackage(bool enable);                                // default false
     void SetIndexFollowsEssence(bool enable);                           // default false. If true then place index partition after the essence it indexes, even for CBE
     void SetSignalST3792(bool enable);                                  // default false. If true then signal ST 379-2 compliance using sub-descriptor
@@ -150,6 +152,7 @@ public:
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }
 
     int GetFlavour() const { return mFlavour; }
+    uint32_t GetKAGSize() const { return mKAGSize; }
 
     UniqueIdHelper* GetTrackIdHelper()  { return &mTrackIdHelper; }
     UniqueIdHelper* GetStreamIdHelper() { return &mStreamIdHelper; }
@@ -167,6 +170,7 @@ private:
     mxfpp::SourcePackage* CreateFileSourcePackage(UMID package_uid, int64_t track_duration, int64_t track_origin);
     void CreateFile();
     void WriteTimedTextIndexTable(OP1ATimedTextTrack *tt_track);
+    void ResolveRDD32EssenceLocationStyle();
 
     void UpdatePackageMetadata();
     void UpdateTrackMetadata(mxfpp::GenericPackage *package, int64_t origin, int64_t duration);

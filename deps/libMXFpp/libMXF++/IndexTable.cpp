@@ -224,6 +224,11 @@ void IndexTableSegment::forceWriteCBEDuration0(bool enable)
     _cSegment->forceWriteCBEDuration0 = enable;
 }
 
+void IndexTableSegment::forceWriteIndexEntryArray(bool enable)
+{
+    _cSegment->forceWriteIndexEntryArray = enable;
+}
+
 void IndexTableSegment::setPosTableCount(uint8_t value)
 {
     _cSegment->posTableCount = value;

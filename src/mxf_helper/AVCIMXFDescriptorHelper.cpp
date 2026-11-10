@@ -346,7 +346,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         case AVCI200_1080I:
         case AVCI100_1080I:
         case AVCI50_1080I:
-            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & MXFDESC_RDD32_FLAVOUR)) {
                 cdci_descriptor->setStoredF2Offset(0);
                 cdci_descriptor->setDisplayF2Offset(0);
                 cdci_descriptor->setFieldDominance(1);
@@ -375,7 +375,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         case AVCI100_1080I:
         case AVCI50_1080I:
             cdci_descriptor->setStoredWidth(1920);
-            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & MXFDESC_RDD32_FLAVOUR))
                 cdci_descriptor->setStoredHeight(544);
             else
                 cdci_descriptor->setStoredHeight(540);
@@ -385,7 +385,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         case AVCI100_1080P:
         case AVCI50_1080P:
             cdci_descriptor->setStoredWidth(1920);
-            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & MXFDESC_RDD32_FLAVOUR))
                 cdci_descriptor->setStoredHeight(1088);
             else
                 cdci_descriptor->setStoredHeight(1080);
@@ -430,15 +430,21 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         default:
             BMX_ASSERT(false);
     }
-    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & MXFDESC_AVID_FLAVOUR)) {
+    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
+        (mFlavour & MXFDESC_AVID_FLAVOUR) ||
+        (mFlavour & MXFDESC_RDD32_FLAVOUR)) {
         cdci_descriptor->setSampledXOffset(0);
         cdci_descriptor->setSampledYOffset(0);
         cdci_descriptor->setDisplayXOffset(0);
         cdci_descriptor->setDisplayYOffset(0);
-        if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & MXFDESC_RDD32_FLAVOUR)) {
             cdci_descriptor->setImageStartOffset(0);
             cdci_descriptor->setImageEndOffset(0);
             cdci_descriptor->setPaddingBits(0);
+        }
+        if ((mFlavour & MXFDESC_RDD32_FLAVOUR)) {
+            cdci_descriptor->setImageAlignmentOffset(0);
+            cdci_descriptor->setReversedByteOrder(false);
         }
     }
     switch (mEssenceType)
@@ -479,9 +485,13 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         mAVCSubDescriptor->setAVCProfile(avc_info->profile);
         mAVCSubDescriptor->setAVCProfileConstraint(avc_info->profile_constraint);
         mAVCSubDescriptor->setAVCLevel(avc_info->level);
+        if ((mFlavour & MXFDESC_RDD32_FLAVOUR)) {
+            mAVCSubDescriptor->setAVCConstantBPictureFlag(1);
+            mAVCSubDescriptor->setAVCMaximumRefFrames(0);
+        }
 
         // SPS and PPS flags are (also) set in the writer helper
-        if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & MXFDESC_RDD32_FLAVOUR)) {
            mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0xa0);    // constant and present in every access unit
            mAVCSubDescriptor->setAVCPictureParameterSetFlag(0xa0);     // constant and present in every access unit
         }

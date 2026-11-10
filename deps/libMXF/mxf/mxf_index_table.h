@@ -80,6 +80,7 @@ typedef struct
     uint8_t sliceCount;
     int forceWriteSliceCount;
     int forceWriteCBEDuration0;
+    int forceWriteIndexEntryArray;
     uint8_t posTableCount;
     MXFDeltaEntry *deltaEntryArray;
     MXFIndexEntry *indexEntryArray;

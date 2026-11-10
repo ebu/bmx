@@ -58,11 +58,15 @@ using namespace mxfpp;
 
 
 static const mxfKey MXF_EE_K(EmptyPackageMetadataSet) = MXF_SDTI_CP_PACKAGE_METADATA_KEY(0x00);
+static const mxfKey MXF_EE_K(BodyUMIDPackageMetadataSet) = MXF_SDTI_CP_PACKAGE_METADATA_KEY(0x01);
 
 static const uint32_t SYSTEM_ITEM_TRACK_INDEX = (uint32_t)(-1);
 static const uint32_t SYSTEM_ITEM_METADATA_PACK_SIZE = 7 + 16 + 17 + 17;
 static const uint32_t NA_SYSTEM_ITEM_SIZE = mxfKey_extlen + FW_ESS_ELEMENT_LLEN + SYSTEM_ITEM_METADATA_PACK_SIZE +
                                             mxfKey_extlen + FW_ESS_ELEMENT_LLEN;
+static const uint32_t BODY_UMID_METADATA_BLOCK_SIZE = 1 + 2 + 32;
+static const uint32_t BODY_UMID_SYSTEM_ITEM_SIZE = mxfKey_extlen + FW_ESS_ELEMENT_LLEN + SYSTEM_ITEM_METADATA_PACK_SIZE +
+                                                   mxfKey_extlen + FW_ESS_ELEMENT_LLEN + BODY_UMID_METADATA_BLOCK_SIZE;
 
 
 
@@ -300,14 +304,18 @@ void OP1AContentPackageElementData::Reset(int64_t new_position)
 OP1AContentPackage::OP1AContentPackage(File *mxf_file, OP1AIndexTable *index_table, uint32_t kag_size, uint8_t min_llen,
                                        bool have_system_item, bool have_user_timecode, Rational frame_rate,
                                        uint8_t sys_meta_item_flags, vector<OP1AContentPackageElement*> elements,
-                                       int64_t position, Timecode start_timecode, bool field_mark)
+                                       int64_t position, Timecode start_timecode, bool field_mark,
+                                       bool have_body_umid, mxfUMID body_umid)
 {
     mMXFFile = mxf_file;
     mIndexTable = index_table;
     mFrameWrapped = true;
     mHaveSystemItem = have_system_item;
+    mHaveBodyUMID = have_body_umid;
+    mBodyUMID = body_umid;
     if (have_system_item) {
-      mSystemItemSize = (uint32_t)get_kag_aligned_size(NA_SYSTEM_ITEM_SIZE, kag_size, min_llen);
+      uint32_t na_system_item_size = mHaveBodyUMID ? BODY_UMID_SYSTEM_ITEM_SIZE : NA_SYSTEM_ITEM_SIZE;
+      mSystemItemSize = (uint32_t)get_kag_aligned_size(na_system_item_size, kag_size, min_llen);
 
       // system metadata bitmap = 0x5c
       // b7 = 0 (FEC not used)
@@ -485,11 +493,21 @@ void OP1AContentPackage::WriteSystemItem()
     encode_smpte_timecode(user_timecode, mFieldMark, &ts_bytes[1], sizeof(ts_bytes) - 1);
     BMX_CHECK(mMXFFile->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
 
-    // empty Package Metadata Set
-    mMXFFile->writeFixedKL(&MXF_EE_K(EmptyPackageMetadataSet), FW_ESS_ELEMENT_LLEN, 0);
+    uint32_t na_system_item_size;
+    if (mHaveBodyUMID) {
+        mMXFFile->writeFixedKL(&MXF_EE_K(BodyUMIDPackageMetadataSet), FW_ESS_ELEMENT_LLEN,
+                                BODY_UMID_METADATA_BLOCK_SIZE);
+        mMXFFile->writeUInt8(0x83);      // CP-Tag: (Extended) UMID
+        mMXFFile->writeUInt16(32);       // Local Length: 32-byte Basic UMID
+        BMX_CHECK(mMXFFile->write(&mBodyUMID.octet0, 32) == 32);
+        na_system_item_size = BODY_UMID_SYSTEM_ITEM_SIZE;
+    } else {
+        mMXFFile->writeFixedKL(&MXF_EE_K(EmptyPackageMetadataSet), FW_ESS_ELEMENT_LLEN, 0);
+        na_system_item_size = NA_SYSTEM_ITEM_SIZE;
+    }
 
-    if (mSystemItemSize > NA_SYSTEM_ITEM_SIZE)
-        mMXFFile->writeFill(mSystemItemSize - NA_SYSTEM_ITEM_SIZE);
+    if (mSystemItemSize > na_system_item_size)
+        mMXFFile->writeFill(mSystemItemSize - na_system_item_size);
 }
 
 void OP1AContentPackage::CompleteWrite()
@@ -516,6 +534,8 @@ OP1AContentPackageManager::OP1AContentPackageManager(File *mxf_file, OP1AIndexTa
     mHaveInputUserTimecode = false;
     mSysMetaItemFlags = 0;
     mFieldMark = false;
+    mHaveBodyUMID = false;
+    mBodyUMID = g_Null_UMID;
     mPosition = 0;
 }
 
@@ -553,6 +573,12 @@ void OP1AContentPackageManager::SetClipWrapped(bool enable)
 void OP1AContentPackageManager::SetFieldMark(bool enable)
 {
     mFieldMark = enable;
+}
+
+void OP1AContentPackageManager::SetBodyUMID(mxfUMID body_umid)
+{
+    mHaveBodyUMID = true;
+    mBodyUMID = body_umid;
 }
 
 void OP1AContentPackageManager::RegisterSystemItem()
@@ -806,7 +832,8 @@ size_t OP1AContentPackageManager::CreateContentPackage()
         BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
         mContentPackages.push_back(new OP1AContentPackage(mMXFFile, mIndexTable, mKAGSize, mMinLLen, mHaveSystemItem,
                                                           mHaveInputUserTimecode, mFrameRate, mSysMetaItemFlags,
-                                                          mElements, mPosition + cp_index, mStartTimecode, mFieldMark));
+                                                          mElements, mPosition + cp_index, mStartTimecode, mFieldMark,
+                                                          mHaveBodyUMID, mBodyUMID));
     } else {
         mContentPackages.push_back(mFreeContentPackages.back());
         mFreeContentPackages.pop_back();

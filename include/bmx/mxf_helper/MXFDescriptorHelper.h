@@ -45,8 +45,10 @@
 #define MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR   0x0010
 #define MXFDESC_RDD9_AS10_FLAVOUR             0x0020
 #define MXFDESC_IMF_FLAVOUR                   0x0040
-#define MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR   0x0080
-
+#define MXFDESC_RDD32_FLAVOUR                 0x0080
+#define MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR   0x0080    // The ARD-ZDF-XDF profile is a restricted subset of this RDD32 implementation and is linked to it here.
+                                                        // If this RDD32 implementation is modified and no longer conforms to the ARD-ZDF-XDF profile,
+                                                        // this link must be removed and the ARD-ZDF-XDF implementation must be adjusted.
 
 
 namespace bmx

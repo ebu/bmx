@@ -189,7 +189,8 @@ void OP1AIndexTableElement::IgnoreRequiredUpdates()
 
 OP1AIndexTableSegment::OP1AIndexTableSegment(uint32_t index_sid, uint32_t body_sid, mxfRational frame_rate,
                                              int64_t start_position, uint32_t index_entry_size,
-                                             uint32_t slice_count, bool force_write_slice_count, bool force_write_cbe_duration_0,
+                                             uint32_t slice_count, bool force_write_slice_count,
+                                             bool force_write_cbe_duration_0, bool force_write_index_entry_array,
                                              mxfOptBool single_index_location, mxfOptBool single_essence_location,
                                              mxfOptBool forward_index_direction)
 {
@@ -210,6 +211,7 @@ OP1AIndexTableSegment::OP1AIndexTableSegment(uint32_t index_sid, uint32_t body_s
     mSegment.setSliceCount(slice_count);
     mSegment.forceWriteSliceCount(force_write_slice_count);
     mSegment.forceWriteCBEDuration0(force_write_cbe_duration_0);
+    mSegment.forceWriteIndexEntryArray(force_write_index_entry_array);
     mSegment.setSingleIndexLocation(single_index_location);
     mSegment.setSingleEssenceLocation(single_essence_location);
     mSegment.setForwardIndexDirection(forward_index_direction);
@@ -288,6 +290,7 @@ OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRationa
     mEditRate = edit_rate;
     mForceWriteSliceCount = force_write_slice_count;
     mForceWriteCBEDuration0 = false;
+    mForceWriteIndexEntryArray = false;
     mSingleIndexLocation = MXF_OPT_BOOL_NOT_PRESENT;
     mSingleEssenceLocation = MXF_OPT_BOOL_NOT_PRESENT;
     mForwardIndexDirection = MXF_OPT_BOOL_NOT_PRESENT;
@@ -338,6 +341,11 @@ void OP1AIndexTable::SetRepeatIndexTable(bool enable)
 void OP1AIndexTable::ForceWriteCBEDuration0(bool enable)
 {
     mForceWriteCBEDuration0 = enable;
+}
+
+void OP1AIndexTable::ForceWriteIndexEntryArray(bool enable)
+{
+    mForceWriteIndexEntryArray = enable;
 }
 
 void OP1AIndexTable::SetInputDuration(int64_t duration)
@@ -400,11 +408,13 @@ void OP1AIndexTable::PrepareWrite()
 
     mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, 0, mIndexEntrySize,
                                                        mSliceCount, mForceWriteSliceCount, mForceWriteCBEDuration0,
+                                                       mIsCBE && mForceWriteIndexEntryArray,
                                                        mSingleIndexLocation, mSingleEssenceLocation,
                                                        mForwardIndexDirection));
     if (RequireIndexTableSegmentPair()) {
         mAVCIFirstIndexSegment = new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, 0, mIndexEntrySize,
                                                            mSliceCount, mForceWriteSliceCount, mForceWriteCBEDuration0,
+                                                           mIsCBE && mForceWriteIndexEntryArray,
                                                            mSingleIndexLocation, mSingleEssenceLocation,
                                                            mForwardIndexDirection);
     }
@@ -741,7 +751,7 @@ void OP1AIndexTable::UpdateVBEIndex(vector<uint32_t> &element_sizes)
     if (mIndexSegments.empty() || mIndexSegments.back()->RequireNewSegment(can_start_partition)) {
         mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, mDuration,
                                                            mIndexEntrySize, mSliceCount, mForceWriteSliceCount, false,
-                                                           mSingleIndexLocation, mSingleEssenceLocation,
+                                                           false, mSingleIndexLocation, mSingleEssenceLocation,
                                                            mForwardIndexDirection));
     }
 

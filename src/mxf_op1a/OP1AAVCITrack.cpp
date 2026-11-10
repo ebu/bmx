@@ -68,8 +68,11 @@ OP1AAVCITrack::~OP1AAVCITrack()
 
 void OP1AAVCITrack::SetMode(OP1AAVCIMode mode)
 {
-    if ((mOP1AFile->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) && mode != OP1A_AVCI_ALL_FRAME_HEADER_MODE)
-        BMX_EXCEPTION(("ARD ZDF HDF flavour requires all AVC-I frames to contain SPS+PPS header data"));
+    if (((mOP1AFile->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
+         (mOP1AFile->GetFlavour() & OP1A_RDD32_FLAVOUR)) && mode != OP1A_AVCI_ALL_FRAME_HEADER_MODE)
+    {
+        BMX_EXCEPTION(("ARD-ZDF-HDF and RDD32 flavour requires all AVC-I frames to contain SPS+PPS header data"));
+    }
 
     switch (mode)
     {

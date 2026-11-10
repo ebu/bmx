@@ -584,6 +584,11 @@ static void usage(const char *cmd)
     printf("\n");
     printf("  op1a:\n");
     printf("    --ard-zdf-xdf           Use the ARD ZDF XDF profile\n");
+    printf("    --rdd32                 Use generic SMPTE RDD 32 (XAVC) constraints. Multiple Essence Location Style is used for Long GOP and Intra VBR\n");
+    printf("                            Single Essence Location Style is used for Intra CBG (RP 2027 Constrained Class 50/100/200)\n");
+    printf("                            Class 300 and 480 cannot be detected automatically. Use --avc-cbg to specify them\n");
+    printf("    --avc-cbg               Use a CBE (Constant Bytes per Element) Index Table for AVC essence instead of the default VBE Index Table\n");
+    printf("                            Switch --rdd32 to Single Essence Location Style. Only use this if the essence is genuinely constant size\n");
     printf("\n");
     printf("  as11d10/d10:\n");
     printf("    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
@@ -920,6 +925,8 @@ int main(int argc, const char** argv)
     ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     bool ard_zdf_hdf_profile = false;
     bool ard_zdf_xdf_profile = false;
+    bool rdd32_profile = false;
+    bool avc_cbg = false;
     bool aes3 = false;
     bool kag_size_512 = false;
     bool op1a_primary_package = false;
@@ -1609,6 +1616,14 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--ard-zdf-xdf") == 0)
         {
             ard_zdf_xdf_profile = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd32") == 0)
+        {
+            rdd32_profile = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc-cbg") == 0)
+        {
+            avc_cbg = true;
         }
         else if (strcmp(argv[cmdln_index], "--d10-mute") == 0)
         {
@@ -5033,7 +5048,11 @@ int main(int argc, const char** argv)
         int flavour = 0;
         if (clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
-            if (ard_zdf_xdf_profile) {
+            if (rdd32_profile) {
+                flavour |= OP1A_RDD32_FLAVOUR;
+                if (mp_track_num)
+                    flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
+            } else if (ard_zdf_xdf_profile) {
                 flavour |= OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR;
             } else if (ard_zdf_hdf_profile) {
                 flavour |= OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
@@ -5504,6 +5523,8 @@ int main(int argc, const char** argv)
                         clip_track->SetAspectRatio(input->aspect_ratio);
                     if (BMX_OPT_PROP_IS_SET(input->afd))
                         clip_track->SetAFD(input->afd);
+                    if (avc_cbg)
+                        clip_track->SetCBGMode(true);
                     update_header = true;
                     break;
                 case UNC_SD:
