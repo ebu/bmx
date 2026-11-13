@@ -99,7 +99,7 @@ bmx is licensed under [BSD-3](COPYING). Any contribution implies that the contri
 
 ## Copyright Notices
 
-Contributions should have the contributor's comyright included. When appending to existing files, the original copyright notice must remain intact and contributor's copyright shall be added to it. New source files shall only carry the contributor's copyright attribution and the [BSD-3](COPYING) clause text.
+Contributions should have the contributor's copyright included. When appending to existing files, the original copyright notice must remain intact and contributor's copyright shall be added to it. New source files shall only carry the contributor's copyright attribution and the [BSD-3](COPYING) clause text.
 
 ## Using AI Tools
 
