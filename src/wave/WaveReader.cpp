@@ -315,12 +315,12 @@ void WaveReader::ReadChunks(bool require_ds64, uint32_t riff_size)
         // Use uint64_t for size to allow assignment of actual_data_size and check to skip the WORD alignment byte
         uint64_t size = mInput->ReadSize();
         if (require_ds64 && id == "ds64") {
-            BMX_CHECK(size == 28);
+            BMX_CHECK(size >= 28);
             mInput->Skip(8); // riff size
             actual_data_size = mInput->ReadUInt64();
             mSampleCount = (int64_t)mInput->ReadUInt64();
             BMX_CHECK(mSampleCount >= 0);
-            mInput->Skip(4);
+            mInput->Skip(size - 24);
             have_ds64 = true;
         } else if (id == "fmt ") {
             BMX_CHECK(size >= 16);
