@@ -320,7 +320,7 @@ void WaveReader::ReadChunks(bool require_ds64, uint32_t riff_size)
             actual_data_size = mInput->ReadUInt64();
             mSampleCount = (int64_t)mInput->ReadUInt64();
             BMX_CHECK(mSampleCount >= 0);
-            mInput->Skip(size - 24);
+            mInput->Skip(size - 24); // table length + table (only the data size is needed)
             have_ds64 = true;
         } else if (id == "fmt ") {
             BMX_CHECK(size >= 16);
