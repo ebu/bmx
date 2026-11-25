@@ -1,6 +1,6 @@
 # Test creating an IMF Track File containing JPEG 2000.
-# First test create an IMF audio Track File.
-# Second test transwraps the IMF audio Track File.
+# First test create an IMF Track File.
+# Second test transwraps the IMF Track File.
 
 include("${TEST_SOURCE_DIR}/../testing.cmake")
 

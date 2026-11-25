@@ -14,7 +14,7 @@ list(APPEND bmx_headers
     bmx/mxf_op1a/OP1APCMTrack.h
     bmx/mxf_op1a/OP1APictureTrack.h
     bmx/mxf_op1a/OP1ARDD36Track.h
-    bmx/mxf_op1a/OP1ATimedTextTrack.h
+    bmx/mxf_op1a/OP1ATimedDataTrack.h
     bmx/mxf_op1a/OP1ATrack.h
     bmx/mxf_op1a/OP1AUncTrack.h
     bmx/mxf_op1a/OP1AVBIDataTrack.h

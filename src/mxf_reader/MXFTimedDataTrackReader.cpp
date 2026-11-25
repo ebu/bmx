@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018, British Broadcasting Corporation
+ * Copyright (C) 2024, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,12 +31,14 @@
 #include "config.h"
 #endif
 
-#include <bmx/mxf_reader/MXFTimedTextTrackReader.h>
+#include <bmx/mxf_reader/MXFTimedDataTrackReader.h>
 
 #include <string.h>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/GenericStreamReader.h>
+#include <bmx/mxf_helper/TimedTextManifest.h>
+#include <bmx/mxf_helper/TimedEventsManifest.h>
 #include <bmx/BMXException.h>
 #include <bmx/Utils.h>
 #include <bmx/Logging.h>
@@ -47,36 +49,42 @@ using namespace mxfpp;
 
 
 
-MXFTimedTextTrackReader::MXFTimedTextTrackReader(MXFFileReader *file_reader, size_t track_index,
+MXFTimedDataTrackReader::MXFTimedDataTrackReader(MXFFileReader *file_reader, size_t track_index,
                                                  MXFTrackInfo *track_info, FileDescriptor *file_descriptor,
                                                  SourcePackage *file_source_package)
 : MXFFileTrackReader(file_reader, track_index, track_info, file_descriptor, file_source_package)
 {
-    BMX_ASSERT(track_info->essence_type == TIMED_TEXT);
+    BMX_ASSERT(track_info->essence_type == TIMED_TEXT || track_info->essence_type == TIMED_EVENTS);
     mBodySID = 0;
 
-    mEssenceElementKey = MXF_EE_K(TimedText);
+    if (track_info->essence_type == TIMED_TEXT) {
+        mEssenceElementKey = MXF_EE_K(TimedText);
+        mAncEssenceElementKey = MXF_EE_K(TimedTextAnc);
+    } else if (track_info->essence_type == TIMED_EVENTS) {
+        mEssenceElementKey = MXF_EE_K(TimedEvents);
+        mAncEssenceElementKey = MXF_EE_K(TimedEventsAnc);
+    }
     mxf_complete_essence_element_key_from_track_num(&mEssenceElementKey, track_info->file_track_number);
 }
 
-MXFTimedTextTrackReader::~MXFTimedTextTrackReader()
+MXFTimedDataTrackReader::~MXFTimedDataTrackReader()
 {
 }
 
-int64_t MXFTimedTextTrackReader::GetOrigin() const
+int64_t MXFTimedDataTrackReader::GetOrigin() const
 {
     // MXFFileReader would throw a MXF_RESULT_NOT_SUPPORTED if origin != 0
     return 0;
 }
 
-int16_t MXFTimedTextTrackReader::GetPrecharge(int64_t position, bool limit_to_available) const
+int16_t MXFTimedDataTrackReader::GetPrecharge(int64_t position, bool limit_to_available) const
 {
     (void)position;
     (void)limit_to_available;
     return 0;
 }
 
-int64_t MXFTimedTextTrackReader::GetAvailablePrecharge(int64_t position) const
+int64_t MXFTimedDataTrackReader::GetAvailablePrecharge(int64_t position) const
 {
     if (position < 0)
         return 0;
@@ -84,14 +92,14 @@ int64_t MXFTimedTextTrackReader::GetAvailablePrecharge(int64_t position) const
         return - position;
 }
 
-int16_t MXFTimedTextTrackReader::GetRollout(int64_t position, bool limit_to_available) const
+int16_t MXFTimedDataTrackReader::GetRollout(int64_t position, bool limit_to_available) const
 {
     (void)position;
     (void)limit_to_available;
     return 0;
 }
 
-int64_t MXFTimedTextTrackReader::GetAvailableRollout(int64_t position) const
+int64_t MXFTimedDataTrackReader::GetAvailableRollout(int64_t position) const
 {
     if (position >= GetDuration())
         return 0;
@@ -99,32 +107,37 @@ int64_t MXFTimedTextTrackReader::GetAvailableRollout(int64_t position) const
         return GetDuration() - 1 - position;
 }
 
-void MXFTimedTextTrackReader::SetBodySID(uint32_t body_sid)
+void MXFTimedDataTrackReader::SetBodySID(uint32_t body_sid)
 {
     mBodySID = body_sid;
 }
 
-TimedTextManifest* MXFTimedTextTrackReader::GetManifest()
+TimedDataManifest* MXFTimedDataTrackReader::GetManifest()
 {
-    return dynamic_cast<MXFDataTrackInfo*>(mTrackInfo)->timed_text_manifest;
+    return dynamic_cast<MXFDataTrackInfo*>(mTrackInfo)->timed_data_manifest;
 }
 
-void MXFTimedTextTrackReader::ReadTimedText(FILE *file_out, unsigned char **data_out, size_t *size_out)
+void MXFTimedDataTrackReader::Read(FILE *file_out, unsigned char **data_out, size_t *size_out)
 {
     BMX_ASSERT(mBodySID != 0);
 
     ReadStream(mBodySID, &mEssenceElementKey, file_out, data_out, size_out, 0);
 }
 
-void MXFTimedTextTrackReader::ReadAncillaryResourceById(mxfUUID resource_id, FILE *file_out,
-                                                        unsigned char **data_out, size_t *size_out)
+void MXFTimedDataTrackReader::ReadTimedTextAncillaryResourceById(mxfUUID resource_id, FILE *file_out,
+                                                                 unsigned char **data_out, size_t *size_out)
 {
+    if (mTrackInfo->essence_type != TIMED_TEXT) {
+        BMX_EXCEPTION(("Timed events track cannot have timed text ancillary resources. Use ReadTimedEventsAncillaryResourceById instead"));
+    }
+
     uint32_t stream_id = 0;
-    vector<TimedTextAncillaryResource> &anc_resources = GetManifest()->GetAncillaryResources();
+    const vector<TimedDataAncillaryResource*> &anc_resources = GetManifest()->GetAncillaryResources();
     size_t i;
     for (i = 0; i < anc_resources.size(); i++) {
-        if (anc_resources[i].resource_id == resource_id) {
-            stream_id = anc_resources[i].stream_id;
+        TimedTextAncillaryResource *text_anc_resource = dynamic_cast<TimedTextAncillaryResource*>(anc_resources[i]);
+        if (text_anc_resource && text_anc_resource->resource_id == resource_id) {
+            stream_id = text_anc_resource->stream_id;
             break;
         }
     }
@@ -132,33 +145,57 @@ void MXFTimedTextTrackReader::ReadAncillaryResourceById(mxfUUID resource_id, FIL
         BMX_EXCEPTION(("Unknown timed text ancillary resource id"));
     }
 
-    ReadStream(stream_id, &MXF_EE_K(TimedTextAnc), file_out, data_out, size_out, 0);
+    ReadStream(stream_id, &mAncEssenceElementKey, file_out, data_out, size_out, 0);
 }
 
-void MXFTimedTextTrackReader::ReadAncillaryResourceByStreamId(uint32_t stream_id, FILE *file_out,
+void MXFTimedDataTrackReader::ReadTimedEventsAncillaryResourceById(const string &resource_id, FILE *file_out,
+                                                                   unsigned char **data_out, size_t *size_out)
+{
+    if (mTrackInfo->essence_type != TIMED_EVENTS) {
+        BMX_EXCEPTION(("Timed text track cannot have timed events ancillary resources. Use ReadTimedTextAncillaryResourceById instead"));
+    }
+
+    uint32_t stream_id = 0;
+    const vector<TimedDataAncillaryResource*> &anc_resources = GetManifest()->GetAncillaryResources();
+    size_t i;
+    for (i = 0; i < anc_resources.size(); i++) {
+        TimedEventsAncillaryResource *events_anc_resource = dynamic_cast<TimedEventsAncillaryResource*>(anc_resources[i]);
+        if (events_anc_resource && events_anc_resource->resource_id == resource_id) {
+            stream_id = events_anc_resource->stream_id;
+            break;
+        }
+    }
+    if (stream_id == 0) {
+        BMX_EXCEPTION(("Unknown timed events ancillary resource id"));
+    }
+
+    ReadStream(stream_id, &mAncEssenceElementKey, file_out, data_out, size_out, 0);
+}
+
+void MXFTimedDataTrackReader::ReadAncillaryResourceByStreamId(uint32_t stream_id, FILE *file_out,
                                                               unsigned char **data_out, size_t *size_out)
 {
-    ReadStream(stream_id, &MXF_EE_K(TimedTextAnc), file_out, data_out, size_out, 0);
+    ReadStream(stream_id, &mAncEssenceElementKey, file_out, data_out, size_out, 0);
 }
 
-TimedTextMXFResourceProvider* MXFTimedTextTrackReader::CreateResourceProvider()
+TimedDataMXFResourceProvider* MXFTimedDataTrackReader::CreateResourceProvider()
 {
     mxfpp::File *file = 0;
-    TimedTextMXFResourceProvider *provider = 0;
+    TimedDataMXFResourceProvider *provider = 0;
     try {
         file = GetFileReader()->GetFileFactory()->OpenRead(GetFileReader()->GetFilename());
-        provider = new TimedTextMXFResourceProvider(file);
+        provider = new TimedDataMXFResourceProvider(file);
 
         vector<pair<int64_t, int64_t> > ranges;
         ReadStream(mBodySID, &mEssenceElementKey, 0, 0, 0, &ranges);
-        provider->AddTimedTextResource(ranges);
+        provider->AddResource(ranges);
 
-        vector<TimedTextAncillaryResource> &anc_resources = GetManifest()->GetAncillaryResources();
+        const vector<TimedDataAncillaryResource*> &anc_resources = GetManifest()->GetAncillaryResources();
         size_t i;
         for (i = 0; i < anc_resources.size(); i++) {
             ranges.clear();
-            ReadStream(anc_resources[i].stream_id, &MXF_EE_K(TimedTextAnc), 0, 0, 0, &ranges);
-            provider->AddAncillaryResource(anc_resources[i].stream_id, ranges);
+            ReadStream(anc_resources[i]->stream_id, &mAncEssenceElementKey, 0, 0, 0, &ranges);
+            provider->AddAncillaryResource(anc_resources[i]->stream_id, ranges);
         }
     } catch (...) {
       if (provider) {
@@ -172,7 +209,7 @@ TimedTextMXFResourceProvider* MXFTimedTextTrackReader::CreateResourceProvider()
     return provider;
 }
 
-void MXFTimedTextTrackReader::ReadStream(uint32_t stream_id, const mxfKey *stream_key,
+void MXFTimedDataTrackReader::ReadStream(uint32_t stream_id, const mxfKey *stream_key,
                                          FILE *file_out,
                                          unsigned char **data_out, size_t *data_out_size,
                                          std::vector<std::pair<int64_t, int64_t> > *ranges_out)

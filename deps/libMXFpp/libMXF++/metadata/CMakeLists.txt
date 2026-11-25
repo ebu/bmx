@@ -56,6 +56,8 @@ list(APPEND MXFpp_sources
     metadata/TextBasedObject.cpp
     metadata/TextLocator.cpp
     metadata/TimecodeComponent.cpp
+    metadata/TimedEventsAncillaryResourceSubDescriptor.cpp
+    metadata/TimedEventsTextDescriptor.cpp
     metadata/Track.cpp
     metadata/UTF16TextBasedSet.cpp
     metadata/UTF8TextBasedSet.cpp
@@ -123,6 +125,8 @@ list(APPEND MXFpp_headers
     metadata/TextBasedObject.h
     metadata/TextLocator.h
     metadata/TimecodeComponent.h
+    metadata/TimedEventsAncillaryResourceSubDescriptor.cpp
+    metadata/TimedEventsTextDescriptor.cpp
     metadata/Track.h
     metadata/UTF16TextBasedSet.h
     metadata/UTF8TextBasedSet.h

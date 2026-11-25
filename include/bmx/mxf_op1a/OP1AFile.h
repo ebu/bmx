@@ -41,7 +41,7 @@
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
-#include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1ATimedDataTrack.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_helper/UniqueIdHelper.h>
 #include <bmx/mxf_helper/UniqueIdHelper.h>
@@ -77,7 +77,7 @@ class OP1AFile
 public:
     friend class OP1ATrack;
     friend class OP1AMPEG2LGTrack;
-    friend class OP1ATimedTextTrack;
+    friend class OP1ATimedDataTrack;
     friend class OP1APCMTrack;
 
 public:
@@ -166,7 +166,7 @@ private:
     void CreateHeaderMetadata();
     mxfpp::SourcePackage* CreateFileSourcePackage(UMID package_uid, int64_t track_duration, int64_t track_origin);
     void CreateFile();
-    void WriteTimedTextIndexTable(OP1ATimedTextTrack *tt_track);
+    void WriteTimedDataIndexTable(OP1ATimedDataTrack *tt_track);
 
     void UpdatePackageMetadata();
     void UpdateTrackMetadata(mxfpp::GenericPackage *package, int64_t origin, int64_t duration);
@@ -217,7 +217,7 @@ private:
     bool mHaveANCTrack;
     bool mHaveVBITrack;
     std::vector<OP1AXMLTrack*> mXMLTracks;
-    size_t mTimedTextTrackCount;
+    size_t mTimedDataTrackCount;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;

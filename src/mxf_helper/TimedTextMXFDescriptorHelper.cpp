@@ -86,10 +86,10 @@ TimedTextManifest* TimedTextMXFDescriptorHelper::CreateManifest(FileDescriptor *
                 DCTimedTextResourceSubDescriptor *tt_subdescriptor =
                     dynamic_cast<DCTimedTextResourceSubDescriptor*>(sub_descriptors[i]);
                 if (tt_subdescriptor) {
-                    TimedTextAncillaryResource anc_resource;
-                    anc_resource.resource_id = tt_subdescriptor->getAncillaryResourceID();
-                    anc_resource.stream_id   = tt_subdescriptor->getEssenceStreamID();
-                    anc_resource.mime_type   = tt_subdescriptor->getMIMEType();
+                    TimedTextAncillaryResource *anc_resource = new TimedTextAncillaryResource();
+                    anc_resource->resource_id = tt_subdescriptor->getAncillaryResourceID();
+                    anc_resource->stream_id   = tt_subdescriptor->getEssenceStreamID();
+                    anc_resource->mime_type   = tt_subdescriptor->getMIMEType();
                     manifest->mAncillaryResources.push_back(anc_resource);
                 }
             }
@@ -105,12 +105,9 @@ TimedTextManifest* TimedTextMXFDescriptorHelper::CreateManifest(FileDescriptor *
 }
 
 TimedTextMXFDescriptorHelper::TimedTextMXFDescriptorHelper()
-: DataMXFDescriptorHelper()
+: TimedDataMXFDescriptorHelper()
 {
     mEssenceType = TIMED_TEXT;
-
-    BMX_OPT_PROP_DEFAULT(mResourceId, g_Null_UUID);
-    BMX_OPT_PROP_DEFAULT(mLanguageList, "");
 }
 
 TimedTextMXFDescriptorHelper::~TimedTextMXFDescriptorHelper()
@@ -124,30 +121,20 @@ void TimedTextMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, u
     mEssenceType = TIMED_TEXT;
 }
 
-void TimedTextMXFDescriptorHelper::SetManifest(TimedTextManifest *manifest)
-{
-    if (manifest->HaveResourceId()) {
-        BMX_OPT_PROP_SET(mResourceId, manifest->GetResourceId());
-    }
-    mNamespaceURI = manifest->GetProfileDesignator();
-    mUCSEncoding = manifest->GetEncoding();
-    if (manifest->HaveLanguages()) {
-        BMX_OPT_PROP_SET(mLanguageList, manifest->GetLanguagesString());
-    }
-
-    mAncillaryResources = manifest->GetAncillaryResources();
-}
-
 FileDescriptor* TimedTextMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata *header_metadata)
 {
+    TimedTextManifest *tt_manifest = dynamic_cast<TimedTextManifest*>(mManifest);
+    BMX_ASSERT(tt_manifest);
+
     mFileDescriptor = new DCTimedTextDescriptor(header_metadata);
 
     size_t i;
-    for (i = 0; i < mAncillaryResources.size(); i++) {
+    for (i = 0; i < tt_manifest->GetAncillaryResources().size(); i++) {
         DCTimedTextResourceSubDescriptor *res_subdescriptor = new DCTimedTextResourceSubDescriptor(header_metadata);
-        res_subdescriptor->setAncillaryResourceID(mAncillaryResources[i].resource_id);
-        res_subdescriptor->setEssenceStreamID(mAncillaryResources[i].stream_id);
-        res_subdescriptor->setMIMEType(mAncillaryResources[i].mime_type);
+        TimedTextAncillaryResource *anc_resource = dynamic_cast<TimedTextAncillaryResource*>(tt_manifest->GetAncillaryResources()[i]);
+        res_subdescriptor->setAncillaryResourceID(anc_resource->resource_id);
+        res_subdescriptor->setEssenceStreamID(anc_resource->stream_id);
+        res_subdescriptor->setMIMEType(anc_resource->mime_type);
         mFileDescriptor->appendSubDescriptors(res_subdescriptor);
     }
 
@@ -158,17 +145,20 @@ FileDescriptor* TimedTextMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadat
 
 void TimedTextMXFDescriptorHelper::UpdateFileDescriptor()
 {
+    TimedTextManifest *tt_manifest = dynamic_cast<TimedTextManifest*>(mManifest);
+    BMX_ASSERT(tt_manifest);
+
     DataMXFDescriptorHelper::UpdateFileDescriptor();
 
     DCTimedTextDescriptor *tt_descriptor = dynamic_cast<DCTimedTextDescriptor*>(mFileDescriptor);
     BMX_ASSERT(tt_descriptor);
 
-    if (BMX_OPT_PROP_IS_SET(mResourceId))
-        tt_descriptor->setResourceID(mResourceId);
-    tt_descriptor->setNamespaceURI(mNamespaceURI);
-    tt_descriptor->setUCSEncoding(mUCSEncoding);
-    if (BMX_OPT_PROP_IS_SET(mLanguageList))
-        tt_descriptor->setRFC5646LanguageTagList(mLanguageList);
+    if (tt_manifest->HaveResourceId())
+        tt_descriptor->setResourceID(tt_manifest->GetResourceId());
+    tt_descriptor->setNamespaceURI(tt_manifest->GetProfileDesignator());
+    tt_descriptor->setUCSEncoding(tt_manifest->GetEncoding());
+    if (tt_manifest->HaveLanguages())
+        tt_descriptor->setRFC5646LanguageTagList(tt_manifest->GetLanguagesString());
 }
 
 mxfUL TimedTextMXFDescriptorHelper::ChooseEssenceContainerUL() const

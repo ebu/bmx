@@ -18,7 +18,7 @@ list(APPEND bmx_sources
     mxf_reader/MXFSequenceReader.cpp
     mxf_reader/MXFSequenceTrackReader.cpp
     mxf_reader/MXFTextObject.cpp
-    mxf_reader/MXFTimedTextTrackReader.cpp
+    mxf_reader/MXFTimedDataTrackReader.cpp
     mxf_reader/MXFTrackInfo.cpp
     mxf_reader/MXFTrackReader.cpp
     mxf_reader/MXFWaveChunk.cpp

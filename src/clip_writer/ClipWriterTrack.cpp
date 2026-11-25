@@ -49,7 +49,7 @@
 #include <bmx/mxf_op1a/OP1ARDD36Track.h>
 #include <bmx/mxf_op1a/OP1AVC2Track.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
-#include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1ATimedDataTrack.h>
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 #include <bmx/avid_mxf/AvidDVTrack.h>
 #include <bmx/avid_mxf/AvidD10Track.h>
@@ -1389,15 +1389,15 @@ void ClipWriterTrack::SetXMLLanguageCode(const string &code)
     }
 }
 
-void ClipWriterTrack::SetTimedTextSource(const TimedTextManifest *manifest)
+void ClipWriterTrack::SetTimedDataManifest(const TimedDataManifest *manifest)
 {
     switch (mClipType)
     {
         case CW_OP1A_CLIP_TYPE:
         {
-            OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mOP1ATrack);
-            if (tt_track) {
-                tt_track->SetSource(manifest);
+            OP1ATimedDataTrack *td_track = dynamic_cast<OP1ATimedDataTrack*>(mOP1ATrack);
+            if (td_track) {
+                td_track->SetManifest(manifest);
             }
             break;
         }
@@ -1413,14 +1413,14 @@ void ClipWriterTrack::SetTimedTextSource(const TimedTextManifest *manifest)
     }
 }
 
-void ClipWriterTrack::SetTimedTextResourceProvider(TimedTextMXFResourceProvider *provider)
+void ClipWriterTrack::SetTimedDataResourceProvider(TimedDataMXFResourceProvider *provider)
 {
     bool have_set = false;
     switch (mClipType)
     {
         case CW_OP1A_CLIP_TYPE:
         {
-            OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mOP1ATrack);
+            OP1ATimedDataTrack *tt_track = dynamic_cast<OP1ATimedDataTrack*>(mOP1ATrack);
             if (tt_track) {
                 tt_track->SetResourceProvider(provider);
                 have_set = true;

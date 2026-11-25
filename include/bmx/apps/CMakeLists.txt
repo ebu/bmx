@@ -10,6 +10,7 @@ list(APPEND bmx_headers
     bmx/apps/AppXMLInfoWriter.h
     bmx/apps/FrameworkHelper.h
     bmx/apps/PropertyFileParser.h
+    bmx/apps/TimedEventsXMLManifestParser.h
     bmx/apps/TimedTextManifestParser.h
 )
 

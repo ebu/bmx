@@ -37,7 +37,6 @@
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/DataMXFDescriptorHelper.h>
-#include <bmx/mxf_helper/TimedTextMXFDescriptorHelper.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/BMXException.h>

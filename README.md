@@ -63,6 +63,7 @@ A number of topics are described in more detail in the [docs/](./docs/) director
 including the following:
 
 * [Timed Text](./docs/timed_text.md)
+* [Timed Events (Event-based, Text-based Metadata)](./docs/timed_events.md)
 * [RDD 6 XML Creator](./meta/rdd6_xml_creator/README.md)
 * [MCA Labels Format](./docs/mca_labels_format.md)
 * [IMF Track Files](./docs/imf_track_files.md)

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="http://www.smpte-ra.org/ns/2067-206/2023/simple-scheme/timed-events-resource" xmlns:pr="http://www.example.com/props/timed-events-resource">
+	<id>urn:uuid:5df7d222-f835-4140-8c1c-77f0c76092d4</id>
+	<editRate>25 1</editRate>
+	<objects>
+		<object>
+			<id>P01</id>
+			<pr:name>Table</pr:name>
+		</object>
+		<object>
+			<id>P02</id>
+			<pr:name>Chair</pr:name>
+		</object>
+	</objects>
+	<events>
+		<event>
+			<id>E01</id>
+			<startCount>0</startCount>
+			<endCount>1</endCount>
+			<pr:propsVisible>
+				<pr:propRef>P01</pr:propRef>
+			</pr:propsVisible>
+		</event>
+		<event>
+			<id>E02</id>
+			<startCount>1</startCount>
+			<endCount>2</endCount>
+			<pr:propsVisible>
+				<pr:propRef>P01</pr:propRef>
+				<pr:propRef>P02</pr:propRef>
+			</pr:propsVisible>
+		</event>
+	</events>
+</document>

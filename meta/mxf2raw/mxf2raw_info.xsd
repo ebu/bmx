@@ -266,6 +266,7 @@
           <xs:element name="duration" type="duration_type"/>
           <xs:element name="lead_filler_offset" type="position_type" minOccurs="0"/>
           <xs:element name="timed_text_offset" type="position_type" minOccurs="0"/>
+          <xs:element name="timed_events_offset" type="position_type" minOccurs="0"/>
           <xs:element name="precharge" type="int16_type" minOccurs="0"/>
           <xs:element name="available_precharge" type="int64_type" minOccurs="0"/>
           <xs:element name="rollout" type="int16_type" minOccurs="0"/>
@@ -517,6 +518,7 @@
       <xs:element name="vbi_descriptor" type="vbi_descriptor_type"/>
       <xs:element name="anc_descriptor" type="anc_descriptor_type"/>
       <xs:element name="timed_text_descriptor" type="timed_text_descriptor_type"/>
+      <xs:element name="timed_events_descriptor" type="timed_events_descriptor_type"/>
     </xs:choice>
   </xs:complexType>
 
@@ -618,6 +620,57 @@
       <xs:extension base="array_element_type">
         <xs:sequence>
           <xs:element name="resource_id" type="label_type"/>
+          <xs:element name="mime_type" type="xs:string"/>
+          <xs:element name="stream_id" type="uint32_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="timed_events_descriptor_type">
+    <xs:sequence>
+      <xs:element name="mime_type" type="xs:string"/>
+      <xs:element name="character_encoding" type="xs:string"/>
+      <xs:element name="event_schemes" type="te_event_schemes_type" minOccurs="0"/>
+      <xs:element name="ancillary_resources" type="te_anc_resources_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="te_event_schemes_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="element" type="te_event_schemes_element_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="te_event_schemes_element_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="uri" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="te_anc_resources_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="element" type="te_anc_resources_element_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="te_anc_resources_element_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="resource_id" type="xs:string"/>
           <xs:element name="mime_type" type="xs:string"/>
           <xs:element name="stream_id" type="uint32_type"/>
         </xs:sequence>
@@ -1019,6 +1072,7 @@
       <xs:enumeration value="ANC_Data"/>
       <xs:enumeration value="VBI_Data"/>
       <xs:enumeration value="Timed_Text"/>
+      <xs:enumeration value="Timed_Events"/>
     </xs:restriction>
   </xs:simpleType>
 

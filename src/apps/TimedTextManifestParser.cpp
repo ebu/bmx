@@ -193,9 +193,9 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
                     return false;
                 }
             } else if (name == "resource_file") {
-                TimedTextAncillaryResource new_resource;
-                new_resource.filename = value;
-                new_resource.resource_id = g_Null_UUID;
+                TimedTextAncillaryResource *new_resource = new TimedTextAncillaryResource();
+                new_resource->filename = value;
+                new_resource->resource_id = g_Null_UUID;
                 mAncillaryResources.push_back(new_resource);
                 parse_state = PARSE_RESOURCE_FILE_STATE;
             } else {
@@ -203,11 +203,11 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
                 return false;
             }
         } else if (parse_state == PARSE_RESOURCE_FILE_STATE) {
-            TimedTextAncillaryResource *resource = &mAncillaryResources.back();
+            TimedTextAncillaryResource *resource = dynamic_cast<TimedTextAncillaryResource*>(mAncillaryResources.back());
             if (name == "resource_file") {
-                TimedTextAncillaryResource new_resource;
-                new_resource.filename = value;
-                new_resource.resource_id = g_Null_UUID;
+                TimedTextAncillaryResource *new_resource = new TimedTextAncillaryResource();
+                new_resource->filename = value;
+                new_resource->resource_id = g_Null_UUID;
                 mAncillaryResources.push_back(new_resource);
             } else if (name == "resource_id") {
                 if (!parse_uuid(value.c_str(), &resource->resource_id)) {
@@ -236,7 +236,7 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
     }
     size_t i;
     for (i = 0; i < mAncillaryResources.size(); i++) {
-        TimedTextAncillaryResource *resource = &mAncillaryResources[i];
+        TimedTextAncillaryResource *resource = dynamic_cast<TimedTextAncillaryResource*>(mAncillaryResources[i]);
         if (resource->filename.empty()) {
             log_error("Empty 'resource_file' in timed text manifest resource section\n");
             return false;
@@ -251,11 +251,11 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
         }
     }
 
-    if (!create_abs_file_path(filename, mf_tt_filename, &mTTFilename)) {
+    if (!create_abs_file_path(filename, mf_tt_filename, &mFilename)) {
         return false;
     }
     for (i = 0; i < mAncillaryResources.size(); i++) {
-        if (!create_abs_file_path(filename, mAncillaryResources[i].filename, &mAncillaryResources[i].filename)) {
+        if (!create_abs_file_path(filename, mAncillaryResources[i]->filename, &mAncillaryResources[i]->filename)) {
             return false;
         }
     }
@@ -265,7 +265,7 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
 
 bool TimedTextManifestParser::CheckCanReadTTFile()
 {
-    FILE *file = fopen(mTTFilename.c_str(), "rb");
+    FILE *file = fopen(mFilename.c_str(), "rb");
     if (!file)
         return false;
 

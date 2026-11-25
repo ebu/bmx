@@ -608,6 +608,8 @@ static const mxfUL MXF_EC_L(ANCData) = MXF_GENERIC_CONTAINER_LABEL(0x09, 0x0e, 0
 
 static const mxfUL MXF_EC_L(TimedText) = MXF_GENERIC_CONTAINER_LABEL(0x0a, 0x13, 0x01, 0x01);
 
+static const mxfUL MXF_EC_L(TimedEvents) = MXF_GENERIC_CONTAINER_LABEL(0x0d, 0x13, 0x01, 0x02);
+
 
 /* Metadata-Guided Audio */
 
@@ -958,8 +960,10 @@ static const uint32_t MXF_EE_TRACKNUM(ANCData) = MXF_TRACK_NUM(0x17, 0x01, 0x02,
 
 
 static const mxfUL MXF_EE_K(TimedText) = MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x01, 0x17, 0x01, 0x0b, 0x01);
-
 static const uint32_t MXF_EE_TRACKNUM(TimedText) = MXF_TRACK_NUM(0x17, 0x01, 0x0b, 0x01);
+
+static const mxfUL MXF_EE_K(TimedEvents) = MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x01, 0x17, 0x01, 0x10, 0x01);
+static const uint32_t MXF_EE_TRACKNUM(TimedEvents) = MXF_TRACK_NUM(0x17, 0x01, 0x10, 0x01);
 
 
 
@@ -1000,6 +1004,11 @@ static const mxfKey MXF_EE_K(RP2057_ENDIAN_UNK) = MXF_GS_DATA_ELEMENT_KEY(MXF_GS
 /* Timed Text ancillary resources */
 
 static const mxfKey MXF_EE_K(TimedTextAnc)  = MXF_GS_DATA_ELEMENT_KEY(MXF_GS_DATA_BASE | MXF_GS_DATA_BYTES, MXF_GS_WRAP_BASE);
+
+
+/* Timed Events ancillary resources */
+
+static const mxfKey MXF_EE_K(TimedEventsAnc)  = MXF_GS_DATA_ELEMENT_KEY(MXF_GS_DATA_BASE | MXF_GS_DATA_BYTES, MXF_GS_WRAP_BASE);
 
 
 /* Wave Chunk */

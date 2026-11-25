@@ -53,7 +53,9 @@
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
 #include <bmx/mxf_reader/MXFFrameMetadata.h>
-#include <bmx/mxf_reader/MXFTimedTextTrackReader.h>
+#include <bmx/mxf_reader/MXFTimedDataTrackReader.h>
+#include <bmx/mxf_helper/TimedTextManifest.h>
+#include <bmx/mxf_helper/TimedEventsManifest.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/st436/RDD6Metadata.h>
@@ -65,6 +67,7 @@
 #include <bmx/Utils.h>
 #include <bmx/URI.h>
 #include <bmx/Version.h>
+#include <bmx/XMLWriter.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/apps/AppMXFFileFactory.h>
 #include <bmx/apps/AppTextInfoWriter.h>
@@ -865,9 +868,14 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
     info_writer->WriteDurationItem("duration", track_info->duration, track_info->edit_rate);
     if (track_info->lead_filler_offset != 0)
         info_writer->WritePositionItem("lead_filler_offset", track_info->lead_filler_offset, track_info->edit_rate);
-    if (data_info && data_info->timed_text_manifest && data_info->timed_text_manifest->mStart != 0) {
-        info_writer->WritePositionItem("timed_text_offset", data_info->timed_text_manifest->mStart,
-                                       track_info->edit_rate);
+    if (data_info && data_info->timed_data_manifest && data_info->timed_data_manifest->mStart != 0) {
+        if (track_info->essence_type == TIMED_TEXT) {
+            info_writer->WritePositionItem("timed_text_offset", data_info->timed_data_manifest->mStart,
+                                           track_info->edit_rate);
+        } else if (track_info->essence_type == TIMED_EVENTS) {
+            info_writer->WritePositionItem("timed_events_offset", data_info->timed_data_manifest->mStart,
+                                           track_info->edit_rate);
+        }
     }
     if (precharge != 0)
         info_writer->WriteIntegerItem("precharge", precharge);
@@ -1016,31 +1024,65 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             }
             info_writer->EndArrayItem();
             info_writer->EndSection();
-        } else if (data_info->timed_text_manifest) {
-            info_writer->StartSection("timed_text_descriptor");
-            info_writer->WriteStringItem("profile", data_info->timed_text_manifest->GetProfileDesignator());
-            info_writer->WriteStringItem("encoding", data_info->timed_text_manifest->GetEncoding());
-            if (data_info->timed_text_manifest->HaveResourceId()) {
-                info_writer->WriteIDAUItem("resource_id", data_info->timed_text_manifest->GetResourceId());
-            }
-            if (data_info->timed_text_manifest->HaveLanguages()) {
-                info_writer->WriteStringItem("languages", data_info->timed_text_manifest->GetLanguagesString());
-            }
-            if (!data_info->timed_text_manifest->GetAncillaryResources().empty()) {
-                const vector<TimedTextAncillaryResource> &anc_resources =
-                      data_info->timed_text_manifest->GetAncillaryResources();
-                info_writer->StartArrayItem("ancillary_resources", anc_resources.size());
-                size_t i;
-                for (i = 0; i < anc_resources.size(); i++) {
-                    info_writer->StartArrayElement("element", i);
-                    info_writer->WriteIDAUItem("resource_id", anc_resources[i].resource_id);
-                    info_writer->WriteStringItem("mime_type", anc_resources[i].mime_type);
-                    info_writer->WriteIntegerItem("stream_id", anc_resources[i].stream_id);
-                    info_writer->EndArrayElement();
+        } else if (data_info->timed_data_manifest) {
+            TimedTextManifest *timed_text_manifest = dynamic_cast<TimedTextManifest*>(data_info->timed_data_manifest);
+            TimedEventsManifest *timed_events_manifest = dynamic_cast<TimedEventsManifest*>(data_info->timed_data_manifest);
+            if (timed_text_manifest) {
+                info_writer->StartSection("timed_text_descriptor");
+                info_writer->WriteStringItem("profile", timed_text_manifest->GetProfileDesignator());
+                info_writer->WriteStringItem("encoding", timed_text_manifest->GetEncoding());
+                if (timed_text_manifest->HaveResourceId()) {
+                    info_writer->WriteIDAUItem("resource_id", timed_text_manifest->GetResourceId());
                 }
-                info_writer->EndArrayItem();
+                if (timed_text_manifest->HaveLanguages()) {
+                    info_writer->WriteStringItem("languages", timed_text_manifest->GetLanguagesString());
+                }
+                if (!timed_text_manifest->GetAncillaryResources().empty()) {
+                    const vector<TimedDataAncillaryResource*> &anc_resources =
+                        timed_text_manifest->GetAncillaryResources();
+                    info_writer->StartArrayItem("ancillary_resources", anc_resources.size());
+                    size_t i;
+                    for (i = 0; i < anc_resources.size(); i++) {
+                        TimedTextAncillaryResource *tt_anc_resource = dynamic_cast<TimedTextAncillaryResource*>(anc_resources[i]);
+                        info_writer->StartArrayElement("element", i);
+                        info_writer->WriteIDAUItem("resource_id", tt_anc_resource->resource_id);
+                        info_writer->WriteStringItem("mime_type", tt_anc_resource->mime_type);
+                        info_writer->WriteIntegerItem("stream_id", tt_anc_resource->stream_id);
+                        info_writer->EndArrayElement();
+                    }
+                    info_writer->EndArrayItem();
+                }
+                info_writer->EndSection();
+            } else if (timed_events_manifest) {
+                info_writer->StartSection("timed_events_descriptor");
+                info_writer->WriteStringItem("mime_type", timed_events_manifest->GetMIMEType());
+                info_writer->WriteStringItem("character_encoding", timed_events_manifest->GetCharacterEncoding());
+                if (!timed_events_manifest->GetEventSchemes().empty()) {
+                    const vector<string> &event_schemes = timed_events_manifest->GetEventSchemes();
+                    info_writer->StartArrayItem("event_schemes", event_schemes.size());
+                    for (size_t i = 0; i < event_schemes.size(); i++) {
+                        info_writer->StartArrayElement("element", i);
+                        info_writer->WriteStringItem("uri", event_schemes[i]);
+                        info_writer->EndArrayElement();
+                    }
+                    info_writer->EndArrayItem();
+                }
+                if (!timed_events_manifest->GetAncillaryResources().empty()) {
+                    const vector<TimedDataAncillaryResource*> &anc_resources =
+                        timed_events_manifest->GetAncillaryResources();
+                    info_writer->StartArrayItem("ancillary_resources", anc_resources.size());
+                    for (size_t i = 0; i < anc_resources.size(); i++) {
+                        TimedEventsAncillaryResource *te_anc_resource = dynamic_cast<TimedEventsAncillaryResource*>(anc_resources[i]);
+                        info_writer->StartArrayElement("element", i);
+                        info_writer->WriteStringItem("resource_id", te_anc_resource->resource_id);
+                        info_writer->WriteStringItem("mime_type", te_anc_resource->mime_type);
+                        info_writer->WriteIntegerItem("stream_id", te_anc_resource->stream_id);
+                        info_writer->EndArrayElement();
+                    }
+                    info_writer->EndArrayItem();
+                }
+                info_writer->EndSection();
             }
-            info_writer->EndSection();
         }
         info_writer->EndSection();
     }
@@ -1615,6 +1657,69 @@ static void write_wave_chna_text(size_t track_index, WaveCHNA *chna, string chna
     log_info("Extracted ADM chna as text to '%s'\n", filename.c_str());
 }
 
+static void write_timed_events_manifest(TimedEventsManifest *manifest, OutputFileManager *output_file_manager, size_t track_index)
+{
+    const string ns = "http://bbc.co.uk/bmx/timed-events/202403";
+
+    // Note that these variables are reused
+    FILE *file;
+    string filename;
+
+    output_file_manager->GetTrackManifestFile(track_index, &file, &filename);
+
+    XMLWriter xml_writer(file, false);
+
+    xml_writer.WriteDocumentStart();
+
+    xml_writer.WriteElementStart(ns, "manifest");
+    xml_writer.DeclareNamespace(ns, "");
+
+    xml_writer.WriteElementStart(ns, "file");
+
+    output_file_manager->GetTrackMainFile(track_index, &file, &filename);
+
+    xml_writer.WriteAttribute(ns, "path", strip_path(filename));
+    xml_writer.WriteAttribute(ns, "mime_type", manifest->GetMIMEType());
+    xml_writer.WriteAttribute(ns, "character_encoding", manifest->GetCharacterEncoding());
+    if (manifest->GetStart() != 0) {
+        char buffer[32];
+        bmx_snprintf(buffer, sizeof(buffer), "%" PRId64, manifest->GetStart());
+        xml_writer.WriteAttribute(ns, "start", buffer);
+    }
+    xml_writer.WriteElementStart(ns, "event_schemes");
+    const vector<string> &event_schemes = manifest->GetEventSchemes();
+    for (size_t i = 0; i < event_schemes.size(); i++) {
+        xml_writer.WriteElement(ns, "uri", event_schemes[i]);
+    }
+    xml_writer.WriteElementEnd(); // event_schemes
+    xml_writer.WriteElementEnd(); // file
+
+    if (!manifest->GetAncillaryResources().empty()) {
+        xml_writer.WriteElementStart(ns, "ancillary_resources");
+
+        const vector<TimedDataAncillaryResource*> &anc_resources = manifest->GetAncillaryResources();
+        for (size_t i = 0; i < anc_resources.size(); i++) {
+            TimedEventsAncillaryResource *te_anc_resource = dynamic_cast<TimedEventsAncillaryResource*>(anc_resources[i]);
+
+            output_file_manager->GetTrackChildFile(track_index, te_anc_resource->stream_id, &file, &filename);
+
+            xml_writer.WriteElementStart(ns, "resource");
+            xml_writer.WriteAttribute(ns, "path", strip_path(filename));
+            if (!te_anc_resource->resource_id.empty()) {
+                xml_writer.WriteAttribute(ns, "id", te_anc_resource->resource_id);
+            }
+            xml_writer.WriteAttribute(ns, "mime_type", te_anc_resource->mime_type);
+            xml_writer.WriteElementEnd();
+        }
+
+        xml_writer.WriteElementEnd(); // ancillary_resources
+    }
+
+    xml_writer.WriteElementEnd(); // manifest
+
+    xml_writer.WriteDocumentEnd();
+}
+
 static bool parse_rdd6_frames(const char *frames_str, int64_t *min, int64_t *max)
 {
     if (parse_int_pair(frames_str, '-', min, max)) {
@@ -1758,7 +1863,16 @@ static void usage(const char *cmd)
     printf(" --mca-detail          Show detailed MCA channel label information\n");
     printf("\n");
     printf(" -p | --ess-out <prefix>\n");
-    printf("                       Extract essence to files starting with <prefix> and suffix '.raw'\n");
+    printf("                       Extract essence to files starting with <prefix> and suffix '.raw' or '.klv'\n");
+    printf("                       Exceptions:\n");
+    printf("                           Timed Text\n");
+    printf("                             - Extract the Timed Text XML document to a file starting with <prefix> and suffix '.xml'\n");
+    printf("                             - Extract each ancillary resource to a file starting with <prefix> and suffix '_<generic stream id>.raw'\n");
+    printf("                           Timed Events\n");
+    printf("                             - Extract the text-based metadata document to a file starting with <prefix> and suffix '.txt'\n");
+    printf("                             - Extract each ancillary resource to a file starting with <prefix> and suffix '_<generic stream id>.raw'\n");
+    printf("                             - Write a manifest to a file starting with <prefix> and suffix '_manifest.xml'\n");
+    printf("                               This file is suitable for use with the raw2bmx option --timed-events\n");
     printf(" --wrap-klv <mask>     Wrap essence frames in KLV using the input Key and an 8-byte Length\n");
     printf("                       The filename suffix is '.klv' rather than '.raw'\n");
     printf("                       <mask> is a sequence of characters which identify which data types to wrap\n");
@@ -1791,8 +1905,8 @@ static void usage(const char *cmd)
         printf(" --http-disable-seek   Disable seeking when reading file over HTTP\n");
     }
     printf("\n");
-    printf(" --text-out <prefix>   Extract text based objects to files starting with <prefix>\n");
-    printf("                       and suffix '.xml' if it is XML and otherwise '.txt'\n");
+    printf(" --text-out <prefix>   Extract text based objects (SMPTE RP 2057) to files starting with <prefix>\n");
+    printf("                       The file suffix is '.xml' for XML (based on TextMIMEMediaType) and '.txt' otherwise\n");
     printf(" --wave-chunks-out <prefix>   Extract Wave chunks to files starting with <prefix>\n");
     printf("                              The file suffix is '_<chunk id>_<generic stream id>'\n");
     printf(" --filter-wave-chunks <ids>   A comma separated list of Wave chunk identifiers to extract\n");
@@ -3043,14 +3157,15 @@ int main(int argc, const char** argv)
                                                            sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
                                         sound_buffer.SetSize(frame->GetSize() / sound_info->channel_count);
                                     }
-                                    output_file_manager.GetTrackFile(i, c, &file, &filename);
+                                    output_file_manager.GetTrackChildFile(i, c, &file, &filename);
                                     write_data(file, filename,
                                                sound_buffer.GetBytes(), sound_buffer.GetSize(),
                                                (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
                                                &frame->element_key);
                                 }
-                            } else if (track_info->essence_type != TIMED_TEXT) {  // timed text is written at the end
-                                output_file_manager.GetTrackFile(i, &file, &filename);
+                            } else if (track_info->essence_type != TIMED_TEXT && track_info->essence_type != TIMED_EVENTS) {
+                                // timed data is written at the end
+                                output_file_manager.GetTrackMainFile(i, &file, &filename);
                                 write_data(file, filename,
                                            frame->GetBytes(), frame->GetSize(),
                                            (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
@@ -3306,35 +3421,54 @@ int main(int argc, const char** argv)
             }
         }
 
-        // extract timed text
+        // extract timed data
         if (ess_output_prefix) {
             size_t i;
             for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                 MXFTrackReader *track_reader = reader->GetTrackReader(i);
-                if (track_reader->GetTrackInfo()->essence_type != TIMED_TEXT) {
+                if (track_reader->GetTrackInfo()->essence_type != TIMED_TEXT &&
+                    track_reader->GetTrackInfo()->essence_type != TIMED_EVENTS)
+                {
                     continue;
                 }
 
-                MXFTimedTextTrackReader *tt_track_reader = dynamic_cast<MXFTimedTextTrackReader*>(track_reader);
-                if (!tt_track_reader) {
-                    log_warn("Extracting timed text from a sequence is not supported\n");
+                MXFTimedDataTrackReader *td_track_reader = dynamic_cast<MXFTimedDataTrackReader*>(track_reader);
+                if (!td_track_reader) {
+                    log_warn("Extracting %s from a sequence is not supported\n",
+                             essence_type_to_string(track_reader->GetTrackInfo()->essence_type));
                     continue;
                 }
 
+                TimedDataManifest *manifest = td_track_reader->GetManifest();
                 FILE *file;
                 string filename;
-                output_file_manager.GetTrackFile(i, &file, &filename);
-                tt_track_reader->ReadTimedText(file, 0, 0);
 
-                TimedTextManifest *manifest = tt_track_reader->GetManifest();
-                vector<TimedTextAncillaryResource> &anc_resources = manifest->GetAncillaryResources();
-                size_t k;
-                for (k = 0; k < anc_resources.size(); k++) {
-                    output_file_manager.GetTrackFile(i, anc_resources[k].stream_id, &file, &filename);
-                    tt_track_reader->ReadAncillaryResourceByStreamId(anc_resources[k].stream_id, file, 0, 0);
+                if (track_reader->GetTrackInfo()->essence_type == TIMED_EVENTS) {
+                    TimedEventsManifest *timed_events_manifest = dynamic_cast<TimedEventsManifest*>(manifest);
+
+                    write_timed_events_manifest(timed_events_manifest, &output_file_manager, i);
+
+                    output_file_manager.GetTrackManifestFile(i, &file, &filename);
+                    log_info("Written %s manifest to '%s'\n",
+                             essence_type_to_string(track_reader->GetTrackInfo()->essence_type),
+                             filename.c_str());
                 }
 
-                log_info("Extracted timed text to '%s'\n", filename.c_str());
+                output_file_manager.GetTrackMainFile(i, &file, &filename);
+                td_track_reader->Read(file, 0, 0);
+                log_info("Extracted %s to '%s'\n",
+                         essence_type_to_string(track_reader->GetTrackInfo()->essence_type),
+                         filename.c_str());
+
+                const vector<TimedDataAncillaryResource*> &anc_resources = manifest->GetAncillaryResources();
+                size_t k;
+                for (k = 0; k < anc_resources.size(); k++) {
+                    output_file_manager.GetTrackChildFile(i, anc_resources[k]->stream_id, &file, &filename);
+                    td_track_reader->ReadAncillaryResourceByStreamId(anc_resources[k]->stream_id, file, 0, 0);
+                    log_info("Extracted %s ancillary resource to '%s'\n",
+                            essence_type_to_string(track_reader->GetTrackInfo()->essence_type),
+                            filename.c_str());
+                }
             }
         }
 

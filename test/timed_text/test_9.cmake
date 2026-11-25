@@ -10,7 +10,7 @@ set(create_command_1 ${RAW2BMX}
     -y 10:00:00:00
     --dur 100
     -o test_input_${test_num}.mxf
-    --tt "${TEST_SOURCE_DIR}/manifest_1.txt"
+    --timed-text "${TEST_SOURCE_DIR}/manifest_1.txt"
 )
 
 set(create_command_2 ${BMXTRANSWRAP}

@@ -12,7 +12,7 @@ set(create_command ${RAW2BMX}
     -y 09:59:59:00
     --dur 100
     -o ${output_file}
-    --tt "${TEST_SOURCE_DIR}/manifest_3.txt"
+    --timed-text "${TEST_SOURCE_DIR}/manifest_3.txt"
 )
 
 run_test_a(

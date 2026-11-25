@@ -80,6 +80,7 @@
 #include <bmx/Version.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/apps/TimedTextManifestParser.h>
+#include <bmx/apps/TimedEventsXMLManifestParser.h>
 #include <bmx/apps/ADMCHNATextFileHelper.h>
 #include <bmx/as11/AS11Labels.h>
 #include <bmx/as10/AS10ShimNames.h>
@@ -157,6 +158,7 @@ struct RawInput
     KLVEssenceReader *klv_reader;
     uint32_t channel_count;
     TimedTextManifestParser *timed_text_manifest;
+    TimedEventsXMLManifestParser *timed_events_manifest;
 
     uint32_t sample_sequence[32];
     size_t sample_sequence_size;
@@ -364,6 +366,7 @@ static void init_input(RawInput *input)
 {
     memset(input, 0, sizeof(*input));
     input->timed_text_manifest = new TimedTextManifestParser();
+    input->timed_events_manifest = new TimedEventsXMLManifestParser();
     input->wave_chunk_refs = new map<string, WaveChunkRef>();
     BMX_OPT_PROP_DEFAULT(input->aspect_ratio, ASPECT_RATIO_16_9);
     BMX_OPT_PROP_DEFAULT(input->afd, 0);
@@ -409,6 +412,7 @@ static void clear_input(RawInput *input)
     delete input->klv_reader;
     delete input->filter;
     delete input->timed_text_manifest;
+    delete input->timed_events_manifest;
     delete input->wave_chunk_refs;
 }
 
@@ -446,7 +450,7 @@ static void usage(const char *cmd)
     printf("  -l <file>               Log filename. Default log to stderr/stdout\n");
     printf(" --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
     printf("  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, as10, wave, imf. Default is op1a\n");
-    printf("                          Note that an 'op1a' or 'as11op1a' output file type could be signalled as other operational patterns if there is a Timed Text track\n");
+    printf("                          Note that an 'op1a' or 'as11op1a' output file type could be signalled as other operational patterns if there is a Timed Text or Events track\n");
     printf("* -o <name>               as02: <name> is a bundle name\n");
     printf("                          as11op1a/as11d10/op1a/d10/rdd9/as10/wave: <name> is a filename or filename pattern (see Notes at the end)\n");
     printf("                          avid: <name> is a filename prefix\n");
@@ -857,7 +861,9 @@ static void usage(const char *cmd)
     printf("  --wave <name>           Wave PCM audio input file\n");
     printf("  --anc <name>            Raw ST 436 Ancillary data. Requires the --anc-const option or frame wrapped in KLV and the --klv option\n");
     printf("  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Requires the --vbi-const option or frame wrapped in KLV and the --klv option\n");
-    printf("  --tt <manifest>         Manifest file containing Timed Text metadata\n");
+    printf("  --timed-text <manifest>   Manifest file containing Timed Text metadata\n");
+    printf("  --tt <manifest>           Same as --timed-text\n");
+    printf("  --timed-events <manifest> Manifest file containing Timed Events metadata\n");
     printf("\n\n");
     printf("Notes:\n");
     printf(" - filename pattern: Clip types producing a single output file may use a filename pattern with variables that get substituted\n");
@@ -4114,7 +4120,7 @@ int main(int argc, const char** argv)
             have_vbi = true;
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--tt") == 0)
+        else if (strcmp(argv[cmdln_index], "--timed-text") == 0 || strcmp(argv[cmdln_index], "--tt") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
@@ -4123,6 +4129,19 @@ int main(int argc, const char** argv)
                 return 1;
             }
             input.essence_type = TIMED_TEXT;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--timed-events") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = TIMED_EVENTS;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -4812,7 +4831,23 @@ int main(int argc, const char** argv)
             }
             if (!input->timed_text_manifest->CheckCanReadTTFile()) {
                 log_error("Timed text file '%s' referenced by manifest can't be opened for reading\n",
-                          input->timed_text_manifest->GetTTFilename().c_str());
+                          input->timed_text_manifest->GetFilename().c_str());
+                throw false;
+            }
+        }
+
+        for (i = 0; i < inputs.size(); i++) {
+            RawInput *input = &inputs[i];
+            if (input->disabled || input->essence_type != TIMED_EVENTS)
+                continue;
+
+            if (!input->timed_events_manifest->Parse(input->filename, start_timecode, frame_rate)) {
+                log_error("Failed to parse timed events manifest\n");
+                throw false;
+            }
+            if (!input->timed_events_manifest->CheckCanReadTimedEventsFile()) {
+                log_error("Timed events file '%s' referenced by manifest can't be opened for reading\n",
+                          input->timed_events_manifest->GetFilename().c_str());
                 throw false;
             }
         }
@@ -4825,9 +4860,13 @@ int main(int argc, const char** argv)
             if (input->disabled)
                 continue;
 
-            if (input->essence_type == WAVE_PCM) {
+            if (input->essence_type == WAVE_PCM)
+            {
                 have_sound = true;
-            } else if (input->essence_type != TIMED_TEXT) {  // timed text is in a separate container
+            }
+            else if (input->essence_type != TIMED_TEXT && input->essence_type != TIMED_EVENTS)
+            {
+                // timed data is in a separate container
                 sound_only_container = false;
                 break;
             }
@@ -4878,7 +4917,7 @@ int main(int argc, const char** argv)
         bool have_samples_to_write = false;
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
-            if (!input->disabled && input->essence_type != TIMED_TEXT) {
+            if (!input->disabled && input->essence_type != TIMED_TEXT && input->essence_type != TIMED_EVENTS) {
                 have_samples_to_write = true;
                 break;
             }
@@ -5637,7 +5676,10 @@ int main(int argc, const char** argv)
                         clip_track->SetConstantDataSize(input->vbi_const_size);
                     break;
                 case TIMED_TEXT:
-                    clip_track->SetTimedTextSource(input->timed_text_manifest);
+                    clip_track->SetTimedDataManifest(input->timed_text_manifest);
+                    break;
+                case TIMED_EVENTS:
+                    clip_track->SetTimedDataManifest(input->timed_events_manifest);
                     break;
                 default:
                     BMX_ASSERT(false);
@@ -5911,6 +5953,7 @@ int main(int argc, const char** argv)
                         input->raw_reader->SetFixedSampleSize(input->vbi_const_size);
                     break;
                 case TIMED_TEXT:
+                case TIMED_EVENTS:
                     break;
                 default:
                     BMX_ASSERT(false);
@@ -6199,7 +6242,7 @@ int main(int argc, const char** argv)
             uint32_t num_samples;
             for (i = 0; i < inputs.size(); i++) {
                 RawInput *input = &inputs[i];
-                if (!input->disabled && input->essence_type != TIMED_TEXT) {
+                if (!input->disabled && input->essence_type != TIMED_TEXT && input->essence_type != TIMED_EVENTS) {
                     num_samples = read_samples(input, max_samples_per_read);
                     if (num_samples < min_num_samples) {
                         min_num_samples = num_samples;
@@ -6218,7 +6261,7 @@ int main(int argc, const char** argv)
             for (i = 0; i < input_tracks.size(); i++) {
                 RawInputTrack *input_track = input_tracks[i];
                 RawInput *input = input_track->GetRawInput();
-                if (input->essence_type == TIMED_TEXT) {
+                if (input->essence_type == TIMED_TEXT || input->essence_type == TIMED_EVENTS) {
                     continue;
                 }
 

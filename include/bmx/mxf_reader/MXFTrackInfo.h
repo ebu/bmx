@@ -37,7 +37,7 @@
 
 #include <bmx/BMXTypes.h>
 #include <bmx/EssenceType.h>
-#include <bmx/mxf_helper/TimedTextManifest.h>
+#include <bmx/mxf_helper/TimedDataManifest.h>
 
 
 namespace mxfpp
@@ -189,7 +189,7 @@ public:
 public:
     std::vector<VBIManifestElement> vbi_manifest;
     std::vector<ANCManifestElement> anc_manifest;
-    TimedTextManifest *timed_text_manifest;
+    TimedDataManifest *timed_data_manifest;
 };
 
 

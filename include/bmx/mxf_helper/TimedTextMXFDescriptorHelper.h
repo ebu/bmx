@@ -33,7 +33,7 @@
 #include <vector>
 
 #include <bmx/BMXTypes.h>
-#include <bmx/mxf_helper/DataMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/TimedDataMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/TimedTextManifest.h>
 
 
@@ -42,7 +42,7 @@ namespace bmx
 {
 
 
-class TimedTextMXFDescriptorHelper : public DataMXFDescriptorHelper
+class TimedTextMXFDescriptorHelper : public TimedDataMXFDescriptorHelper
 {
 public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
@@ -59,9 +59,7 @@ public:
     virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
 
 public:
-    // configure and create new descriptor
-    void SetManifest(TimedTextManifest *manifest);
-
+    // create and update new descriptor
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
 
@@ -70,13 +68,6 @@ public:
 
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
-
-private:
-    BMX_OPT_PROP_DECL(mxfUUID, mResourceId);
-    std::string mNamespaceURI;
-    std::string mUCSEncoding;
-    BMX_OPT_PROP_DECL(std::string, mLanguageList);
-    std::vector<TimedTextAncillaryResource> mAncillaryResources;
 };
 
 

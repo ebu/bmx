@@ -51,6 +51,7 @@ public:
 
 public:
     XMLWriter(FILE *xml_file);
+    XMLWriter(FILE *xml_file, bool own_xml_file);
     virtual ~XMLWriter();
 
     void EscapeCR(bool escape);
@@ -133,8 +134,11 @@ private:
     void Write(const std::string &data);
     void Write(const char *data, size_t len);
 
+    void Close();
+
 private:
     FILE *mXMLFile;
+    bool mOwnXMLFile;
     bool mEscapeCR;
     bool mEscapeAttrNewlineChars;
     bool mSkipCR;

@@ -13,7 +13,7 @@ set(create_command ${RAW2BMX}
     -y 09:59:59:24
     --out-start 4
     -o ${output_file}
-    --tt "${TEST_SOURCE_DIR}/manifest_3.txt"
+    --timed-text "${TEST_SOURCE_DIR}/manifest_3.txt"
     --mpeg2lg_422p_hl_1080i video_2_${test_num}
 )
 

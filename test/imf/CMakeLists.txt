@@ -7,6 +7,7 @@ set(tests
     jpeg2000
     rdd36
     timed_text
+    timed_events
 )
 
 foreach(test ${tests})

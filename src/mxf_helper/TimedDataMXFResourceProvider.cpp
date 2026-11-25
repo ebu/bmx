@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, British Broadcasting Corporation
+ * Copyright (C) 2024, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
 #include "config.h"
 #endif
 
-#include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
+#include <bmx/mxf_helper/TimedDataMXFResourceProvider.h>
 
 #define __STDC_LIMIT_MACROS
 
@@ -46,7 +46,7 @@ using namespace bmx;
 using namespace mxfpp;
 
 
-TimedTextMXFResourceProvider::TimedTextMXFResourceProvider(mxfpp::File *file)
+TimedDataMXFResourceProvider::TimedDataMXFResourceProvider(mxfpp::File *file)
 {
     mFile = file;
     mRemSize = 0;
@@ -54,34 +54,34 @@ TimedTextMXFResourceProvider::TimedTextMXFResourceProvider(mxfpp::File *file)
     mRangeRemSize = 0;
 }
 
-TimedTextMXFResourceProvider::~TimedTextMXFResourceProvider()
+TimedDataMXFResourceProvider::~TimedDataMXFResourceProvider()
 {
     delete mFile;
 }
 
-void TimedTextMXFResourceProvider::AddTimedTextResource(const vector<std::pair<int64_t, int64_t> > &ranges)
+void TimedDataMXFResourceProvider::AddResource(const vector<std::pair<int64_t, int64_t> > &ranges)
 {
-    mTimedTextResource = ranges;
+    mResource = ranges;
 }
 
-void TimedTextMXFResourceProvider::AddAncillaryResource(uint32_t stream_id,
+void TimedDataMXFResourceProvider::AddAncillaryResource(uint32_t stream_id,
                                                         const vector<std::pair<int64_t, int64_t> > &ranges)
 {
     mAncillaryResources[stream_id] = ranges;
 }
 
-int64_t TimedTextMXFResourceProvider::GetTimedTextResourceSize()
+int64_t TimedDataMXFResourceProvider::GetResourceSize()
 {
     int64_t size = 0;
     size_t i;
-    for (i = 0; i < mTimedTextResource.size(); i++) {
-        size += mTimedTextResource[i].second;
+    for (i = 0; i < mResource.size(); i++) {
+        size += mResource[i].second;
     }
 
     return size;
 }
 
-int64_t TimedTextMXFResourceProvider::GetAncillaryResourceSize(uint32_t stream_id)
+int64_t TimedDataMXFResourceProvider::GetAncillaryResourceSize(uint32_t stream_id)
 {
     const vector<pair<int64_t, int64_t> > &ranges = mAncillaryResources.at(stream_id);
     int64_t size = 0;
@@ -93,12 +93,12 @@ int64_t TimedTextMXFResourceProvider::GetAncillaryResourceSize(uint32_t stream_i
     return size;
 }
 
-void TimedTextMXFResourceProvider::OpenTimedTextResource()
+void TimedDataMXFResourceProvider::OpenResource()
 {
-    mRemSize = GetTimedTextResourceSize();
+    mRemSize = GetResourceSize();
     mRangeIndex = 0;
     mRangeRemSize = 0;
-    mOpenRanges = mTimedTextResource;
+    mOpenRanges = mResource;
 
     if (!mOpenRanges.empty()) {
         mRangeRemSize = mOpenRanges[0].second;
@@ -106,7 +106,7 @@ void TimedTextMXFResourceProvider::OpenTimedTextResource()
     }
 }
 
-void TimedTextMXFResourceProvider::OpenAncillaryResource(uint32_t stream_id)
+void TimedDataMXFResourceProvider::OpenAncillaryResource(uint32_t stream_id)
 {
     mRemSize = GetAncillaryResourceSize(stream_id);
     mRangeIndex = 0;
@@ -119,7 +119,7 @@ void TimedTextMXFResourceProvider::OpenAncillaryResource(uint32_t stream_id)
     }
 }
 
-size_t TimedTextMXFResourceProvider::Read(unsigned char *buffer, size_t size)
+size_t TimedDataMXFResourceProvider::Read(unsigned char *buffer, size_t size)
 {
     size_t target_read = size;
     if ((int64_t)target_read > mRemSize) {
@@ -152,7 +152,7 @@ size_t TimedTextMXFResourceProvider::Read(unsigned char *buffer, size_t size)
 
         uint32_t num_read = mFile->read(&buffer[total_read], to_read);
         if (num_read != to_read) {
-            BMX_EXCEPTION(("Failed to read timed text resource data"));
+            BMX_EXCEPTION(("Failed to read timed data resource data"));
         }
 
         total_read += num_read;
