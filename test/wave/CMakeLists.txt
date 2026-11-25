@@ -5,6 +5,7 @@ setup_test_dir("wave")
 set(tests
     write
     read
+    read_ds64
     sound_only_from_raw
     sound_only_transwrap
 )
